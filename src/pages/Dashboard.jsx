@@ -18,6 +18,7 @@ import {
   X,
   PlayCircle,
   ArrowRight,
+  FolderOpen,
 } from 'lucide-react';
 
 import Navbar from '../components/Navbar';
@@ -25,6 +26,7 @@ import AriaOrbit from '../components/cv/AriaOrbit';
 import GlobalBanner from '../components/GlobalBanner';
 import CreditGate from '../components/CreditGate';
 import { CREDIT_COSTS } from '../lib/credits';
+import { getCompletionStatus } from '../lib/cvCompleteness';
 import { signalReady } from '../utils/splash';
 import { useTranslation, Trans } from 'react-i18next';
 import { toast } from 'sonner';
@@ -64,6 +66,12 @@ const Dashboard = () => {
   // preserves the (currently dead) loading branch in case it's resurrected.
   const scanning = false;
 
+  // How many CVs are finished enough to design and download. This page stopped listing
+  // CVs when the workspace sidebar became their home, but it still fetches them (see
+  // loadDrafts — the request times the skeleton), and it was throwing the body away.
+  // So the count is free: no extra request, no extra latency.
+  const [finishedCvs, setFinishedCvs] = useState(0);
+
   // Get user from local storage
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
 
@@ -78,7 +86,13 @@ const Dashboard = () => {
   // ships megabytes to time a spinner.
   const loadDrafts = async ({ initial = false } = {}) => {
     try {
-      await CVService.listCvs();
+      // 'all', not the default 'builder' scope: builder EXCLUDES CVs born in Aria, and
+      // those are precisely the ones the studio lists. Counting the narrow set here would
+      // advertise a smaller number than the studio then shows.
+      const list = await CVService.listCvs('all');
+      setFinishedCvs(
+        (Array.isArray(list) ? list : []).filter((cv) => getCompletionStatus(cv).isComplete).length
+      );
     } catch (error) {
       console.error('Failed to load drafts', error);
     } finally {
@@ -333,6 +347,35 @@ const Dashboard = () => {
                 </div>
               </div>
             </section>
+
+            {/* The finishing end. Deliberately NOT a third card in the row above: those
+                two are about STARTING (aim a CV at a job, or write one), that row was
+                cut from three to two on purpose, and a document you have already
+                written is a different question — what should it look like, and can I
+                have the PDF. So it reads as a door rather than a choice: one hairline
+                row, no card shadow, subordinate to everything above it.
+
+                Hidden at zero. The studio only ever lists finished CVs, so an empty
+                one is a door into an empty room — worse than no door, and the two
+                cards above are already the answer to "I have nothing yet". */}
+            {finishedCvs > 0 && (
+              <button
+                type="button"
+                onClick={() => navigate('/cv-studio')}
+                className="group flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white px-5 py-4 text-left transition-colors hover:border-slate-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              >
+                <FolderOpen className="h-5 w-5 shrink-0 text-slate-400 dark:text-slate-500" />
+                <span className="min-w-0 flex-1">
+                  <span className="block font-heading text-base font-bold text-slate-900 dark:text-slate-100">
+                    {t('dashboard.studioCard.title', { count: finishedCvs })}
+                  </span>
+                  <span className="mt-0.5 block text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
+                    {t('dashboard.studioCard.body')}
+                  </span>
+                </span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 dark:text-slate-500" />
+              </button>
+            )}
           </div>
         )}
 

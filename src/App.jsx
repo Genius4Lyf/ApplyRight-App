@@ -65,6 +65,7 @@ import FeedbackDashboard from './pages/FeedbackDashboard';
 import { isMobile } from './utils/platform';
 import MaintenanceGuard from './components/MaintenanceGuard';
 import RouteSeo from './components/RouteSeo';
+import CvStudioIndex from './pages/CvStudioIndex';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import TopProgressBar from './components/TopProgressBar';
@@ -522,6 +523,19 @@ const router = createBrowserRouter([
           <MaintenanceGuard>
             <ProtectedRoute>
               <MockInterviewPage />
+            </ProtectedRoute>
+          </MaintenanceGuard>
+        ),
+      },
+      // The studio with no document open. /resume/:id is the studio ITSELF, which means
+      // it had no address that did not already name a CV — so nothing could link to it.
+      // Same shape as /cv-builder and /interview-prep.
+      {
+        path: '/cv-studio',
+        element: (
+          <MaintenanceGuard>
+            <ProtectedRoute>
+              <CvStudioIndex />
             </ProtectedRoute>
           </MaintenanceGuard>
         ),

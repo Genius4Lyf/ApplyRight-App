@@ -54,7 +54,13 @@ const Login = () => {
         // During the campaign there is nothing to sign in TO yet, so the countdown is
         // the destination and gets its own URL. MaintenanceGuard is still the actual
         // gate, so a singleton that has not hydrated yet costs one redirect, no more.
-        navigate(LAUNCH.enabled ? '/pre-launch' : '/dashboard');
+        //
+        // Except for a granted account: /pre-launch is a PUBLIC route that never asks
+        // the guard anything, so sending an admin or a maintenanceAccess holder there
+        // walked them straight past the access they were just given. The server decides
+        // who qualifies and says so on the login response.
+        const gated = LAUNCH.enabled && res.data.bypassesMaintenance !== true;
+        navigate(gated ? '/pre-launch' : '/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || t('errors.loginFailed'));

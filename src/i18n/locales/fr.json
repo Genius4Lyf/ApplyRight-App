@@ -825,6 +825,11 @@
       "skip": "Ignorer — générer maintenant",
       "withNumbers_one": "{{label}} avec {{count}} chiffre",
       "withNumbers_other": "{{label}} avec {{count}} chiffres"
+    },
+    "studioCard": {
+      "title_one": "Votre CV terminé — 1 prêt à mettre en forme",
+      "title_other": "Vos CV terminés — {{count}} prêts à mettre en forme",
+      "body": "Choisissez un modèle, réglez la typographie et les espacements, puis téléchargez le PDF."
     }
   },
   "billing": {
@@ -4085,7 +4090,9 @@
     "cvStudio": {
       "title": "CV Studio",
       "listLabel": "CV terminés",
-      "empty": "Aucun CV terminé pour l'instant. Finalisez-en un avec Aria ou dans le générateur de CV et il apparaîtra ici, prêt à être mis en forme et téléchargé."
+      "empty": "Aucun CV terminé pour l'instant. Finalisez-en un avec Aria ou dans le générateur de CV et il apparaîtra ici, prêt à être mis en forme et téléchargé.",
+      "indexTitle": "Vos CV terminés",
+      "indexBlurb": "Choisissez-en un dans la barre latérale pour le mettre en forme et le télécharger, ou créez-en un nouveau."
     },
     "prep": {
       "title": "Préparation d'entretien",
@@ -5254,6 +5261,10 @@
       "welcome": {
         "title": "Bienvenue sur ApplyRight",
         "description": "Construisez un CV qui passe les logiciels de recrutement, ajustez-le au poste visé et préparez l'entretien avant qu'il arrive."
+      },
+      "cvStudio": {
+        "title": "CV Studio — ApplyRight",
+        "description": "Mettez en forme et téléchargez votre CV terminé : choisissez un modèle, réglez la typographie et les espacements, puis exportez un PDF net."
       }
     }
   }

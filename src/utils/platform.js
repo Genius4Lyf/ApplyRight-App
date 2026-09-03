@@ -19,7 +19,15 @@ export const markOnboardingComplete = () => {
 // This list used to double as the "immersive" set: the pages where a bottom tab bar would
 // have fought with a page that already owned the bottom of the screen. There is no tab bar
 // on either platform any more, so it answers only the one question now.
-export const WORKSPACE_PREFIXES = ['/cv-builder', '/aria-studio', '/resume', '/interview-prep'];
+export const WORKSPACE_PREFIXES = [
+  '/cv-builder',
+  '/aria-studio',
+  '/resume',
+  // The studio index. Separate from '/resume' because the studio's own address is
+  // /resume/:id — this is the frame that holds its list when no document is open.
+  '/cv-studio',
+  '/interview-prep',
+];
 
 const matchesPrefix = (pathname, prefixes) =>
   prefixes.some((p) => pathname === p || pathname.startsWith(`${p}/`));

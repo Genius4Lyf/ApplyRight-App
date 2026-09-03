@@ -18,6 +18,7 @@ const DARK_ELIGIBLE_PREFIXES = [
   '/interview-prep',
   '/resume',
   '/cv-builder',
+  '/cv-studio', // the studio's list frame; /resume/:id is the studio itself
   '/aria-studio', // Aria Studio — the agentic tailor chat
   '/feedback/dashboard',
   '/jobs',

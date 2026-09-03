@@ -232,6 +232,7 @@ describe('locale files', () => {
       // Per-page SEO copy: two titles are the same in both languages on purpose.
       'seo.pages.app.title', // 'ApplyRight' — the wordmark, nothing to translate
       'seo.pages.contact.title', // 'Contact' is the same word in French
+      'seo.pages.cvStudio.title', // 'CV Studio' — the surface's name, not prose
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

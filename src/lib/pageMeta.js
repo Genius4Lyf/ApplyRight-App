@@ -27,6 +27,7 @@ const PAGE_KEYS = {
   '/privacy': 'privacy',
   '/feedback': 'feedback',
   '/jobs': 'jobs',
+  '/cv-studio': 'cvStudio',
   '/login': 'login',
   '/register': 'register',
   '/forgot-password': 'forgotPassword',

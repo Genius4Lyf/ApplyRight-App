@@ -174,3 +174,59 @@ describe('MaintenanceGuard — the onboarding door in the gate', () => {
     expect(await screen.findByText('MAINTENANCE PAGE')).toBeTruthy();
   });
 });
+
+describe('MaintenanceGuard — a granted account must not be held by a stale verdict', () => {
+  const gated = () => status({ maintenance: true, launch: { enabled: true, date: null } });
+
+  it('re-asks when the signed-in identity changes', async () => {
+    // `bypass` is decided per caller, so the answer fetched as a guest is the WRONG
+    // answer for the account that signs in a moment later. With one session-wide
+    // promise the only way to a fresh verdict was a full page reload — which is what
+    // kept showing the countdown to an account that had just been granted access.
+    api.get.mockResolvedValueOnce(gated());
+    // A fresh module, or this test inherits the cache another test already primed.
+    vi.resetModules();
+    const { default: Guard } = await import('./MaintenanceGuard');
+    render(
+      <Guard>
+        <div>APP CONTENT</div>
+      </Guard>
+    );
+    await screen.findByText(/PRELAUNCH/);
+    expect(api.get).toHaveBeenCalledTimes(1);
+
+    // The grant holder signs in. Same page load, same module instance.
+    localStorage.setItem('token', 'granted.jwt');
+    api.get.mockResolvedValueOnce(status({ maintenance: true, bypass: true }));
+    cleanup();
+    render(
+      <Guard>
+        <div>APP CONTENT</div>
+      </Guard>
+    );
+
+    expect(await screen.findByText('APP CONTENT')).toBeTruthy();
+    expect(api.get).toHaveBeenCalledTimes(2);
+  });
+
+  it('still asks only ONCE while the identity is unchanged', async () => {
+    // The cache exists because the guard mounts per route element and the API carries a
+    // global per-IP limit that a mobile audience behind carrier NAT shares.
+    localStorage.setItem('token', 'same.jwt');
+    api.get.mockResolvedValue(status({ maintenance: true, bypass: true }));
+    // A fresh module, or this test inherits the cache another test already primed.
+    vi.resetModules();
+    const { default: Guard } = await import('./MaintenanceGuard');
+
+    for (let i = 0; i < 3; i++) {
+      cleanup();
+      render(
+        <Guard>
+          <div>APP CONTENT</div>
+        </Guard>
+      );
+      await screen.findByText('APP CONTENT');
+    }
+    expect(api.get).toHaveBeenCalledTimes(1);
+  });
+});

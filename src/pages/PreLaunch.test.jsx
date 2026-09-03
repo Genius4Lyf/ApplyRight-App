@@ -7,7 +7,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 
 import '../i18n';
 
@@ -18,6 +18,7 @@ vi.mock('react-router-dom', async (orig) => ({
 }));
 vi.mock('../services/api', () => ({ default: { get: vi.fn(() => new Promise(() => {})) } }));
 
+import api from '../services/api';
 import PreLaunch from './PreLaunch';
 
 const LAUNCH = { enabled: true, date: '2099-01-01T00:00:00.000Z', bonusCredits: 50 };
@@ -39,6 +40,9 @@ const signOutButton = () => screen.queryByRole('button', { name: /^sign out$/i }
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
+  // Default: a status call that never settles, so a test that does not care about it
+  // renders the page from its props alone.
+  api.get.mockImplementation(() => new Promise(() => {}));
 });
 afterEach(() => cleanup());
 
@@ -135,5 +139,64 @@ describe('PreLaunch — it has two audiences', () => {
     signIn();
     mount();
     expect(screen.getByText(/new@person.com/)).toBeTruthy();
+  });
+});
+
+describe('PreLaunch — the gate may not even apply to this visitor', () => {
+  // The route is PUBLIC: nothing guards it, so whoever is sent or links here sees the
+  // countdown whether or not they are gated. An admin or a maintenanceAccess holder is
+  // precisely who it should not apply to.
+  const standalone = () =>
+    render(
+      <MemoryRouter initialEntries={['/pre-launch']}>
+        <Routes>
+          <Route path="/pre-launch" element={<PreLaunch />} />
+          <Route path="/dashboard" element={<div>APP CONTENT</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+  it('gets out of the way of an account that bypasses maintenance', async () => {
+    api.get.mockResolvedValue({
+      data: { success: true, maintenance: true, bypass: true, launch: LAUNCH },
+    });
+    standalone();
+    expect(await screen.findByText('APP CONTENT')).toBeTruthy();
+  });
+
+  it('gets out of the way once maintenance is over', async () => {
+    // Otherwise a link shared during the campaign strands people on a dead countdown
+    // forever after launch day.
+    api.get.mockResolvedValue({
+      data: { success: true, maintenance: false, bypass: false, launch: LAUNCH },
+    });
+    standalone();
+    expect(await screen.findByText('APP CONTENT')).toBeTruthy();
+  });
+
+  it('holds a genuinely gated visitor on the countdown', async () => {
+    api.get.mockResolvedValue({
+      data: { success: true, maintenance: true, bypass: false, launch: LAUNCH },
+    });
+    standalone();
+    expect(await screen.findByText(/opens soon/i)).toBeTruthy();
+    expect(screen.queryByText('APP CONTENT')).toBeNull();
+  });
+
+  it('never redirects when the GUARD is the one rendering it', async () => {
+    // With a launch prop the guard has already decided this person is gated; re-deciding
+    // here would fight it, and a redirect loop is the shape that failure takes.
+    api.get.mockResolvedValue({
+      data: { success: true, maintenance: false, bypass: true, launch: LAUNCH },
+    });
+    render(
+      <MemoryRouter initialEntries={['/anything']}>
+        <Routes>
+          <Route path="/anything" element={<PreLaunch launch={LAUNCH} />} />
+          <Route path="/dashboard" element={<div>APP CONTENT</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+    expect(await screen.findByText(/opens soon/i)).toBeTruthy();
   });
 });

@@ -22,19 +22,28 @@ const readStoredUser = () => {
   }
 };
 
-let statusPromise = null;
+// Keyed on the TOKEN, not just cached once. `bypass` is decided per caller, so a
+// response fetched as a guest is the wrong answer for the account that signs in a
+// moment later — and with a single session-wide promise the only way to get a fresh
+// verdict was a full page reload. That is what made a freshly granted
+// maintenanceAccess user keep seeing the countdown.
+let cached = null;
 const fetchStatus = () => {
-  if (!statusPromise) {
-    statusPromise = api
-      .get('/system/status')
-      .then((res) => res.data)
-      .catch((err) => {
-        // Let the next mount retry rather than caching a failure for the session.
-        statusPromise = null;
-        throw err;
-      });
+  const token = localStorage.getItem('token') || '';
+  if (!cached || cached.token !== token) {
+    cached = {
+      token,
+      promise: api
+        .get('/system/status')
+        .then((res) => res.data)
+        .catch((err) => {
+          // Let the next mount retry rather than caching a failure for the session.
+          cached = null;
+          throw err;
+        }),
+    };
   }
-  return statusPromise;
+  return cached.promise;
 };
 
 const MaintenanceGuard = ({ children, allowOnboarding = false }) => {

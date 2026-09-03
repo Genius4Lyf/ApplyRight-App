@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useReducer, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Check, Copy } from 'lucide-react';
 import api from '../services/api';
 import { LAUNCH, msUntil, countdownParts } from '../lib/launch';
@@ -42,14 +42,14 @@ const PreLaunch = ({ launch }) => {
   // prop, and the LAUNCH singleton cannot be relied on: it is hydrated asynchronously by
   // App.jsx and mutating it triggers no re-render, so a page mounted before that resolves
   // would sit there with no countdown forever. So fetch it here instead.
-  const [remote, setRemote] = useState(null);
+  const [status, setStatus] = useState(null);
 
   useEffect(() => {
     if (launch) return undefined; // the guard already supplied it
     let alive = true;
     api
       .get('/system/status')
-      .then(({ data }) => alive && setRemote(data?.launch || null))
+      .then(({ data }) => alive && setStatus(data || null))
       .catch(() => {
         // Fall through to the singleton / defaults — the page still renders its copy.
       });
@@ -58,7 +58,7 @@ const PreLaunch = ({ launch }) => {
     };
   }, [launch]);
 
-  const config = launch || remote || LAUNCH;
+  const config = launch || status?.launch || LAUNCH;
   const launchDate = config?.date || null;
   const bonusCredits = config?.bonusCredits ?? 50;
 
@@ -98,6 +98,14 @@ const PreLaunch = ({ launch }) => {
     return () => clearInterval(id);
   }, [launchDate, tick]);
 
+  // This route is PUBLIC — nothing gated it, so anyone navigated or linked here saw the
+  // countdown regardless of whether the gate even applies to them. An admin or a
+  // maintenanceAccess holder is exactly who it should not apply to, so defer to the
+  // server's own verdict and get out of their way. Also covers the campaign being over:
+  // once maintenance is off there is nothing here to wait for.
+  const standalone = !launch;
+  const letThrough = standalone && status && (status.bypass === true || !status.maintenance);
+
   const remaining = msUntil(launchDate);
 
   const isLive = remaining !== null && remaining <= 0;
@@ -131,6 +139,8 @@ const PreLaunch = ({ launch }) => {
       // Clipboard blocked — the code is on screen to copy by hand.
     }
   };
+
+  if (letThrough) return <Navigate to="/dashboard" replace />;
 
   return (
     <div
