@@ -4049,7 +4049,8 @@
     "guestCredits": "{{credits}} free credits when you sign up",
     "guestCreditsHint": "Join before we open and they will be on your account the day we launch — for your CV, your fit score and your cover letter.",
     "ctaSignUp": "Create your account",
-    "ctaHaveAccount": "Already have an account?"
+    "ctaHaveAccount": "Already have an account?",
+    "ctaHome": "Home"
   },
   "workspace": {
     "newCv": {
@@ -5185,6 +5186,78 @@
         "matching": "Matching your experience against what they asked for…",
         "weighing": "Weighing it all up…",
         "note": "This takes a few seconds. Stay on this screen."
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "app": {
+        "title": "ApplyRight",
+        "description": "Build a CV in a conversation with Aria, check it against the job you want, and practise the interview before you sit it."
+      },
+      "pricing": {
+        "title": "Pricing — ApplyRight",
+        "description": "What ApplyRight costs. Credits pay for CV work and AI features and anyone can buy them; plans cover live interview minutes, premium templates and downloads."
+      },
+      "howItWorks": {
+        "title": "How ApplyRight works — build, check, practise",
+        "description": "Build or upload a CV, check it against a real job description, fix what is weak, then practise the interview. The whole loop, and what each step actually does."
+      },
+      "atsGuide": {
+        "title": "ATS guide — what happens to your CV before a person sees it",
+        "description": "What an applicant tracking system does with your CV, why good candidates get filtered out, and how to write one that reaches a human."
+      },
+      "cvTips": {
+        "title": "CV tips that change the outcome — ApplyRight",
+        "description": "The CV advice that decides interviews: achievements instead of duties, numbers that mean something, and what to cut. Written for people starting out."
+      },
+      "cvHealth": {
+        "title": "CV Health — find what is costing you interviews",
+        "description": "Check your CV for the problems that quietly lose interviews: thin bullets, missing keywords, and formatting a parser cannot read."
+      },
+      "atsRecruiters": {
+        "title": "How ATS and recruiters really read a CV — ApplyRight",
+        "description": "What the software screens for, what the recruiter reads afterwards, and why passing a filter and convincing a person are two different jobs."
+      },
+      "contact": {
+        "title": "Contact — ApplyRight",
+        "description": "Get in touch about your account, a payment, or something that is not working. A person reads these."
+      },
+      "terms": {
+        "title": "Terms of Service — ApplyRight",
+        "description": "The terms you agree to when you use ApplyRight: what the service does, what you may do with it, and where the limits are."
+      },
+      "privacy": {
+        "title": "Privacy Policy — ApplyRight",
+        "description": "What ApplyRight collects, what happens to your CV and job data, and what we never do with it."
+      },
+      "feedback": {
+        "title": "Send feedback — ApplyRight",
+        "description": "Tell us what is working and what is not. Bug reports and feature requests go straight to the people building it."
+      },
+      "jobs": {
+        "title": "Find jobs — ApplyRight",
+        "description": "Browse openings and see how well your CV matches each one before you spend an evening applying."
+      },
+      "login": {
+        "title": "Sign in — ApplyRight",
+        "description": "Sign in to pick up your CVs, applications and interview practice where you left them."
+      },
+      "register": {
+        "title": "Create your account — ApplyRight",
+        "description": "Create a free account and start building a CV that gets past resume software. Free credits to try it, no card needed."
+      },
+      "forgotPassword": {
+        "title": "Reset your password — ApplyRight",
+        "description": "Forgotten your password? We will email you a code to get back into your account."
+      },
+      "preLaunch": {
+        "title": "ApplyRight opens soon",
+        "description": "ApplyRight opens shortly. Sign up before launch day and your free credits will be on your account the moment we open."
+      },
+      "welcome": {
+        "title": "Welcome to ApplyRight",
+        "description": "Build a CV that gets past resume software, aim it at the job you want, and practise the interview before it happens."
       }
     }
   }

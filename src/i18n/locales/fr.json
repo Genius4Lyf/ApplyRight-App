@@ -4045,7 +4045,8 @@
     "guestCredits": "{{credits}} crédits offerts à l’inscription",
     "guestCreditsHint": "Inscrivez-vous avant l'ouverture et ils seront sur votre compte le jour du lancement — pour votre CV, votre score d'adéquation et votre lettre de motivation.",
     "ctaSignUp": "Créer votre compte",
-    "ctaHaveAccount": "Vous avez déjà un compte ?"
+    "ctaHaveAccount": "Vous avez déjà un compte ?",
+    "ctaHome": "Accueil"
   },
   "workspace": {
     "newCv": {
@@ -5181,6 +5182,78 @@
         "matching": "Comparaison de votre expérience à ce qu'ils demandent…",
         "weighing": "Pesée de l’ensemble…",
         "note": "Cela prend quelques secondes. Restez sur cet écran."
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "app": {
+        "title": "ApplyRight",
+        "description": "Construisez un CV en conversation avec Aria, confrontez-le au poste que vous visez et préparez l'entretien avant de le passer."
+      },
+      "pricing": {
+        "title": "Tarifs — ApplyRight",
+        "description": "Ce que coûte ApplyRight. Les crédits paient le travail sur le CV et les fonctions IA, accessibles à tous ; les formules couvrent les minutes d'entretien en direct, les modèles premium et les téléchargements."
+      },
+      "howItWorks": {
+        "title": "Comment fonctionne ApplyRight — créer, vérifier, préparer",
+        "description": "Créez ou importez un CV, confrontez-le à une vraie offre, corrigez les points faibles, puis préparez l'entretien. Tout le parcours, étape par étape."
+      },
+      "atsGuide": {
+        "title": "Guide ATS — ce qui arrive à votre CV avant un lecteur humain",
+        "description": "Ce que les logiciels de recrutement font de votre CV, pourquoi de bons profils sont écartés, et comment écrire un CV qui atteint un humain."
+      },
+      "cvTips": {
+        "title": "Les conseils CV qui changent tout — ApplyRight",
+        "description": "Les conseils qui décrochent des entretiens : des réalisations plutôt que des tâches, des chiffres qui veulent dire quelque chose, et ce qu'il faut supprimer."
+      },
+      "cvHealth": {
+        "title": "CV Health — ce qui vous coûte des entretiens",
+        "description": "Repérez ce qui fait perdre des entretiens sans bruit : des puces trop vagues, des mots-clés absents, une mise en page illisible pour un logiciel."
+      },
+      "atsRecruiters": {
+        "title": "Comment les ATS et les recruteurs lisent vraiment un CV",
+        "description": "Ce que le logiciel filtre, ce que le recruteur lit ensuite, et pourquoi passer un filtre et convaincre une personne sont deux exercices différents."
+      },
+      "contact": {
+        "title": "Contact — ApplyRight",
+        "description": "Écrivez-nous au sujet de votre compte, d'un paiement ou de ce qui ne fonctionne pas. Un humain vous répond."
+      },
+      "terms": {
+        "title": "Conditions d'utilisation — ApplyRight",
+        "description": "Les conditions que vous acceptez en utilisant ApplyRight : ce que fait le service, ce que vous pouvez en faire et où sont les limites."
+      },
+      "privacy": {
+        "title": "Politique de confidentialité — ApplyRight",
+        "description": "Ce qu'ApplyRight collecte, ce que deviennent les données de votre CV et de vos candidatures, et ce que nous n'en faisons jamais."
+      },
+      "feedback": {
+        "title": "Envoyer un retour — ApplyRight",
+        "description": "Dites-nous ce qui marche et ce qui ne marche pas. Les bugs et les idées arrivent directement chez ceux qui construisent l'outil."
+      },
+      "jobs": {
+        "title": "Trouver un emploi — ApplyRight",
+        "description": "Parcourez les offres et voyez à quel point votre CV correspond à chacune avant d'y passer la soirée."
+      },
+      "login": {
+        "title": "Connexion — ApplyRight",
+        "description": "Connectez-vous pour retrouver vos CV, vos candidatures et vos entraînements d'entretien là où vous les avez laissés."
+      },
+      "register": {
+        "title": "Créer votre compte — ApplyRight",
+        "description": "Créez un compte gratuit et construisez un CV qui passe les logiciels de recrutement. Des crédits offerts pour essayer, sans carte bancaire."
+      },
+      "forgotPassword": {
+        "title": "Réinitialiser votre mot de passe — ApplyRight",
+        "description": "Mot de passe oublié ? Nous vous enverrons un code par e-mail pour retrouver votre compte."
+      },
+      "preLaunch": {
+        "title": "ApplyRight ouvre bientôt",
+        "description": "ApplyRight ouvre très bientôt. Inscrivez-vous avant le lancement et vos crédits offerts seront sur votre compte dès l'ouverture."
+      },
+      "welcome": {
+        "title": "Bienvenue sur ApplyRight",
+        "description": "Construisez un CV qui passe les logiciels de recrutement, ajustez-le au poste visé et préparez l'entretien avant qu'il arrive."
       }
     }
   }

@@ -194,12 +194,22 @@ const PreLaunch = ({ launch }) => {
             gate can render: a link shared on social has to be able to convert. */}
         {!signedIn && (
           <div className="mt-6">
-            <Link
-              to="/register"
-              className="flex w-full items-center justify-center rounded-xl bg-slate-900 px-5 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-slate-800"
-            >
-              {t('preLaunch.ctaSignUp')}
-            </Link>
+            {/* Secondary before primary, the same order as the sign-out confirm: the way
+                out sits left, the thing we want sits right and carries the weight. */}
+            <div className="flex gap-3">
+              <Link
+                to="/"
+                className="flex shrink-0 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-3 text-[15px] font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+              >
+                {t('preLaunch.ctaHome')}
+              </Link>
+              <Link
+                to="/register"
+                className="flex flex-1 items-center justify-center rounded-xl bg-slate-900 px-4 py-3 text-[15px] font-semibold text-white transition-colors hover:bg-slate-800"
+              >
+                {t('preLaunch.ctaSignUp')}
+              </Link>
+            </div>
             <p className="mt-3 text-[13px] text-slate-500">
               {t('preLaunch.ctaHaveAccount')}{' '}
               <Link

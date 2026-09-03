@@ -108,6 +108,13 @@ describe('PreLaunch — it has two audiences', () => {
     expect(screen.getByText(/free credits when you sign up/i)).toBeTruthy();
   });
 
+  it('lets a GUEST leave for the landing page', () => {
+    // The countdown is not a trap: someone who is not ready to sign up yet should be
+    // able to go read what the product actually is.
+    mount();
+    expect(screen.getByRole('link', { name: /^home$/i }).getAttribute('href')).toBe('/');
+  });
+
   it('gives a GUEST somewhere to go', () => {
     // Without this the shared link is a dead end: a countdown and no way to act on it.
     mount();

@@ -64,6 +64,7 @@ import FeedbackPage from './pages/FeedbackPage';
 import FeedbackDashboard from './pages/FeedbackDashboard';
 import { isMobile } from './utils/platform';
 import MaintenanceGuard from './components/MaintenanceGuard';
+import RouteSeo from './components/RouteSeo';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import TopProgressBar from './components/TopProgressBar';
@@ -207,6 +208,10 @@ const RootLayout = () => {
 
   return (
     <SessionManager>
+      {/* Route-level title and description for every page. Pages that render their own
+          <Seo> are excluded by seoKeyForPath, so exactly one of the two ever writes to
+          a given path — the precedence is by construction, not by ordering luck. */}
+      <RouteSeo />
       <TopProgressBar />
 
       {/* No bottom tab bar, on either platform. It began as four tabs; two pointed at list
@@ -694,8 +699,6 @@ const router = createBrowserRouter([
   },
 ]);
 
-import { HelmetProvider } from 'react-helmet-async';
-
 function App() {
   // Seed the app language from the stored user (interfaceLang) so a returning
   // user's saved choice sticks. Re-runs whenever the user blob is refreshed
@@ -772,12 +775,14 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <HelmetProvider>
-        <ThemeProvider>
-          <RouterProvider router={router} />
-          <Toaster position="top-right" richColors />
-        </ThemeProvider>
-      </HelmetProvider>
+      {/* No HelmetProvider. react-helmet-async emits no meta tags on React 19 (see
+          components/Seo.jsx), and a provider sitting here made <Helmet> look supported
+          — the next person to reach for it would have got the same silent no-op. With
+          the provider gone it throws loudly instead. */}
+      <ThemeProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" richColors />
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

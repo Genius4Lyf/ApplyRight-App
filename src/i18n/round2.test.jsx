@@ -3,7 +3,6 @@ import React from 'react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, cleanup, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { HelmetProvider } from 'react-helmet-async';
 import { useTranslation } from 'react-i18next';
 import i18n from './index';
 import en from './locales/en.json';
@@ -34,12 +33,8 @@ const setLang = async (lng) => {
   });
 };
 
-// LandingPage renders <Seo>, which needs a HelmetProvider.
-const Shell = ({ children }) => (
-  <HelmetProvider>
-    <MemoryRouter>{children}</MemoryRouter>
-  </HelmetProvider>
-);
+// <Seo> writes to document.head directly now, so there is no provider to supply.
+const Shell = ({ children }) => <MemoryRouter>{children}</MemoryRouter>;
 const wrap = (ui) => render(<Shell>{ui}</Shell>);
 
 // The editorial landing markup splits copy across nested spans and renders

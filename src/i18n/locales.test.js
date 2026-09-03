@@ -229,6 +229,9 @@ describe('locale files', () => {
       'nav.ariaStudio', // "Aria Studio" — product name (see dashboard.studio.kicker)
       'nav.mobile.ariaStudio', // "Aria" — product name (see landing.vignettes.askTabAria)
       'ariaStudio.jobCapture.linkPlaceholder', // "https://…" — a URL scheme, not prose
+      // Per-page SEO copy: two titles are the same in both languages on purpose.
+      'seo.pages.app.title', // 'ApplyRight' — the wordmark, nothing to translate
+      'seo.pages.contact.title', // 'Contact' is the same word in French
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);
