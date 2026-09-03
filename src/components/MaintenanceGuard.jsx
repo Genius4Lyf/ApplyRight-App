@@ -11,6 +11,17 @@ import PreLaunch from '../pages/PreLaunch';
 // shares an IP — so a busy campaign day could collectively trip the limiter and show
 // people "Too many requests" instead of the countdown. Resolving one promise for the
 // whole session costs nothing and removes that entirely.
+// App.jsx keeps its own copy of this for the route wrappers. Duplicated rather than
+// shared because the read has to happen when the GUARD renders: the route table is
+// built once at module load, long before anyone has logged in.
+const readStoredUser = () => {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}');
+  } catch {
+    return {};
+  }
+};
+
 let statusPromise = null;
 const fetchStatus = () => {
   if (!statusPromise) {
@@ -26,12 +37,21 @@ const fetchStatus = () => {
   return statusPromise;
 };
 
-const MaintenanceGuard = ({ children }) => {
+const MaintenanceGuard = ({ children, allowOnboarding = false }) => {
   // null = undecided, 'open' = let them through, or which blocking page to show.
   const [verdict, setVerdict] = useState(null);
   // The authoritative launch block from the same response, handed to PreLaunch so it
   // never has to depend on the client singleton being hydrated yet.
   const [launch, setLaunch] = useState(null);
+
+  // Whether THIS mount may pass through the pre-launch gate so someone can finish
+  // onboarding. Captured once, on the first render, and deliberately never
+  // recomputed: the onboarding form writes onboardingCompleted into localStorage the
+  // moment it saves, so a guard that re-read it on a later render would swap the page
+  // out for the countdown while the welcome modal was still on screen.
+  const [onboardingExempt] = useState(
+    () => allowOnboarding && readStoredUser().onboardingCompleted !== true
+  );
 
   useEffect(() => {
     let alive = true;
@@ -69,6 +89,11 @@ const MaintenanceGuard = ({ children }) => {
 
   // Hand the page the authoritative copy from /system/status rather than letting it read
   // the (possibly unhydrated) client singleton.
+  // The single door left open in the gate: a registrant who has not yet given us their
+  // details. Everything else — including this same route once they are done — falls
+  // through to the countdown.
+  if (verdict === 'prelaunch' && onboardingExempt) return children;
+
   if (verdict === 'prelaunch') return <PreLaunch launch={launch} />;
 
   if (verdict === 'maintenance') return <Maintenance />;

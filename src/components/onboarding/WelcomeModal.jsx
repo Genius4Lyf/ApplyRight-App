@@ -40,7 +40,12 @@ const LOADING_STEPS = [
   },
 ];
 
-const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
+// `launchMode` swaps the three lines that name a destination. Everything the modal
+// says is a promise about what happens when it closes, and during the pre-launch
+// campaign what happens is the countdown, not a dashboard — telling someone their
+// dashboard is ready and then showing them a waiting page is how you lose them at
+// the last step of a signup you paid to acquire.
+const WelcomeModal = ({ isOpen, firstName, onComplete, launchMode = false }) => {
   const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -125,7 +130,10 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
 
             {/* Message */}
             <p className="text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed mb-12">
-              {t(LOADING_STEPS[currentStep].messageKey, { name: cleanName })}
+              {/* Only the LAST step names where they are going, so only it forks. */}
+              {launchMode && currentStep === LOADING_STEPS.length - 1
+                ? t('onboarding.welcome.steps.3.messageLaunch')
+                : t(LOADING_STEPS[currentStep].messageKey, { name: cleanName })}
             </p>
           </motion.div>
         </AnimatePresence>
@@ -143,7 +151,9 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
                 />
               </div>
               <p className="text-center text-xs text-slate-400 dark:text-slate-500 font-medium animate-pulse">
-                {t('onboarding.welcome.settingUp')}
+                {t(
+                  launchMode ? 'onboarding.welcome.settingUpLaunch' : 'onboarding.welcome.settingUp'
+                )}
               </p>
             </div>
           ) : (
@@ -153,7 +163,9 @@ const WelcomeModal = ({ isOpen, firstName, onComplete }) => {
               onClick={onComplete}
               className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 px-8 py-4 rounded-lg font-semibold text-lg shadow-sm flex items-center gap-3 transition-all active:scale-[0.98]"
             >
-              {t('onboarding.welcome.enterDashboard')}
+              {t(
+                launchMode ? 'onboarding.welcome.enterLaunch' : 'onboarding.welcome.enterDashboard'
+              )}
               <ArrowRight className="w-5 h-5" />
             </motion.button>
           )}

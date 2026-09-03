@@ -661,12 +661,15 @@
         "3": {
           "title": "All set!",
           "message": "Your dashboard is ready. Let's start building your future.",
-          "type": "READY"
+          "type": "READY",
+          "messageLaunch": "You're on the list, and your credits are waiting. We'll email you the moment we're live."
         }
       },
       "settingUp": "Setting up your personal dashboard...",
       "enterDashboard": "Enter Dashboard",
-      "defaultName": "Future Pro"
+      "defaultName": "Future Pro",
+      "settingUpLaunch": "Saving your details...",
+      "enterLaunch": "See the countdown"
     }
   },
   "dashboard": {

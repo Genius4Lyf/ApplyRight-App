@@ -21,7 +21,6 @@ import { motion, useReducedMotion } from 'framer-motion';
 import Modal from '../components/Modal';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { SIGNUP_CREDITS } from '../lib/credits';
-import { LAUNCH } from '../lib/launch';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import { getLang, syncLangFromUser } from '../lib/lang';
@@ -311,14 +310,11 @@ const Register = () => {
       // Server truth (it echoes interfaceLang back) becomes the local language.
       syncLangFromUser(res.data);
       // Agents skip the job-seeker onboarding and go straight to their workspace.
-      // During the campaign the countdown is the destination, and it gets its own URL
-      // rather than being swapped in under /onboarding — that URL would lie about what
-      // is on screen, and the onboarding form would silently never be collected.
-      // MaintenanceGuard remains the catch-all, so a stale singleton costs a redirect
-      // at worst, never access.
-      navigate(
-        res.data.role === 'agent' ? '/agent' : LAUNCH.enabled ? '/pre-launch' : '/onboarding'
-      );
+      // Everyone else goes to onboarding FIRST, campaign or not: their details are the
+      // whole point of collecting a signup, and a countdown shown before the form means
+      // that form never gets filled in. Onboarding hands them on to the countdown at
+      // the end (see Onboarding.jsx).
+      navigate(res.data.role === 'agent' ? '/agent' : '/onboarding');
     } catch (err) {
       setError(err.response?.data?.message || t('errors.registrationFailed'));
       setIsLoading(false);

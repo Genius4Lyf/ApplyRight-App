@@ -230,7 +230,9 @@ const AdminLaunch = () => {
             disabled={testing || !data.emailConfigured}
             className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
           >
-            {testing ? 'Sending…' : 'Send a test to me'}
+            {/* Named rather than "to me": it goes to a fixed pre-flight inbox, not to
+                whichever admin is signed in. */}
+            {testing ? 'Sending…' : 'Send a test'}
           </button>
           <button
             type="button"

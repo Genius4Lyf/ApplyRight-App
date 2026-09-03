@@ -148,7 +148,16 @@ const GuestRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (token) {
     const user = readUser();
-    return <Navigate to={user.role === 'agent' ? '/agent' : '/dashboard'} replace />;
+    if (user.role === 'agent') return <Navigate to="/agent" replace />;
+    // An unfinished form first — same order as a fresh sign-in. Read from localStorage,
+    // which is populated at login and so is available on this first render.
+    if (user.onboardingCompleted !== true) return <Navigate to="/onboarding" replace />;
+    // Deliberately NOT branching on LAUNCH here. This wrapper runs on the very first
+    // render, before the /auth/config effect has hydrated the singleton, so the branch
+    // could only ever read `false` and would be a comment describing something that
+    // never happens. During the campaign MaintenanceGuard swaps the countdown in on
+    // arrival; only the URL differs, and only on this one already-signed-in path.
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 };
@@ -381,7 +390,10 @@ const router = createBrowserRouter([
       {
         path: '/onboarding',
         element: (
-          <MaintenanceGuard>
+          // The ONE route that stays reachable behind the pre-launch gate, and only for
+          // someone who has not finished it — see MaintenanceGuard. A campaign signup
+          // has to be able to hand over their details before the countdown.
+          <MaintenanceGuard allowOnboarding>
             <ProtectedRoute>
               <Onboarding />
             </ProtectedRoute>
@@ -390,7 +402,14 @@ const router = createBrowserRouter([
       },
       {
         path: '/jobs',
-        element: <JobSearch />,
+        // Gated like every other app page. It was the only one that was not, which
+        // during the campaign meant a URL anyone could type to get past the countdown
+        // into a page whose every request 503s.
+        element: (
+          <MaintenanceGuard>
+            <JobSearch />
+          </MaintenanceGuard>
+        ),
       },
       // Job analyses live in Aria Studio now — they are sessions in its Recents list
       // rather than a separate Applications page. These two routes are kept as redirects

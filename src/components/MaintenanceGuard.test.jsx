@@ -19,11 +19,11 @@ import api from '../services/api';
 
 // The guard caches one in-flight /system/status promise at MODULE level, so each case
 // has to load a fresh copy or the first verdict leaks into every later test.
-const mountFresh = async () => {
+const mountFresh = async (props = {}) => {
   vi.resetModules();
   const { default: Guard } = await import('./MaintenanceGuard');
   return render(
-    <Guard>
+    <Guard {...props}>
       <div>APP CONTENT</div>
     </Guard>
   );
@@ -33,7 +33,10 @@ const status = (over = {}) => ({
   data: { success: true, maintenance: false, bypass: false, launch: null, ...over },
 });
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  localStorage.clear();
+});
 afterEach(() => cleanup());
 
 describe('MaintenanceGuard — who sees what', () => {
@@ -107,5 +110,67 @@ describe('MaintenanceGuard — who sees what', () => {
     );
     await screen.findByText('ONE');
     await waitFor(() => expect(api.get).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('MaintenanceGuard — the onboarding door in the gate', () => {
+  const prelaunch = () =>
+    api.get.mockResolvedValue(
+      status({ maintenance: true, launch: { enabled: true, date: '2026-09-07T00:00:00.000Z' } })
+    );
+  const storeUser = (user) => localStorage.setItem('user', JSON.stringify(user));
+
+  it('lets an UNFINISHED registrant through to the form', async () => {
+    // The campaign asks people to sign up and hand over their details. Showing the
+    // countdown before the form means the details are never collected at all.
+    prelaunch();
+    storeUser({ onboardingCompleted: false });
+    await mountFresh({ allowOnboarding: true });
+    expect(await screen.findByText('APP CONTENT')).toBeTruthy();
+  });
+
+  it('shows the countdown once that registrant is DONE', async () => {
+    // The exemption is not a permanent hole: the same route closes behind them.
+    prelaunch();
+    storeUser({ onboardingCompleted: true });
+    await mountFresh({ allowOnboarding: true });
+    expect(await screen.findByText(/PRELAUNCH/)).toBeTruthy();
+    expect(screen.queryByText('APP CONTENT')).toBeNull();
+  });
+
+  it('opens NOTHING on a route that did not ask for the exemption', async () => {
+    prelaunch();
+    storeUser({ onboardingCompleted: false });
+    await mountFresh();
+    expect(await screen.findByText(/PRELAUNCH/)).toBeTruthy();
+  });
+
+  it('does NOT re-read the flag once mounted', async () => {
+    // The form marks itself complete in localStorage the instant it saves, while the
+    // welcome modal is still on screen. A guard that re-read it on any later render
+    // would yank that modal away mid-sentence.
+    prelaunch();
+    storeUser({ onboardingCompleted: false });
+    const { rerender } = await mountFresh({ allowOnboarding: true });
+    await screen.findByText('APP CONTENT');
+
+    storeUser({ onboardingCompleted: true });
+    const { default: Guard } = await import('./MaintenanceGuard');
+    rerender(
+      <Guard allowOnboarding>
+        <div>APP CONTENT</div>
+      </Guard>
+    );
+
+    expect(screen.getByText('APP CONTENT')).toBeTruthy();
+  });
+
+  it('keeps the ORDINARY maintenance page shut, exemption or not', async () => {
+    // The exemption exists for the campaign. During a real outage nothing is writable,
+    // so letting someone fill in a form that cannot save would only waste their time.
+    api.get.mockResolvedValue(status({ maintenance: true, launch: { enabled: false } }));
+    storeUser({ onboardingCompleted: false });
+    await mountFresh({ allowOnboarding: true });
+    expect(await screen.findByText('MAINTENANCE PAGE')).toBeTruthy();
   });
 });

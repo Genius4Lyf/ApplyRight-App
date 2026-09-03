@@ -6,6 +6,7 @@ import { CheckCircle, User } from 'lucide-react';
 import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
 import WelcomeModal from '../components/onboarding/WelcomeModal';
+import { LAUNCH } from '../lib/launch';
 
 // Academic journey (university/discipline/graduation year) used to be a second
 // onboarding step, but not every user has been to school — it's now collected
@@ -98,7 +99,10 @@ const Onboarding = () => {
   };
 
   const handleWelcomeComplete = () => {
-    navigate('/dashboard');
+    // End of the welcome tips. During the campaign the dashboard does not exist yet for
+    // this person, so send them to the countdown by name rather than letting the guard
+    // swap it in under /dashboard — the URL should say what is on screen.
+    navigate(LAUNCH.enabled ? '/pre-launch' : '/dashboard');
   };
 
   return (
@@ -107,6 +111,7 @@ const Onboarding = () => {
         isOpen={showWelcome}
         firstName={formData.firstName}
         onComplete={handleWelcomeComplete}
+        launchMode={LAUNCH.enabled}
       />
 
       <div className="w-full max-w-2xl">

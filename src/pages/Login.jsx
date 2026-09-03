@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AriaLoader from '../components/ui/AriaLoader';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { LAUNCH } from '../lib/launch';
 import { ArrowRight, Eye, EyeOff } from 'lucide-react';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { signalReady } from '../utils/splash';
@@ -45,8 +46,15 @@ const Login = () => {
       // CV agents have their own CV-only workspace.
       if (res.data.role === 'agent') {
         navigate('/agent');
+      } else if (res.data.onboardingCompleted !== true) {
+        // Signed up but never finished the form — including anyone who closed the tab
+        // partway through the campaign. Finish that before anything else.
+        navigate('/onboarding');
       } else {
-        navigate('/dashboard');
+        // During the campaign there is nothing to sign in TO yet, so the countdown is
+        // the destination and gets its own URL. MaintenanceGuard is still the actual
+        // gate, so a singleton that has not hydrated yet costs one redirect, no more.
+        navigate(LAUNCH.enabled ? '/pre-launch' : '/dashboard');
       }
     } catch (err) {
       setError(err.response?.data?.message || t('errors.loginFailed'));

@@ -657,12 +657,15 @@
         "3": {
           "title": "C’est prêt !",
           "message": "Votre tableau de bord est prêt. Construisons votre avenir, dès maintenant.",
-          "type": "PRÊT"
+          "type": "PRÊT",
+          "messageLaunch": "Vous êtes inscrit et vos crédits vous attendent. Nous vous préviendrons par e-mail dès le lancement."
         }
       },
       "settingUp": "Préparation de votre tableau de bord personnel...",
       "enterDashboard": "Accéder au tableau de bord",
-      "defaultName": "futur(e) pro"
+      "defaultName": "futur(e) pro",
+      "settingUpLaunch": "Enregistrement de vos informations...",
+      "enterLaunch": "Voir le compte à rebours"
     }
   },
   "dashboard": {
