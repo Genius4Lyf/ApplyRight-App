@@ -52,7 +52,9 @@ const ACCENTS = {
     hairline: 'via-white/25',
     icon: 'text-slate-400',
     badgeDark: 'bg-white/20 border border-white/30 text-white',
-    badgeLight: 'bg-slate-50 border border-slate-200 text-slate-800',
+    // Same outline treatment as `ink` — the badge marks which sign-up page this is,
+    // not the account type's brand, so it shouldn't carry its own accent weight.
+    badgeLight: 'bg-transparent border border-slate-300 text-slate-900',
   },
 };
 

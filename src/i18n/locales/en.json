@@ -96,6 +96,7 @@
       "createAccount": "Create an account"
     },
     "verify": {
+      "gateHint": "We'll send a 6-digit code to confirm this is your address. The rest of the form opens once it's verified.",
       "send": "Send code",
       "resend": "Resend",
       "sending": "Sending…",
@@ -109,9 +110,9 @@
     },
     "register": {
       "title": "Create your account",
-      "titleAgent": "Create your CV agent account",
-      "subtitle": "Start building your CV in minutes — {{credits}} free credits to play with.",
-      "subtitleAgent": "Build and download CVs for your clients — pick an agent plan after signup.",
+      "titleAgent": "Create your agent account",
+      "subtitle": "Build your CV — {{credits}} free credits included.",
+      "subtitleAgent": "Build and download client CVs — pick a plan after signup.",
       "leftHeading": "Build a CV that gets past resume software.",
       "leftHeadingAgent": "Run your CV-writing business in one place.",
       "leftSubcopy": "ApplyRight pulls the right keywords from each job description and rewrites your bullets so recruiters — and the systems they use — actually notice you.",

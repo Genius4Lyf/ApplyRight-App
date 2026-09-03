@@ -14,6 +14,10 @@ import {
   HelpCircle,
   Check,
 } from 'lucide-react';
+// The config has no react plugin, so jsx-uses-vars never runs and `motion` reads as
+// unused — the same suppression every other motion file in this codebase carries.
+// eslint-disable-next-line no-unused-vars
+import { motion, useReducedMotion } from 'framer-motion';
 import Modal from '../components/Modal';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { SIGNUP_CREDITS } from '../lib/credits';
@@ -81,6 +85,23 @@ const AccountTypeCard = ({ selected, icon, title, onClick }) => {
   );
 };
 
+// The rest of the form arrives as ONE unit once the mailbox is proved. Same spring
+// as the app's motion language (lib/ariaMotion.js): the fields rise into place
+// instead of blinking on, so the reveal reads as an answer to what the user just
+// did rather than the page repainting under them.
+const REVEAL_GROUP = {
+  hidden: {},
+  shown: { transition: { staggerChildren: 0.05, delayChildren: 0.04 } },
+};
+const REVEAL_ITEM = {
+  hidden: { opacity: 0, y: 12 },
+  shown: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 460, damping: 32, mass: 1 },
+  },
+};
+
 const Register = () => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
@@ -110,6 +131,9 @@ const Register = () => {
   // "?" popover explaining the two account types.
   const [showInfo, setShowInfo] = useState(false);
   const infoRef = React.useRef(null);
+  // Focus target for the reveal — the first field of the half that was hidden.
+  const passwordRef = React.useRef(null);
+  const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
 
   const { email, password, confirmPassword, referralCode } = formData;
@@ -133,6 +157,18 @@ const Register = () => {
     document.addEventListener('mousedown', onDown);
     return () => document.removeEventListener('mousedown', onDown);
   }, [showInfo]);
+
+  // Land the user on the newly revealed fields. Without this the reveal happens
+  // BELOW THE FOLD on a phone: the code box disappears, nothing visibly changes,
+  // and the next thing to do is off screen — exactly the "where did it go?" moment
+  // the progressive disclosure is meant to avoid.
+  React.useEffect(() => {
+    if (verifyStep !== 'verified') return;
+    const el = passwordRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
+    el.focus({ preventScroll: true });
+  }, [verifyStep, reduceMotion]);
 
   const onChange = (e) => {
     const { name, value } = e.target;
@@ -396,11 +432,12 @@ const Register = () => {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1.5">
               {t('common.emailLabel')}
             </label>
             <div className="flex gap-2">
               <input
+                id="email"
                 name="email"
                 type="email"
                 required
@@ -430,6 +467,10 @@ const Register = () => {
                 </button>
               )}
             </div>
+
+            {verifyStep === 'idle' && (
+              <p className="mt-1.5 text-xs text-slate-500">{t('auth.verify.gateHint')}</p>
+            )}
 
             {verifyStep === 'verified' && (
               <p className="mt-1.5 flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
@@ -473,140 +514,169 @@ const Register = () => {
             )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              {t('common.passwordLabel')}
-            </label>
-            <div className="relative">
-              <input
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                className="input-field w-full pr-10"
-                placeholder="••••••••"
-                value={password}
-                onChange={onChange}
+          {/* Everything past the mailbox proof. Held back until the code is confirmed so
+              the page asks ONE thing at a time — a stranger meets an email field and a
+              button, not a wall of inputs that cannot be submitted yet. Editing the email
+              puts it all away again (onEmailChange), because the proof no longer applies. */}
+          {verifyStep === 'verified' && (
+            <motion.div
+              className="space-y-5"
+              variants={REVEAL_GROUP}
+              initial={reduceMotion ? false : 'hidden'}
+              animate="shown"
+            >
+              <motion.div variants={REVEAL_ITEM}>
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                >
+                  {t('common.passwordLabel')}
+                </label>
+                <div className="relative">
+                  <input
+                    id="password"
+                    name="password"
+                    ref={passwordRef}
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="new-password"
+                    className="input-field w-full pr-10"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={onChange}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={showPassword ? t('common.hidePassword') : t('common.showPassword')}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {password && passwordStrength.labelKey && (
+                  <div
+                    className={`mt-2 px-3 py-1.5 rounded-lg border text-xs font-medium ${passwordStrength.color}`}
+                  >
+                    {t('auth.register.passwordStrength', { label: t(passwordStrength.labelKey) })}
+                  </div>
+                )}
+                <p className="mt-1.5 text-xs text-slate-500">{t('auth.register.passwordHint')}</p>
+              </motion.div>
+
+              <motion.div variants={REVEAL_ITEM}>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                >
+                  {t('auth.register.confirmPasswordLabel')}
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    autoComplete="new-password"
+                    className="input-field w-full pr-10"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={onChange}
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                    aria-label={
+                      showConfirmPassword ? t('common.hidePassword') : t('common.showPassword')
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </motion.div>
+
+              <motion.div variants={REVEAL_ITEM}>
+                <label
+                  htmlFor="referralCode"
+                  className="block text-sm font-medium text-slate-700 mb-1.5"
+                >
+                  {t('auth.register.referralLabel')}{' '}
+                  <span className="text-slate-400 font-normal">{t('common.optional')}</span>
+                </label>
+                <input
+                  id="referralCode"
+                  name="referralCode"
+                  type="text"
+                  className="input-field w-full uppercase"
+                  placeholder={t('auth.register.referralPlaceholder')}
+                  value={referralCode}
+                  onChange={onChange}
+                  disabled={isLoading}
+                />
+              </motion.div>
+
+              <motion.div variants={REVEAL_ITEM} className="flex items-start">
+                <div className="flex items-center h-5">
+                  <input
+                    id="terms"
+                    type="checkbox"
+                    required
+                    disabled={isLoading}
+                    className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-slate-900/20 accent-slate-900 disabled:opacity-50"
+                  />
+                </div>
+                <label htmlFor="terms" className="ml-2 text-xs text-slate-600 leading-relaxed">
+                  {t('auth.register.termsAgree')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal('terms')}
+                    className="font-medium text-slate-900 hover:underline"
+                  >
+                    {t('common.legal.termsOfService')}
+                  </button>{' '}
+                  {t('auth.register.termsAnd')}{' '}
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal('privacy')}
+                    className="font-medium text-slate-900 hover:underline"
+                  >
+                    {t('common.legal.privacyPolicy')}
+                  </button>
+                  .
+                </label>
+              </motion.div>
+
+              <motion.button
+                variants={REVEAL_ITEM}
+                type="submit"
                 disabled={isLoading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-                aria-label={showPassword ? t('common.hidePassword') : t('common.showPassword')}
+                className={`w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed ${
+                  isAgent
+                    ? 'py-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-colors'
+                    : 'btn-primary'
+                }`}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {password && passwordStrength.labelKey && (
-              <div
-                className={`mt-2 px-3 py-1.5 rounded-lg border text-xs font-medium ${passwordStrength.color}`}
-              >
-                {t('auth.register.passwordStrength', { label: t(passwordStrength.labelKey) })}
-              </div>
-            )}
-            <p className="mt-1.5 text-xs text-slate-500">{t('auth.register.passwordHint')}</p>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              {t('auth.register.confirmPasswordLabel')}
-            </label>
-            <div className="relative">
-              <input
-                name="confirmPassword"
-                type={showConfirmPassword ? 'text' : 'password'}
-                required
-                autoComplete="new-password"
-                className="input-field w-full pr-10"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={onChange}
-                disabled={isLoading}
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-                aria-label={
-                  showConfirmPassword ? t('common.hidePassword') : t('common.showPassword')
-                }
-              >
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
-              {t('auth.register.referralLabel')}{' '}
-              <span className="text-slate-400 font-normal">{t('common.optional')}</span>
-            </label>
-            <input
-              name="referralCode"
-              type="text"
-              className="input-field w-full uppercase"
-              placeholder={t('auth.register.referralPlaceholder')}
-              value={referralCode}
-              onChange={onChange}
-              disabled={isLoading}
-            />
-          </div>
-
-          <div className="flex items-start">
-            <div className="flex items-center h-5">
-              <input
-                id="terms"
-                type="checkbox"
-                required
-                disabled={isLoading}
-                className="w-4 h-4 border border-slate-300 rounded bg-slate-50 focus:ring-3 focus:ring-slate-900/20 accent-slate-900 disabled:opacity-50"
-              />
-            </div>
-            <label htmlFor="terms" className="ml-2 text-xs text-slate-600 leading-relaxed">
-              {t('auth.register.termsAgree')}{' '}
-              <button
-                type="button"
-                onClick={() => setActiveModal('terms')}
-                className="font-medium text-slate-900 hover:underline"
-              >
-                {t('common.legal.termsOfService')}
-              </button>{' '}
-              {t('auth.register.termsAnd')}{' '}
-              <button
-                type="button"
-                onClick={() => setActiveModal('privacy')}
-                className="font-medium text-slate-900 hover:underline"
-              >
-                {t('common.legal.privacyPolicy')}
-              </button>
-              .
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            // The server refuses an unverified email anyway (EMAIL_NOT_VERIFIED); this
-            // just stops someone filling in a whole form only to be bounced at the end.
-            disabled={isLoading || verifyStep !== 'verified'}
-            className={`w-full group flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed ${
-              isAgent
-                ? 'py-3 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition-colors'
-                : 'btn-primary'
-            }`}
-          >
-            {isLoading ? (
-              <>
-                <AriaLoader inline tone="mono" size={16} label="" className="-ml-1 mr-3" />
-                {t('auth.register.submitting')}
-              </>
-            ) : (
-              <>
-                {t(isAgent ? 'auth.register.submitAgent' : 'auth.register.submit')}
-                <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </>
-            )}
-          </button>
+                {isLoading ? (
+                  <>
+                    <AriaLoader inline tone="mono" size={16} label="" className="-ml-1 mr-3" />
+                    {t('auth.register.submitting')}
+                  </>
+                ) : (
+                  <>
+                    {t(isAgent ? 'auth.register.submitAgent' : 'auth.register.submit')}
+                    <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </motion.button>
+            </motion.div>
+          )}
 
           <p className="text-center text-sm text-slate-500">
             {t('auth.register.haveAccount')}{' '}

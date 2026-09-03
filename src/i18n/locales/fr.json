@@ -92,6 +92,7 @@
       "createAccount": "Créer un compte"
     },
     "verify": {
+      "gateHint": "Nous enverrons un code à 6 chiffres pour confirmer votre adresse. Le reste du formulaire s'ouvre une fois l'e-mail vérifié.",
       "send": "Envoyer le code",
       "resend": "Renvoyer",
       "sending": "Envoi…",
@@ -105,9 +106,9 @@
     },
     "register": {
       "title": "Créez votre compte",
-      "titleAgent": "Créez votre compte rédacteur de CV",
-      "subtitle": "Commencez à construire votre CV en quelques minutes — {{credits}} crédits offerts pour essayer.",
-      "subtitleAgent": "Créez et téléchargez des CV pour vos clients — choisissez une formule rédacteur après l'inscription.",
+      "titleAgent": "Créez votre compte rédacteur",
+      "subtitle": "Créez votre CV — {{credits}} crédits offerts inclus.",
+      "subtitleAgent": "Créez et téléchargez des CV clients — choisissez une formule ensuite.",
       "leftHeading": "Créez un CV qui passe les logiciels de recrutement.",
       "leftHeadingAgent": "Gérez toute votre activité de rédaction de CV au même endroit.",
       "leftSubcopy": "ApplyRight extrait les bons mots-clés de chaque offre d'emploi et reformule vos points clés pour que les recruteurs — et les logiciels qu'ils utilisent — vous remarquent vraiment.",
