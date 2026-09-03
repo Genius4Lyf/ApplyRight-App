@@ -3,8 +3,9 @@ import AriaLoader from '../components/ui/AriaLoader';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { ArrowRight, Sparkles, Mail, Lock, Hash } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Hash } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import logoBlack from '../assets/logo/applyright-icon-black.png';
 
 const ForgotPassword = () => {
   const { t } = useTranslation();
@@ -75,14 +76,12 @@ const ForgotPassword = () => {
     >
       <div className="relative z-10 w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
+          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <img src={logoBlack} alt="ApplyRight" className="h-8 w-auto" />
             <span className="font-brand text-2xl font-bold text-slate-900 tracking-tight">
               ApplyRight
             </span>
-          </div>
+          </Link>
         </div>
 
         <div className="clean-card w-full p-6 sm:p-8 space-y-8">
