@@ -4075,6 +4075,20 @@
       "aria": "Built with Aria",
       "builder": "Built in the CV builder"
     },
+    "editMenu": {
+      "trigger": "Edit",
+      "ariaLabel": "Choose where to edit this CV",
+      "aria": "Edit with Aria",
+      "builder": "Edit in the CV builder",
+      "hint": {
+        "aria": "Pick up the conversation that wrote it",
+        "builder": "Back to the step-by-step form"
+      },
+      "locked": {
+        "aria": "Aria didn't write this one",
+        "builder": "This one was written with Aria"
+      }
+    },
     "list": {
       "filterAria": "Filter this list"
     },

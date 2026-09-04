@@ -12,7 +12,6 @@ import {
   Share2,
   Check,
   Mail,
-  PenTool,
   MessageSquare,
   AlertTriangle,
   Crown,
@@ -23,6 +22,7 @@ import {
 } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import SidebarToggle from '../components/workspace/SidebarToggle';
+import EditOriginMenu from '../components/workspace/EditOriginMenu';
 import { useWorkspaceSidebar } from '../hooks/useWorkspaceSidebar';
 import api from '../services/api';
 import { toast } from 'sonner';
@@ -1042,6 +1042,30 @@ const ResumeReview = () => {
     }
   };
 
+  // Where this CV was WRITTEN, which is where Edit has to send it back to.
+  //
+  // DraftCV.studioKind is the marker and its mere presence is the answer: only an Aria
+  // Studio session ever sets it. Everything else — typed in the builder, uploaded,
+  // generated from an analysis — is edited in the builder form, so they all read as
+  // 'builder' and all go to the same right place.
+  //
+  // An Application (the non-draft case) has no studioKind of its own; its Edit has always
+  // meant "extract this into a builder draft", which is what handleEdit does. Reporting it
+  // as builder-origin is therefore a description of the flow, not a guess about it.
+  const editOrigin = application?.rawDraft?.studioKind ? 'aria' : 'builder';
+
+  // Aria binds a DRAFT, so she needs the draft id — which in draft mode is this record
+  // and otherwise the draft the application was cut from. `openDraft` resumes that exact
+  // session with its transcript rather than starting a new one; see AriaStudio.jsx.
+  const openEditWithAria = () =>
+    navigate('/aria-studio', { state: { openDraft: application?.rawDraft?._id || builderId } });
+
+  // Unchanged behaviour, just named: a draft resumes at the finalize step, an application
+  // goes through the extraction handleEdit already owned.
+  const openEditInBuilder = isDraftMode
+    ? () => navigate(`/cv-builder/${application._id}/finalize`)
+    : handleEdit;
+
   if (isDraftMode && application && !application.isDraftComplete) {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col relative">
@@ -1484,18 +1508,15 @@ const ResumeReview = () => {
             )}
             {/* Desktop primary actions — the mobile action bar is the phone equivalent. */}
             <div className="hidden lg:flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={
-                  isDraftMode
-                    ? () => navigate(`/cv-builder/${application._id}/finalize`)
-                    : handleEdit
-                }
-                className="inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-1.5 rounded-lg transition-colors"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Edit</span>
-              </button>
+              {/* Edit is a CHOICE OF PLACE, not a single destination: this CV lives in
+                  Aria or in the builder, and only that one can edit it. Both are drawn
+                  so the other surface is named rather than merely missing. */}
+              <EditOriginMenu
+                origin={editOrigin}
+                onEditWithAria={openEditWithAria}
+                onEditInBuilder={openEditInBuilder}
+                triggerClassName="inline-flex items-center gap-1.5 border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-1.5 rounded-lg transition-colors"
+              />
               {/* Download → PDF or Word (.docx). Same paywall/unlock gating. */}
               <div className="relative">
                 <button
@@ -2071,19 +2092,15 @@ const ResumeReview = () => {
                 <ChevronDown className="w-3.5 h-3.5" />
               )}
             </button>
-            <button
-              type="button"
-              onClick={
-                isDraftMode
-                  ? () => navigate(`/cv-builder/${application?._id}/finalize`)
-                  : handleEdit
-              }
-              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
-              aria-label="Edit"
-            >
-              <PenTool className="w-4 h-4" />
-              <span>Edit</span>
-            </button>
+            {/* Same menu, presented as a sheet — matching Download beside it rather than
+                dropping a popover off the bottom edge of a phone. */}
+            <EditOriginMenu
+              presentation="sheet"
+              origin={editOrigin}
+              onEditWithAria={openEditWithAria}
+              onEditInBuilder={openEditInBuilder}
+              triggerClassName="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+            />
             <button
               type="button"
               onClick={() => setMobileSidebarOpen(true)}

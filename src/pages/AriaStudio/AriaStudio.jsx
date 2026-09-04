@@ -62,7 +62,7 @@ const StudioDesk = () => {
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
 
   const layout = useStudioLayout();
-  const { closePreview, setPanelOverlay } = layout;
+  const { closePreview, setPanelOverlay, setPanelView } = layout;
   const [sessions, setSessions] = useState([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   // The session awaiting a delete confirm, and which action is in flight.
@@ -152,29 +152,44 @@ const StudioDesk = () => {
   // sheet was open: whichever one unwound LAST clobbered the other's restore.
   useBodyScrollLock(true);
 
-  // Arrived with a session already decided. Three ways that happens, all consumed ONCE
+  // Arrived with a session already decided. Four ways that happens, all consumed ONCE
   // (the router state is cleared) so a refresh doesn't restart the session:
   //
   //   start: 'prep'   → the home page's card, which now leads here instead of unfolding
   //                     a workflow of its own.
   //   seedSource      → a tailoring whose source CV is already chosen.
   //   openApplication → an analysis to reopen, from a link outside the Studio.
+  //   openDraft       → a CV Aria already wrote, sent back here by Edit in the CV Studio.
   //
-  // Each STARTS A NEW SESSION rather than resuming the remembered one: arriving through a
-  // door that names what you came to do should not drop you back into last week's CV.
+  // The first three START A NEW SESSION rather than resuming the remembered one: arriving
+  // through a door that names what you came to do should not drop you back into last
+  // week's CV. openDraft is the deliberate exception — it names the document, so it binds
+  // THAT one and restores its transcript. Starting fresh there would throw away the very
+  // conversation the user came back to carry on.
   const seededRef = useRef(false);
+  // Set only by the openDraft door, and consumed once the draft is actually bound.
+  // It cannot act at seed time: loadSession is async, so `canPreview` is still false
+  // then and the guard below would immediately close a preview opened that early.
+  const previewOnOpenRef = useRef(false);
   useEffect(() => {
     if (seededRef.current) return;
     const seed = location.state?.seedSource;
     const reopen = location.state?.openApplication;
     const start = location.state?.start;
-    if (!seed?.id && !reopen && !start) return;
+    const resume = location.state?.openDraft;
+    if (!seed?.id && !reopen && !start && !resume) return;
     seededRef.current = true;
     window.history.replaceState({}, '');
-    if (reopen) openApplication(reopen);
+    if (resume) {
+      // Someone who clicked "Edit with Aria" was LOOKING AT THEIR CV a moment ago.
+      // Landing on a chat with the document nowhere in sight reads as having lost it,
+      // so the preview opens with the session rather than waiting to be found.
+      previewOnOpenRef.current = true;
+      loadSession(resume);
+    } else if (reopen) openApplication(reopen);
     else if (start) newSession(start);
     else newSession('tailor', seed);
-  }, [location.state, newSession, openApplication]);
+  }, [location.state, newSession, openApplication, loadSession]);
 
   // The unsaved tail of a conversation is the easiest thing in this design to lose —
   // the autosave is debounced, so a tab close mid-sentence would drop it.
@@ -381,6 +396,24 @@ const StudioDesk = () => {
     closePreview();
     setPanelOverlay(false);
   }, [canPreview, layout.panelView, closePreview, setPanelOverlay]);
+
+  // …and the other direction, for an arrival that came from the document itself.
+  //
+  // Waits for canPreview because the draft is still in flight when the door fires, and
+  // the guard directly above would close anything opened before it lands. The ref is
+  // cleared on use so this is strictly a WELCOME: switching sessions afterwards, or
+  // closing the panel, leaves the user in charge of it from then on.
+  //
+  // setPanelView, never selectView — this is not a toggle, and selectView would close
+  // the preview in the case where it was already the remembered view. On a phone it's
+  // invisible rather than forced: no inline home means nothing renders until the toggle
+  // is tapped, and burying a chat the user has not read yet under a full-screen sheet is
+  // the one thing this must not do. It just makes that first tap land on the preview.
+  useEffect(() => {
+    if (!previewOnOpenRef.current || !canPreview) return;
+    previewOnOpenRef.current = false;
+    setPanelView('preview');
+  }, [canPreview, setPanelView]);
 
   // When the editor UNLOCKS, open the preview — Aria says "I've opened the editor on the
   // right", and she should be telling the truth rather than describing a button.

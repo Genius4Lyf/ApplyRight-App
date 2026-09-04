@@ -4071,6 +4071,20 @@
       "aria": "Créé avec Aria",
       "builder": "Créé dans le créateur de CV"
     },
+    "editMenu": {
+      "trigger": "Modifier",
+      "ariaLabel": "Choisir où modifier ce CV",
+      "aria": "Modifier avec Aria",
+      "builder": "Modifier dans le créateur de CV",
+      "hint": {
+        "aria": "Reprenez la conversation qui l’a écrit",
+        "builder": "Retour au formulaire étape par étape"
+      },
+      "locked": {
+        "aria": "Aria n’a pas écrit ce CV",
+        "builder": "Ce CV a été écrit avec Aria"
+      }
+    },
     "list": {
       "filterAria": "Filtrer cette liste"
     },
