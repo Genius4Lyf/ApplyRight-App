@@ -10,6 +10,7 @@ import AdPlayer from './AdPlayer';
 import api from '../services/api';
 import { Capacitor } from '@capacitor/core';
 
+import { useTemplatePromo } from '../lib/promos';
 import { toast } from 'sonner';
 
 // Watch-ad-for-credits is native-only; web has no ads and routes to the paid
@@ -29,6 +30,11 @@ const TemplateSelector = ({
   const [adOpen, setAdOpen] = useState(false);
   const [unlocking, setUnlocking] = useState(false);
 
+  // The launch promo. A hook rather than a plain read: it arrives on GET /auth/config
+  // AFTER this component has usually mounted, and a value that cannot notify would
+  // leave the padlocks on until something else happened to re-render the grid.
+  const promo = useTemplatePromo();
+
   // Active paid status, expiry-aware (mirrors the backend subscription.hasPaidAccess):
   // honor a subscription's expiry when present, else fall back to the manually-set
   // `plan` flag (admin grants have no subscription subdoc). So an expired subscriber
@@ -43,6 +49,10 @@ const TemplateSelector = ({
   // Helper to check if template is unlocked
   const isUnlocked = (template) => {
     if (!template.isPro) return true; // Free templates always unlocked
+    // Launch promo — every premium template, for everyone, until it expires. The
+    // server enforces the same rule on /billing/unlock-template, so this only decides
+    // what the grid LOOKS like, never what someone is charged.
+    if (promo.active) return true;
     if (isPaidActive(user)) return true; // Active paid tiers unlock everything
     if (user.unlockedTemplates && user.unlockedTemplates.includes(template.id)) return true;
     return false;
@@ -266,7 +276,16 @@ const TemplateSelector = ({
               >
                 <TemplateThumbnail type={template.id} />
 
-                {template.isPro && !locked && (
+                {/* During the promo a Pro template is unlocked for everyone, so the
+                    plain "Pro" star would read as something they own. Naming the promo
+                    instead is the difference between quietly giving the feature away
+                    and running an offer people know they are getting. */}
+                {template.isPro && !locked && promo.active && (
+                  <div className="absolute top-2 right-2 bg-slate-900 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full flex items-center gap-1 shadow-sm z-10 dark:bg-white dark:text-slate-900">
+                    <Star className="w-3 h-3 fill-current" /> Free
+                  </div>
+                )}
+                {template.isPro && !locked && !promo.active && (
                   <div className="absolute top-2 right-2 bg-gradient-to-r from-amber-500 to-amber-600 text-white text-[10px] uppercase font-bold px-2 py-1 rounded-full flex items-center shadow-sm z-10">
                     <Star className="w-3 h-3 mr-1 fill-white" /> Pro
                   </div>

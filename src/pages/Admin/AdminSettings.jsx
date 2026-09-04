@@ -64,6 +64,28 @@ const CREDIT_COST_META = {
 // <input type="datetime-local"> has no timezone: it reads and writes local wall-clock.
 // Converting through the Date object keeps the stored instant correct for an admin in
 // any timezone — slicing a UTC ISO string here would shift the launch by their offset.
+// Launch date + 30 days, as the promo's natural end. Falls back to "from now" when no
+// launch date is set, so the button still does something sensible.
+const oneMonthFromLaunch = (settings) => {
+  const base = settings?.launch?.date ? new Date(settings.launch.date) : new Date();
+  if (Number.isNaN(base.getTime())) return null;
+  const end = new Date(base);
+  end.setDate(end.getDate() + 30);
+  return end.toISOString();
+};
+
+// Says plainly whether the promo is ON, because a bare date in a field does not: a date
+// in the past looks identical to one in the future at a glance.
+const promoStatus = (settings) => {
+  const until = settings?.templates?.freeUntil;
+  if (!until) return 'Off — premium templates cost credits as normal.';
+  const at = new Date(until);
+  if (Number.isNaN(at.getTime())) return 'Off — that date could not be read.';
+  return at.getTime() > Date.now()
+    ? `ON — every premium template is free for everyone until ${at.toLocaleString()}.`
+    : `Ended ${at.toLocaleString()}. Premium templates cost credits again.`;
+};
+
 const toLocalInput = (value) => {
   if (!value) return '';
   const d = new Date(value);
@@ -195,6 +217,58 @@ const AdminSettings = () => {
         oldVal: originalSettings.tts?.provider || 'elevenlabs',
         newVal: settings.tts?.provider || 'elevenlabs',
       });
+    }
+
+    // Check the pre-launch campaign and the templates promo.
+    //
+    // These were MISSING, and the consequence was not a cosmetic one: handleSaveClick
+    // bails out with "No changes detected" whenever this list is empty, so a screen
+    // whose only edit was a launch toggle, a launch date or the free-templates window
+    // could not be saved at all. It reported success-shaped nothing and silently threw
+    // the edit away.
+    const stamp = (v) => (v ? new Date(v).toISOString() : null);
+    const readable = (v) => (v ? new Date(v).toLocaleString() : 'Not set');
+
+    if (settings.launch || originalSettings.launch) {
+      const before = originalSettings.launch || {};
+      const after = settings.launch || {};
+      if ((after.enabled || false) !== (before.enabled || false)) {
+        changesList.push({
+          category: 'Pre-launch',
+          key: 'Launch countdown',
+          oldVal: before.enabled ? 'Enabled' : 'Disabled',
+          newVal: after.enabled ? 'Enabled' : 'Disabled',
+        });
+      }
+      if (stamp(after.date) !== stamp(before.date)) {
+        changesList.push({
+          category: 'Pre-launch',
+          key: 'Launch date',
+          oldVal: readable(before.date),
+          newVal: readable(after.date),
+        });
+      }
+      if ((after.bonusCredits ?? 50) !== (before.bonusCredits ?? 50)) {
+        changesList.push({
+          category: 'Pre-launch',
+          key: 'Bonus credits',
+          oldVal: before.bonusCredits ?? 50,
+          newVal: after.bonusCredits ?? 50,
+        });
+      }
+    }
+
+    if (settings.templates || originalSettings.templates) {
+      const before = originalSettings.templates || {};
+      const after = settings.templates || {};
+      if (stamp(after.freeUntil) !== stamp(before.freeUntil)) {
+        changesList.push({
+          category: 'Templates',
+          key: 'Free for everyone until',
+          oldVal: readable(before.freeUntil),
+          newVal: readable(after.freeUntil),
+        });
+      }
     }
 
     return changesList;
@@ -554,6 +628,154 @@ const AdminSettings = () => {
                     </div>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Announcements */}
+            {activeTab === 'announcements' && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-primary" />
+                    Global Banner
+                  </h3>
+
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.announcement.enabled}
+                          onChange={(e) =>
+                            handleChange('announcement', 'enabled', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                      <span className="font-medium text-slate-900">Enable Announcement Banner</span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">Banner Message</label>
+                      <textarea
+                        value={settings.announcement.message}
+                        onChange={(e) => handleChange('announcement', 'message', e.target.value)}
+                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                        rows="3"
+                        placeholder="e.g. System maintenance scheduled for Saturday..."
+                      ></textarea>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-semibold text-slate-700">
+                        Banner Type (Severity)
+                      </label>
+                      <div className="flex gap-4">
+                        {['info', 'warning', 'critical'].map((type) => (
+                          <button
+                            key={type}
+                            onClick={() => handleChange('announcement', 'type', type)}
+                            className={`px-4 py-2 rounded-lg border text-sm font-bold capitalize transition-all ${
+                              settings.announcement.type === type
+                                ? type === 'info'
+                                  ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                  : type === 'warning'
+                                    ? 'bg-amber-100 border-amber-500 text-amber-700'
+                                    : 'bg-red-100 border-red-500 text-red-700'
+                                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
+                            }`}
+                          >
+                            {type}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    {settings.announcement.enabled && (
+                      <div className="mt-8">
+                        <label className="text-sm font-semibold text-slate-700 block mb-2">
+                          Live Preview:
+                        </label>
+                        <div
+                          className={`p-4 rounded-lg flex items-center justify-center text-center font-medium ${
+                            settings.announcement.type === 'info'
+                              ? 'bg-blue-600 text-white'
+                              : settings.announcement.type === 'warning'
+                                ? 'bg-amber-500 text-white'
+                                : 'bg-red-600 text-white'
+                          }`}
+                        >
+                          {settings.announcement.message || 'Your message here'}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Templates (Placeholder for now) */}
+            {activeTab === 'templates' && (
+              <div className="space-y-8">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Layout className="w-5 h-5 text-primary" />
+                    Template Management
+                  </h3>
+                  <p className="text-slate-500">
+                    Featured template and per-template disabling are not built yet.
+                  </p>
+                </div>
+
+                {/* Free-templates promo. A DATE, not a switch: a switch has to be turned
+                    back, and forgetting means giving the premium templates away for good —
+                    silently, because nobody writes in to complain about not being charged.
+                    Clear the field to end it now. */}
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Free templates promo</h3>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-5">
+                    <div className="space-y-2">
+                      <label
+                        htmlFor="templates-free-until"
+                        className="text-sm font-semibold text-slate-700"
+                      >
+                        Every template free until
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="templates-free-until"
+                          type="datetime-local"
+                          value={toLocalInput(settings.templates?.freeUntil)}
+                          onChange={(e) =>
+                            handleChange('templates', 'freeUntil', fromLocalInput(e.target.value))
+                          }
+                          className="flex-1 min-w-[15rem] p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleChange('templates', 'freeUntil', oneMonthFromLaunch(settings))
+                          }
+                          className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+                        >
+                          One month from launch
+                        </button>
+                        {settings.templates?.freeUntil && (
+                          <button
+                            type="button"
+                            onClick={() => handleChange('templates', 'freeUntil', null)}
+                            className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-red-600 transition-colors hover:bg-red-50"
+                          >
+                            End now
+                          </button>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-400">{promoStatus(settings)}</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="pt-6 border-t border-slate-100">
                   <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -669,106 +891,6 @@ const AdminSettings = () => {
                       browser&apos;s built-in voice.
                     </p>
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Announcements */}
-            {activeTab === 'announcements' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Globe className="w-5 h-5 text-primary" />
-                    Global Banner
-                  </h3>
-
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.announcement.enabled}
-                          onChange={(e) =>
-                            handleChange('announcement', 'enabled', e.target.checked)
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                      <span className="font-medium text-slate-900">Enable Announcement Banner</span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">Banner Message</label>
-                      <textarea
-                        value={settings.announcement.message}
-                        onChange={(e) => handleChange('announcement', 'message', e.target.value)}
-                        className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:outline-none"
-                        rows="3"
-                        placeholder="e.g. System maintenance scheduled for Saturday..."
-                      ></textarea>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-semibold text-slate-700">
-                        Banner Type (Severity)
-                      </label>
-                      <div className="flex gap-4">
-                        {['info', 'warning', 'critical'].map((type) => (
-                          <button
-                            key={type}
-                            onClick={() => handleChange('announcement', 'type', type)}
-                            className={`px-4 py-2 rounded-lg border text-sm font-bold capitalize transition-all ${
-                              settings.announcement.type === type
-                                ? type === 'info'
-                                  ? 'bg-blue-100 border-blue-500 text-blue-700'
-                                  : type === 'warning'
-                                    ? 'bg-amber-100 border-amber-500 text-amber-700'
-                                    : 'bg-red-100 border-red-500 text-red-700'
-                                : 'bg-white border-slate-200 text-slate-500 hover:bg-slate-50'
-                            }`}
-                          >
-                            {type}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Preview */}
-                    {settings.announcement.enabled && (
-                      <div className="mt-8">
-                        <label className="text-sm font-semibold text-slate-700 block mb-2">
-                          Live Preview:
-                        </label>
-                        <div
-                          className={`p-4 rounded-lg flex items-center justify-center text-center font-medium ${
-                            settings.announcement.type === 'info'
-                              ? 'bg-blue-600 text-white'
-                              : settings.announcement.type === 'warning'
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-red-600 text-white'
-                          }`}
-                        >
-                          {settings.announcement.message || 'Your message here'}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Templates (Placeholder for now) */}
-            {activeTab === 'templates' && (
-              <div className="space-y-8">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Layout className="w-5 h-5 text-primary" />
-                    Template Management
-                  </h3>
-                  <p className="text-slate-500">
-                    Feature disabled templates or set the default here. (Coming Soon)
-                  </p>
                 </div>
               </div>
             )}

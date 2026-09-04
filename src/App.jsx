@@ -28,6 +28,7 @@ import { waitForReady } from './utils/splash';
 import api from './services/api';
 import { hydrateCreditCosts, hydrateSignupCredits } from './lib/credits';
 import { hydrateLaunch } from './lib/launch';
+import { hydratePromos } from './lib/promos';
 import PreLaunch from './pages/PreLaunch';
 import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
@@ -742,6 +743,7 @@ function App() {
           hydrateModels(res?.data?.aiModels);
           hydrateSignupCredits(res?.data?.credits);
           hydrateLaunch(res?.data?.launch);
+          hydratePromos(res?.data?.templates);
         })
         .catch(() => {
           // A local restart or Render cold start can make the first request lose the
