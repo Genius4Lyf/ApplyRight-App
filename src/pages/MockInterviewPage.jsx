@@ -1892,9 +1892,15 @@ const MockInterviewPage = () => {
           that stretch is what gives its `auto 1fr auto` shell a height to
           divide. Centring it would leave it no height to fill. */}
       <main
-        className={`flex-1 flex justify-center px-4 sm:px-6 py-2 sm:py-3.5 ${
-          fullScreenPreflight ? 'items-center max-lg:items-stretch' : 'items-center'
-        }`}
+        // The full-screen pre-flight gets a wider mobile gutter (20px, not the
+        // usual 16px) — its content (the interviewer grid especially) has no
+        // padding of its own, so this IS the only distance between a card and
+        // the edge of the phone. 16px read as the first/last seat pressed
+        // against the glass; PreflightSteps' pinned footer mirrors this via a
+        // matching -mx-5, so its own full-bleed hairline still lines up.
+        className={`flex-1 flex justify-center py-2 sm:py-3.5 ${
+          fullScreenPreflight ? 'px-5 sm:px-6' : 'px-4 sm:px-6'
+        } ${fullScreenPreflight ? 'items-center max-lg:items-stretch' : 'items-center'}`}
       >
         <div
           className={`w-full max-w-3xl transition-all duration-300 ${

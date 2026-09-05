@@ -651,7 +651,7 @@ const InterviewPrepDetail = () => {
 
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
-            <h1 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
+            <h1 className="text-base font-semibold text-slate-900 dark:text-slate-100 truncate">
               {title}
             </h1>
             {company && (
@@ -677,12 +677,12 @@ const InterviewPrepDetail = () => {
             </span>
           </div>
           {company && (
-            <p className="sm:hidden text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+            <p className="sm:hidden text-sm text-slate-500 dark:text-slate-400 truncate mt-0.5">
               {company}
             </p>
           )}
           {isCvOnly && (
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
               {t('interviewPrep.detail.header.notAttached')}
             </p>
           )}
@@ -690,7 +690,7 @@ const InterviewPrepDetail = () => {
 
         <Link
           to={`/interview-prep/${applicationId}/brief`}
-          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md transition-colors"
           aria-label={t('interviewPrep.detail.header.briefAria')}
         >
           <ClipboardList className="w-4 h-4" />
@@ -701,7 +701,7 @@ const InterviewPrepDetail = () => {
           to="/how-to-ace-your-interview"
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+          className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
           aria-label={t('interviewPrep.detail.header.howScoring')}
         >
           <HelpCircle className="w-4 h-4" />
@@ -711,7 +711,7 @@ const InterviewPrepDetail = () => {
         {isCvOnly ? (
           <Link
             to={application.draftCVId ? `/cv-builder/${application.draftCVId}/skills` : '#'}
-            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
             aria-label={t('interviewPrep.detail.header.openCv')}
           >
             <Eye className="w-4 h-4" />
@@ -721,7 +721,7 @@ const InterviewPrepDetail = () => {
           <button
             type="button"
             onClick={() => setShowCv(true)}
-            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
+            className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-md transition-colors"
             aria-label={t('interviewPrep.detail.header.viewCv')}
           >
             <Eye className="w-4 h-4" />
@@ -859,7 +859,7 @@ const InterviewPrepDetail = () => {
                   <Lock className="w-4 h-4" /> {t('interviewPrep.detail.rail.completeToUnlock')}
                 </button>
               )}
-              <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
+              <p className="mt-2 text-sm leading-relaxed text-slate-500 dark:text-slate-400">
                 {t('interviewPrep.detail.rail.mockDesc')}
               </p>
 
@@ -881,7 +881,7 @@ const InterviewPrepDetail = () => {
                             <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                               {p.name}
                             </span>
-                            <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                            <span className="block truncate text-sm text-slate-500 dark:text-slate-400">
                               {p.role}
                             </span>
                           </span>
@@ -907,7 +907,7 @@ const InterviewPrepDetail = () => {
                               <span className="block truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
                                 {nm}
                               </span>
-                              <span className="block truncate text-xs text-slate-500 dark:text-slate-400">
+                              <span className="block truncate text-sm text-slate-500 dark:text-slate-400">
                                 {rl}
                               </span>
                             </span>
@@ -916,13 +916,13 @@ const InterviewPrepDetail = () => {
                       })}
                     </ul>
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-center">
-                      <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 dark:text-slate-200">
+                      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-700 dark:text-slate-200">
                         <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                         {t('interviewPrep.detail.rail.unlockPanel')}
                       </span>
                       <Link
                         to="/upgrade"
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
+                        className="inline-flex items-center gap-1 text-sm font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
                       >
                         {t('interviewPrep.detail.rail.upgrade')} <ArrowRight className="w-3 h-3" />
                       </Link>
@@ -953,7 +953,7 @@ const InterviewPrepDetail = () => {
                   style={{ width: `${interviewGate.pct}%` }}
                 />
               </div>
-              <p className="mt-2 text-xs leading-snug text-slate-500 dark:text-slate-400">
+              <p className="mt-2 text-sm leading-snug text-slate-500 dark:text-slate-400">
                 {interviewGate.unlocked
                   ? t('interviewPrep.detail.rail.prepped')
                   : t('interviewPrep.detail.rail.finishToUnlock')}
@@ -970,7 +970,7 @@ const InterviewPrepDetail = () => {
                     )}
                     <span className="min-w-0 flex-1">
                       <span
-                        className={`block text-xs font-semibold leading-tight ${
+                        className={`block text-sm font-semibold leading-tight ${
                           task.done
                             ? 'text-slate-400 dark:text-slate-500 line-through'
                             : 'text-slate-700 dark:text-slate-200'
@@ -979,7 +979,7 @@ const InterviewPrepDetail = () => {
                         {t(task.labelKey)}
                       </span>
                       {!task.done && (
-                        <span className="block text-[11px] leading-tight text-slate-400 dark:text-slate-500">
+                        <span className="block text-xs leading-tight text-slate-400 dark:text-slate-500">
                           {t(task.hintKey)}
                         </span>
                       )}
@@ -990,7 +990,7 @@ const InterviewPrepDetail = () => {
                         onClick={() =>
                           task.key === 'weakness' ? draftWeakness() : goToPrep(task.tab)
                         }
-                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
+                        className="shrink-0 inline-flex items-center gap-0.5 text-xs font-bold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100 transition-colors"
                       >
                         {t('interviewPrep.detail.rail.doIt')} <ArrowRight className="w-3 h-3" />
                       </button>
@@ -1005,7 +1005,7 @@ const InterviewPrepDetail = () => {
                   <button
                     type="button"
                     onClick={startPracticeWeak}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-slate-900 dark:text-slate-100 underline underline-offset-4 decoration-slate-300 dark:decoration-slate-600 hover:decoration-slate-900 dark:hover:decoration-slate-100"
                   >
                     <PlayCircle className="w-3.5 h-3.5" />{' '}
                     {t('interviewPrep.detail.rail.practiceWeak')} <ArrowRight className="w-3 h-3" />
@@ -1061,7 +1061,7 @@ const InterviewPrepDetail = () => {
                         key={s.id}
                         type="button"
                         onClick={() => setPrepSection(s.id)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                           active
                             ? 'border-transparent bg-slate-900 text-white dark:bg-white dark:text-slate-900'
                             : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600'
@@ -1094,7 +1094,7 @@ const InterviewPrepDetail = () => {
                   {!isFreeTier && panel.length >= 2 ? (
                     <div className="mb-4">
                       {!interviewGate.unlocked && (
-                        <div className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3.5 py-2.5 text-xs text-slate-600 dark:text-slate-300">
+                        <div className="mb-3 flex items-center gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3.5 py-2.5 text-sm text-slate-600 dark:text-slate-300">
                           <Lock className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
                           {t('interviewPrep.detail.panel.finishRounds')}
                         </div>
@@ -1120,7 +1120,7 @@ const InterviewPrepDetail = () => {
                           locked={isFreeTier}
                           loading={panelLoading}
                         />
-                        <p className="mt-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                        <p className="mt-4 text-center text-xs text-slate-400 dark:text-slate-500">
                           {t('interviewPrep.detail.panel.paidNote')}
                         </p>
                       </div>
@@ -1213,7 +1213,7 @@ const InterviewPrepDetail = () => {
                     <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
                       {t('interviewPrep.detail.gameday.title')}
                     </h2>
-                    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                       {t('interviewPrep.detail.gameday.subtitle')}
                     </p>
                   </div>
@@ -1287,7 +1287,7 @@ const InterviewPrepDetail = () => {
                       <p className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {t('interviewPrep.detail.recordings.emptyTitle')}
                       </p>
-                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                      <p className="text-sm text-slate-400 dark:text-slate-500 mt-1">
                         {t('interviewPrep.detail.recordings.emptyBody')}
                       </p>
                     </div>
@@ -1334,7 +1334,7 @@ const SkillsTab = ({ skills, draftCVId, onPracticeSkill }) => {
   return (
     <section className="space-y-3">
       <div className="flex items-start gap-2 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 px-3 py-2.5">
-        <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
           <Trans
             i18nKey="interviewPrep.detail.skillsTab.soundbitesIntro"
             components={{
@@ -1547,7 +1547,7 @@ const QuestionListItem = ({
 
               {/* Warnings Panel */}
               {warnings && warnings.unsupportedClaims?.length > 0 && (
-                <div className="mb-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-700 dark:text-slate-200 flex items-start gap-2.5">
+                <div className="mb-3.5 p-3.5 bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg text-sm text-slate-700 dark:text-slate-200 flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                   <div>
                     <Trans
@@ -1569,10 +1569,10 @@ const QuestionListItem = ({
               <div className="bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 rounded-lg p-3.5 mb-4 flex items-start gap-2.5">
                 <EyeOff className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0 mt-0.5" />
                 <div className="min-w-0">
-                  <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                  <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                     {t('interviewPrep.detail.questions.modelHidden')}
                   </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
                     <Trans
                       i18nKey="interviewPrep.detail.questions.modelHiddenBody"
                       components={{
@@ -1588,7 +1588,7 @@ const QuestionListItem = ({
                 <button
                   type="button"
                   onClick={startPracticeThis}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold"
                 >
                   <Play className="w-3.5 h-3.5" />{' '}
                   {t('interviewPrep.detail.questions.practiceThisQuestion')}
@@ -1708,7 +1708,7 @@ const EssentialsSection = ({
         {visible.map((e) => (
           <div key={e.kind} className="border-l-2 border-slate-200 dark:border-slate-700 pl-3">
             <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{t(e.qKey)}</p>
-            <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
+            <p className="text-sm text-slate-600 dark:text-slate-300 mt-0.5 leading-relaxed">
               {t(e.tipKey)}
             </p>
             {e.generatable && onGenerateEssential && (
@@ -1716,7 +1716,7 @@ const EssentialsSection = ({
                 type="button"
                 onClick={() => onGenerateEssential(e.kind)}
                 disabled={generatingEssential === e.kind}
-                className="mt-2 inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-xs font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-2 inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-lg bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 border border-transparent dark:border-slate-700/50 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {generatingEssential === e.kind ? (
                   <>
@@ -1750,7 +1750,7 @@ const EssentialsSection = ({
                     body: t(e.noteSeedKeys.bodyKey),
                   })
                 }
-                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
+                className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-sm font-semibold transition-colors"
               >
                 <StickyNote className="w-3.5 h-3.5" />{' '}
                 {t('interviewPrep.detail.essentialsSection.draftInNotes')}
@@ -1820,7 +1820,7 @@ const QuestionsTab = ({
               <button
                 type="button"
                 onClick={onStartPractice}
-                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-sm font-semibold hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <PlayCircle className="w-3.5 h-3.5" />
                 {t('interviewPrep.detail.questionsTab.practiceAll')}
@@ -1830,7 +1830,7 @@ const QuestionsTab = ({
                   type="button"
                   disabled
                   title={t('interviewPrep.detail.rail.completeToUnlockTitle')}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-xs font-semibold cursor-not-allowed"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 text-sm font-semibold cursor-not-allowed"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   {t('interviewPrep.detail.rail.completeToUnlock')}
@@ -1839,7 +1839,7 @@ const QuestionsTab = ({
                 <button
                   type="button"
                   onClick={onStartMock}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-xs font-semibold"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white dark:bg-white dark:text-slate-900 dark:hover:bg-slate-100 text-sm font-semibold"
                 >
                   <Play className="w-3.5 h-3.5" />
                   {t('interviewPrep.detail.questionsTab.interviewMode')}
@@ -1933,7 +1933,7 @@ const QuestionsTab = ({
                   </>
                 )}
               </button>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
                 {adRewarded
                   ? t('interviewPrep.detail.questionsTab.getMoreHelpAd')
                   : t('interviewPrep.detail.questionsTab.getMoreHelpCredits')}
@@ -1975,7 +1975,7 @@ const SectionHeader = ({ eyebrow, title, subtitle }) => (
     <h2 className="mt-1 font-heading text-base sm:text-lg font-bold text-slate-900 dark:text-slate-100">
       {title}
     </h2>
-    <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
+    <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>
   </div>
 );
 

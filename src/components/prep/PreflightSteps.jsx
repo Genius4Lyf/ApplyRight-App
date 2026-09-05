@@ -323,7 +323,10 @@ const PreflightSteps = ({
           away and doesn't need to be sticky; full-bleed hairline, and safe-area
           padding so it clears a phone's home indicator. */}
       <div
-        className="-mx-4 flex shrink-0 items-center gap-2.5 border-t border-slate-200 bg-slate-50 px-4 pt-3 sm:-mx-6 sm:px-6 dark:border-slate-800 dark:bg-slate-950"
+        // -mx-5 cancels the phone shape's 20px main gutter (see
+        // MockInterviewPage) so this bar can run full-bleed; px-5 re-applies it
+        // as inner padding for the buttons themselves.
+        className="-mx-5 flex shrink-0 items-center gap-2.5 border-t border-slate-200 bg-slate-50 px-5 pt-3 sm:-mx-6 sm:px-6 dark:border-slate-800 dark:bg-slate-950"
         style={{ paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom))' }}
       >
         {/* 44px floor: these are the only two tap targets on the screen. */}

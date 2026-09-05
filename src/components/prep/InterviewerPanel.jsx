@@ -1,74 +1,21 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Users, Lock, CheckCircle2, Info } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { initials } from '../../utils/avatar';
 
 // "Who's likely to interview you" — the 3-person panel (HR + 2 JD-derived roles).
 // Used on the prep detail screen (preview, with an optional upsell lock) and on
-// the live-interview connecting screen (dark variant). Avatars are realistic
-// AI-generated professional headshots mapped deterministically by name.
-
-// Neutral seat treatment — the panel reads as one roster, not a colour code.
-// Literal class strings (no runtime string-building) so Tailwind can see them.
-const SEAT_RING = 'ring-slate-200 dark:ring-slate-700';
-const SEAT_RING_ACTIVE = 'ring-offset-2 ring-offset-transparent ring-slate-900 dark:ring-slate-100';
-const SEAT_FALLBACK = 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200';
-
-export const getAvatarUrl = (name = '') => {
-  const clean = name.trim().toLowerCase();
-  if (!clean) return '/avatars/female_1.png';
-  if (clean === 'renee') return '/avatars/female_1.png';
-  if (clean === 'priya' || clean.includes('priya')) return '/avatars/female_2.png';
-  if (clean === 'fatima' || clean.includes('fatima')) return '/avatars/female_3.png';
-  if (clean === 'ahmed' || clean.includes('ahmed')) return '/avatars/male_1.png';
-  if (clean === 'marcus' || clean.includes('marcus')) return '/avatars/male_2.png';
-  if (clean === 'ali' || clean.includes('ali')) return '/avatars/male_1.png';
-
-  // Deterministic fallback using hash
-  let hash = 0;
-  for (let i = 0; i < clean.length; i++) {
-    hash = clean.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  const isFemale = Math.abs(hash) % 2 === 0;
-  if (isFemale) {
-    const idx = (Math.abs(hash) % 3) + 1; // female_1 to female_3
-    return `/avatars/female_${idx}.png`;
-  } else {
-    const idx = (Math.abs(hash) % 2) + 1; // male_1 to male_2
-    return `/avatars/male_${idx}.png`;
-  }
-};
+// the live-interview connecting screen (dark variant). Text-only by design: a
+// name and a role tell you who you're facing; a stock headshot from a 5-photo
+// pool (the same 5 faces recycled across every user, every job) told you
+// nothing and cost more to look at than it gave back.
 
 const InterviewerCard = ({ person, dark, active = false, dim = false, compact = false }) => {
-  const [imgOk, setImgOk] = useState(true);
-  const avatar = getAvatarUrl(person.name);
-
   return (
     <div
       className={`flex flex-col items-center text-center w-full transition-all duration-300 ${
         active ? 'scale-105' : dim ? 'opacity-40' : ''
       }`}
     >
-      <div className={`relative shrink-0 ${compact ? 'mb-1.5' : 'mb-2'}`}>
-        {imgOk ? (
-          <img
-            src={avatar}
-            onError={() => setImgOk(false)}
-            alt={person.name}
-            className={`w-12 h-12 sm:w-13 sm:h-13 rounded-xl object-cover ring-2 ${
-              active ? SEAT_RING_ACTIVE : SEAT_RING
-            }`}
-          />
-        ) : (
-          <div
-            className={`w-12 h-12 sm:w-13 sm:h-13 rounded-xl flex items-center justify-center font-extrabold text-[15px] ring-2 ${SEAT_FALLBACK} ${
-              active ? SEAT_RING_ACTIVE : SEAT_RING
-            }`}
-          >
-            {initials(person.name)}
-          </div>
-        )}
-      </div>
       <h4
         className={`text-[15px] sm:text-[16px] font-bold leading-tight flex items-center justify-center ${compact ? '' : 'min-h-[1.25rem]'} ${dark ? 'text-white' : 'text-slate-900 dark:text-white'}`}
       >
@@ -94,8 +41,7 @@ const InterviewerCard = ({ person, dark, active = false, dim = false, compact = 
 
 const InterviewerSkeleton = () => (
   <div className="flex flex-col items-center text-center w-full animate-pulse">
-    <div className="w-12 h-12 sm:w-13 sm:h-13 rounded-xl bg-slate-100 dark:bg-slate-800/80 border-2 border-slate-200/50 dark:border-slate-800/50" />
-    <div className="mt-2 w-16 h-3 rounded bg-slate-100 dark:bg-slate-800" />
+    <div className="w-16 h-3 rounded bg-slate-100 dark:bg-slate-800" />
     <div className="mt-1.5 w-20 h-2.5 rounded bg-slate-100/70 dark:bg-slate-800/60" />
     <div className="mt-2 w-24 h-2 rounded bg-slate-100/50 dark:bg-slate-800/40" />
   </div>
@@ -140,7 +86,10 @@ const InterviewerPanel = ({
         </div>
       )}
       <div className="relative">
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-3">
+        {/* gap-2.5, not the old 1.5 (6px): with no avatar square anchoring each
+            seat, a thin gap read as three cards jammed together, first and last
+            pressed up against the page's own gutter. */}
+        <div className="grid grid-cols-3 gap-2.5 sm:gap-3">
           {loading ? (
             <>
               <InterviewerSkeleton />
@@ -157,7 +106,12 @@ const InterviewerPanel = ({
                     type="button"
                     disabled={locked}
                     onClick={() => !locked && onSelect(i)}
-                    className={`relative rounded-2xl p-2.5 sm:p-3 transition-all w-full ${
+                    // pt-5, not p-3 on every side: the Info icon and score badge
+                    // are absolutely positioned into the card's top corners, and
+                    // used to float over the avatar block. With no avatar, that
+                    // corner is now the name's own first line — the extra top
+                    // clearance keeps the icons from sitting on the text.
+                    className={`relative rounded-2xl px-3 pb-3 pt-5 transition-all w-full ${
                       locked
                         ? 'cursor-not-allowed ring-1 ring-slate-200 dark:ring-slate-700 bg-slate-50 dark:bg-slate-800/40'
                         : selectedIndex === i
@@ -165,7 +119,7 @@ const InterviewerPanel = ({
                           : 'hover:bg-slate-50 dark:hover:bg-slate-800/60 ring-1 ring-transparent'
                     }`}
                   >
-                    {/* Dim only the avatar/name when locked — keep the requirement
+                    {/* Dim only the name/role when locked — keep the requirement
                         pill below at full contrast so it's clearly readable. */}
                     <div className={locked ? 'opacity-45' : ''}>
                       <InterviewerCard
