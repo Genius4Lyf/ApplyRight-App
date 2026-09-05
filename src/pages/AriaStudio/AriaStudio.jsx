@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { PanelLeft, FilePen, ListChecks, Briefcase } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
-import { editorUnlocked, editorJustUnlocked } from '../../lib/studioFlow';
+import { editorUnlocked, editorJustUnlocked, finishableNow } from '../../lib/studioFlow';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useJobCoverage } from '../../hooks/useJobCoverage';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
@@ -68,6 +68,10 @@ const StudioDesk = () => {
   // The session awaiting a delete confirm, and which action is in flight.
   const [pendingDelete, setPendingDelete] = useState(null);
   const [deleteBusy, setDeleteBusy] = useState(null);
+  // The row with a duplicate in flight, so its menu item can say so and refuse a second
+  // click. The server also guards this (a repeat within seconds returns the same copy
+  // rather than making another), but the cheapest place to stop a double-click is here.
+  const [duplicatingId, setDuplicatingId] = useState(null);
   const [showWelcomeGuide, setShowWelcomeGuide] = useState(false);
   // The one-time teaching moment, and the lightweight recurring one. They are
   // deliberately exclusive: the modal IS the notification the first time, so firing the
@@ -303,8 +307,55 @@ const StudioDesk = () => {
     }
   };
 
+  // Fork a finished session so the original can be left alone. Charged.
+  const duplicateSession = async (session) => {
+    if (duplicatingId) return;
+    setDuplicatingId(session._id);
+    try {
+      // FLUSH FIRST. The chat autosave is debounced, so duplicating the session you are
+      // sitting in could otherwise copy a conversation missing its last few messages —
+      // the server copies what is in the database, not what is on screen.
+      await flushChats();
+    } catch {
+      // A failed flush costs the newest messages on the copy, not the copy itself.
+    }
+    try {
+      const res = await CVService.studioDuplicateSession(session._id);
+      if (typeof res?.remainingCredits === 'number') {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.remainingCredits }));
+      }
+      await refreshSessions();
+      // Land in the copy. Wanting to work on it without touching the original is the
+      // entire reason for duplicating.
+      if (res?.draftId) await loadSession(res.draftId);
+      toast.success(t('ariaStudio.desk.toast.duplicated'));
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === 'INSUFFICIENT_CREDITS') {
+        toast.error(t('ariaStudio.desk.toast.duplicateNotEnoughCredits'));
+      } else if (code === 'CV_NOT_COMPLETE') {
+        toast.error(t('ariaStudio.desk.toast.duplicateNotComplete'));
+      } else if (code === 'NEED_AGENT_SUB') {
+        toast.error(t('ariaStudio.desk.toast.agentPlanRequired'));
+        navigate('/upgrade');
+      } else {
+        console.error('Failed to duplicate session', err);
+        toast.error(t('ariaStudio.desk.toast.duplicateFailed'));
+      }
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
+
   const railProps = {
-    sessions,
+    // `canDuplicate` on each row is the server's verdict, computed from the last SAVED
+    // state — and this list only refetches when the bound session changes. So for the row
+    // you are actually sitting in, ask the live document instead: someone who just
+    // finished their CV should not be told to go and finish it. Same rule either way —
+    // finishableNow here, its port in utils/cvCompleteness there.
+    sessions: draftId
+      ? sessions.map((s) => (s._id === draftId ? { ...s, canDuplicate: finishableNow(cvData) } : s))
+      : sessions,
     loading: loadingSessions,
     // One of the two is always null — a session is either a document or an analysis.
     activeId: draftId || applicationId,
@@ -314,6 +365,8 @@ const StudioDesk = () => {
       layout.setRailOverlay(false);
       setPendingDelete(s);
     },
+    onDuplicate: duplicateSession,
+    duplicatingId,
     onNewTailoring: () => startSession('tailor'),
     onNewCv: () => startSession('build'),
     // The OTHER build path — the step-by-step wizard. It lives on another route, so this

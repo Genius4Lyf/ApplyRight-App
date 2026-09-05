@@ -163,6 +163,21 @@ const CVService = {
     return response.data;
   },
 
+  // Aria Studio — fork a FINISHED session into a separate copy: the CV, the
+  // conversation and the scan, so the original can be left alone. Charged.
+  //
+  // 403 { code:'INSUFFICIENT_CREDITS' } → not enough credits (nothing was created).
+  // 409 { code:'CV_NOT_COMPLETE' }      → the CV isn't finished yet.
+  // 409 { code:'NOT_A_SESSION' }        → not an Aria Studio CV.
+  // 402 { code:'NEED_AGENT_SUB' }       → agent needs a plan.
+  //
+  // A repeat within a few seconds (a double-click) returns the copy already made,
+  // with cached:true and charged:false, rather than a second one.
+  studioDuplicateSession: async (draftId) => {
+    const response = await api.post('/studio/duplicate', { draftId });
+    return response.data; // { draftId, title, cached, charged, cost, remainingCredits }
+  },
+
   // Aria Studio — start a BUILD session: an empty CV prefilled with the user's contact
   // details, optionally aimed at a job. 402 { code:'NEED_AGENT_SUB' } → agent needs a plan.
   studioBuildStart: async ({ jobTitle, jobDescription, model } = {}) => {

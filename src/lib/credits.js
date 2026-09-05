@@ -46,6 +46,11 @@ export const CREDIT_COSTS = {
   // Aria Studio — suggest up to 3 project ideas grounded in the user's own CV. Also
   // server-pinned to the Standard (light) model, so this light cost is what's billed.
   PROJECT_IDEAS: 1,
+  // Aria Studio — fork a finished session so the original can be left alone. No model
+  // runs, so there is no flagship price for it: this is the only one. Priced above
+  // GENERATE_CV (10) on purpose — see config/creditCosts.js on the backend — so
+  // duplicating is never a cheaper shortcut to a second CV than generating one.
+  DUPLICATE_CV: 20,
 };
 
 // The backend uses the canonical key ANALYSIS for what the frontend calls

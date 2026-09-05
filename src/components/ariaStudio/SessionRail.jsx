@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { formatRelative } from '../../lib/relativeDate';
-import { Plus, Trash2, Pencil, MoreHorizontal, FileText } from 'lucide-react';
+import { Plus, Trash2, Pencil, Copy, MoreHorizontal, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { bandOf } from '../../lib/applicationInsights';
 import { BAND_TEXT, TAG_TONE } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
+import { CREDIT_COSTS } from '../../lib/credits';
 import AriaOrbit from '../cv/AriaOrbit';
 import StudioSidebarNav from './StudioSidebarNav';
 import StudioSidebarProfile from './StudioSidebarProfile';
@@ -38,6 +39,8 @@ const SessionRail = ({
   onSelect,
   onRename,
   onDelete,
+  onDuplicate,
+  duplicatingId,
   onNewTailoring,
   onNewCv,
   onNewBuilderCv,
@@ -238,6 +241,14 @@ const SessionRail = ({
 
               const isRenaming = renamingId === s._id;
               const canRename = isBuild && !!onRename;
+              // Duplicate is offered on any CV session but never on an analysis, which is
+              // an Application rather than a DraftCV and has nothing to fork. `canDuplicate`
+              // is the SERVER's verdict on whether the CV is finished (see
+              // studio.controller.sessions) — the row itself cannot work that out, because
+              // completeness is a question about the CV body and this list never carries it.
+              const showDuplicate = !isApplication && !!onDuplicate;
+              const duplicateReady = s.canDuplicate !== false;
+              const duplicating = duplicatingId === s._id;
 
               return (
                 <li key={s._id} className="group relative">
@@ -350,7 +361,7 @@ const SessionRail = ({
 
                   {/* Secondary row actions live behind one predictable overflow control so
                   the list stays quiet and the actions remain available on touch. */}
-                  {!isRenaming && (canRename || onDelete) && (
+                  {!isRenaming && (canRename || showDuplicate || onDelete) && (
                     <div
                       ref={openActionId === s._id ? actionMenuRef : undefined}
                       className="absolute right-1 top-1.5 z-20"
@@ -376,7 +387,7 @@ const SessionRail = ({
                       {openActionId === s._id && (
                         <div
                           role="menu"
-                          className="absolute right-0 top-9 w-36 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30"
+                          className="absolute right-0 top-9 w-48 overflow-hidden rounded-lg border border-slate-200 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-700 dark:bg-slate-900 dark:shadow-black/30"
                         >
                           {canRename && (
                             <button
@@ -387,6 +398,50 @@ const SessionRail = ({
                             >
                               <Pencil className="h-3.5 w-3.5" />
                               {t('ariaStudio.sessionRail.rename')}
+                            </button>
+                          )}
+                          {showDuplicate && (
+                            <button
+                              type="button"
+                              role="menuitem"
+                              disabled={!duplicateReady || duplicating}
+                              aria-disabled={!duplicateReady || duplicating}
+                              onClick={() => {
+                                if (!duplicateReady || duplicating) return;
+                                setOpenActionId(null);
+                                onDuplicate(s);
+                              }}
+                              className={`flex w-full items-start gap-2.5 px-3 py-2 text-left text-[13px] font-medium ${
+                                duplicateReady
+                                  ? 'text-slate-700 hover:bg-slate-50 focus:bg-slate-50 focus:outline-none dark:text-slate-200 dark:hover:bg-slate-800 dark:focus:bg-slate-800'
+                                  : // Shown rather than hidden, and it says WHY. A missing item
+                                    // teaches nothing; this answers "why can't I copy this one?"
+                                    // at the moment the question gets asked.
+                                    'cursor-not-allowed text-slate-400 dark:text-slate-500'
+                              } disabled:opacity-100`}
+                            >
+                              <Copy
+                                className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${duplicateReady ? '' : 'opacity-40'}`}
+                              />
+                              <span className="min-w-0">
+                                <span className="flex items-center gap-1.5">
+                                  {duplicating
+                                    ? t('ariaStudio.sessionRail.duplicating')
+                                    : t('ariaStudio.sessionRail.duplicate')}
+                                  {duplicateReady && !duplicating && (
+                                    <span className="shrink-0 rounded border border-slate-200 px-1 py-px font-mono text-[9px] uppercase tracking-[0.08em] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                      {t('cvBuilder.common.creditChip', {
+                                        n: CREDIT_COSTS.DUPLICATE_CV,
+                                      })}
+                                    </span>
+                                  )}
+                                </span>
+                                {!duplicateReady && (
+                                  <span className="mt-0.5 block text-[11px] leading-snug text-slate-400 dark:text-slate-500">
+                                    {t('ariaStudio.sessionRail.duplicateLocked')}
+                                  </span>
+                                )}
+                              </span>
                             </button>
                           )}
                           {onDelete && (

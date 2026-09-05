@@ -4650,6 +4650,9 @@
       "actions": "Plus d’actions",
       "actionsFor": "Plus d’actions pour {{heading}}",
       "rename": "Renommer",
+      "duplicate": "Dupliquer",
+      "duplicating": "Duplication…",
+      "duplicateLocked": "Terminez d’abord ce CV",
       "removeOrDeleteCv": "Retirer ou supprimer ce CV",
       "deleteTailoring": "Supprimer cette adaptation",
       "deleteAria": "Supprimer {{heading}}",
@@ -5158,7 +5161,11 @@
         "removedFromStudio": "Retiré du Studio — le CV est toujours dans Mes CV.",
         "removeFailed": "Impossible de le retirer — réessayez.",
         "deleted": "Supprimé.",
-        "deleteFailed": "Impossible de le supprimer — réessayez."
+        "deleteFailed": "Impossible de le supprimer — réessayez.",
+        "duplicated": "Copié. Vous êtes dans la copie — l’original est intact.",
+        "duplicateFailed": "Impossible de dupliquer ce CV.",
+        "duplicateNotEnoughCredits": "Crédits insuffisants pour dupliquer ce CV.",
+        "duplicateNotComplete": "Terminez ce CV avant de le dupliquer."
       },
       "newCv": "Nouveau CV",
       "title": "Aria Studio",
