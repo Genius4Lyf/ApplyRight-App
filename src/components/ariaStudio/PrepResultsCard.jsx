@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FilePlus2, Mail, MessageSquare } from 'lucide-react';
+import { Mail, MessageSquare } from 'lucide-react';
 import AriaCard from './AriaCard';
 import FitScoreCard from '../FitScoreCard';
 import GenerationModelRow from '../cv/GenerationModelRow';
@@ -11,8 +11,8 @@ import { costForActionTier, tierOf } from '../../lib/models';
 import { hasInterviewPrep } from '../../utils/interviewPrep';
 import { decodeEntities } from '../../lib/decodeEntities';
 
-// One row of the "what next" list. The three actions differ in what they produce, not in
-// how they are offered, so they share a shape rather than three near-identical blocks.
+// One row of the "what next" list. The two actions differ in what they produce, not in
+// how they are offered, so they share a shape rather than two near-identical blocks.
 //
 // `Icon` is used only via <Icon /> in JSX; this eslint config lacks jsx-uses-vars so it
 // reads as unused — same false positive AriaCard suppresses for `motion`.
@@ -36,26 +36,29 @@ const ActionRow = ({ icon: Icon, title, body, children, extra }) => (
   </div>
 );
 
-// The end of a prep session: what the analysis found, and the three things worth doing
+// The end of a prep session: what the analysis found, and the two things worth doing
 // about it.
 //
 // The verdict is FitScoreCard — the same component the home page used before this flow
 // moved into the Studio, not a chat-shaped retelling of it. Someone who ran an analysis
 // last month should recognise this screen.
 //
-// The three actions are deliberately the only three. A job analysis suggests a hundred
+// The two actions are deliberately the only two. A job analysis suggests a hundred
 // possible next steps and offering all of them is how a result becomes a menu nobody
 // reads; these are the ones that produce something you can send or use.
+//
+// "Build a CV for this role" used to lead this list and was removed: an analysis is a
+// verdict on a CV that already exists, so offering to start a NEW one from it read as a
+// non-sequitur. Starting a build belongs where a build starts, not at the end of a
+// result. Both halves of its plumbing (prepBuildCv, buildingCv) went with it.
 const PrepResultsCard = ({
   application,
   jobTitle,
   company,
-  onBuildCv,
   onCoverLetter,
   onViewCoverLetter,
   onInterviewPrep,
   onViewInterviewPrep,
-  buildingCv,
   generatingCoverLetter,
   generatingPrep,
   coverLetterFreeRemaining = 0,
@@ -113,24 +116,6 @@ const PrepResultsCard = ({
                 : t('ariaStudio.prep.whatNextBody', { jobTitle: role })}
             </p>
           </div>
-
-          {/* Build a CV — first, and the only one with no price on it. Starting a build
-              costs nothing; the JD is carried over so the new session opens already
-              knowing what it is aimed at. */}
-          <ActionRow
-            icon={FilePlus2}
-            title={t('ariaStudio.prep.buildCvTitle')}
-            body={t('ariaStudio.prep.buildCvBody')}
-          >
-            <button
-              type="button"
-              onClick={onBuildCv}
-              disabled={buildingCv}
-              className="btn-primary px-3.5 py-2 text-[13px] disabled:opacity-60"
-            >
-              {buildingCv ? t('ariaStudio.prep.opening') : t('ariaStudio.prep.buildCvCta')}
-            </button>
-          </ActionRow>
 
           <ActionRow
             icon={Mail}

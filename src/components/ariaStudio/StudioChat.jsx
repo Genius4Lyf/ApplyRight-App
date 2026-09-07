@@ -379,7 +379,6 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // message" you see when you tap an analysis in Recents.
   const [restoringPrep, setRestoringPrep] = useState(() => !!restoreTarget.id);
   const [prepApp, setPrepApp] = useState(null);
-  const [buildingCv, setBuildingCv] = useState(false);
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
   const [generatingPrep, setGeneratingPrep] = useState(false);
   const [coverLetterFreeRemaining, setCoverLetterFreeRemaining] = useState(0);
@@ -1289,21 +1288,9 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
     }
   };
 
-  // ─── The three things worth doing with an analysis ───
+  // ─── The two things worth doing with an analysis ───
 
-  // 1. A CV aimed at this role. The JD travels with it, so the new session opens already
-  //    knowing the target instead of asking for it a second time.
-  const prepBuildCv = async () => {
-    if (buildingCv) return;
-    setBuildingCv(true);
-    const job = [...messages].reverse().find((m) => m.who === 'prepjob');
-    const ok = await newSession('build', null, {
-      job: job ? { jobTitle: job.jobTitle, jobDescription: job.jobDescription } : null,
-    });
-    if (!ok) setBuildingCv(false);
-  };
-
-  // 2. The letter. `model` is the Standard | Pro pick from the card.
+  // 1. The letter. `model` is the Standard | Pro pick from the card.
   const prepCoverLetter = async (model) => {
     const id = prepApp?.applicationId;
     if (!id || generatingCoverLetter) return;
@@ -4321,12 +4308,10 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   application={prepApp}
                   jobTitle={latestPrepResult?.jobTitle || latestPrepJob?.jobTitle || ''}
                   company={latestPrepResult?.company || ''}
-                  onBuildCv={prepBuildCv}
                   onCoverLetter={prepCoverLetter}
                   onViewCoverLetter={viewCoverLetter}
                   onInterviewPrep={prepInterviewPrep}
                   onViewInterviewPrep={viewInterviewPrep}
-                  buildingCv={buildingCv}
                   generatingCoverLetter={generatingCoverLetter}
                   generatingPrep={generatingPrep}
                   coverLetterFreeRemaining={coverLetterFreeRemaining}

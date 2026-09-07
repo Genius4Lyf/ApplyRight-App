@@ -346,34 +346,10 @@ describe('a job read from a link', () => {
   });
 });
 
-describe('building a CV from the result', () => {
-  it('carries the job into the new session so it is never asked for twice', async () => {
-    CVService.studioBuildStart.mockResolvedValue({
-      draftId: 'd2',
-      draft: { _id: 'd2', studioKind: 'build' },
-      brief: null,
-    });
-
-    await startPrep();
-    fireEvent.click(screen.getByText(SAVED_CV.title));
-    await screen.findByRole('button', { name: ANALYZE });
-    await captureJob(document);
-
-    // The result, and its first action.
-    const start = await screen.findByRole('button', { name: 'Start' });
-    fireEvent.click(start);
-
-    // The build session opens on its roadmap; accepting it is what creates the draft.
-    const begin = await screen.findByRole('button', { name: 'Start building' });
-    fireEvent.click(begin);
-
-    await waitFor(() => expect(CVService.studioBuildStart).toHaveBeenCalledTimes(1));
-    expect(CVService.studioBuildStart.mock.calls[0][0]).toMatchObject({
-      jobTitle: 'Rig Electrician',
-      jobDescription: 'Offshore electrical maintenance on a jack-up rig, 5 years.',
-    });
-  });
-});
+// 'building a CV from the result' used to live here. The results card no longer offers
+// to start a new CV — an analysis is a verdict on a CV that already exists, so offering
+// to begin a different one read as a non-sequitur. The action and its plumbing were
+// removed together; nothing replaced it, so nothing replaces this.
 
 // ─── Getting an analysis back on screen ───
 //
@@ -415,7 +391,7 @@ describe('an analysis already in play', () => {
     // conversation being shown.
     await waitFor(() => expect(CVService.getApplication).toHaveBeenCalledWith('a1'));
     expect(await screen.findByText(/What next/i)).toBeTruthy();
-    expect(screen.getByRole('button', { name: /start/i })).toBeTruthy();
+    expect(screen.getByText(/Written from your CV and this job description/i)).toBeTruthy();
   });
 
   it('keeps the transcript it restored rather than rewriting it', async () => {
