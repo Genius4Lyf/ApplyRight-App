@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
-import AriaTypewriter from '../cv/AriaTypewriter';
+import AriaMessageText from '../cv/AriaMessageText';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
 import {
@@ -36,6 +36,7 @@ import {
   withoutBlankEntries,
 } from '../../lib/studioFlow';
 import { CV_SECTIONS } from '../../lib/cvCompleteness';
+import { screenContext, stepIdForPhase } from '../../lib/ariaScreen';
 import { STUDIO_PROJECT_IDEAS_ENABLED } from '../../lib/studioFeatures';
 
 import { useAriaModel } from '../../hooks/useAriaModel';
@@ -3102,6 +3103,11 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // Presentation only — the phase is untouched, so nothing about where they are has changed.
   const [cardStoodDown, setCardStoodDown] = useState(false);
 
+  // The section-menu row currently on screen. It is assembled a long way below this point,
+  // and the send handler needs it to tell Aria which card the user is looking at — so it is
+  // mirrored into a ref rather than reached for across the temporal dead zone.
+  const nextSectionRef = useRef(null);
+
   // requirementId → the server's verdict for a hunt already answered this session.
   const [huntedRequirements, setHuntedRequirements] = useState({});
 
@@ -3254,28 +3260,29 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
       try {
         const r = await CVService.coachChat({
           draftId,
-          currentStepId:
-            pinnedEntry && pinnedSectionKey === 'experience'
-              ? 'history'
-              : pinnedEntry && pinnedSectionKey === 'project'
-                ? 'projects'
-                : pinnedEntry && pinnedSectionKey === 'education'
-                  ? 'education'
-                  : phase === 'build:job' || phase === 'build:brief'
-                    ? 'target_job'
-                    : phase === 'build:contact'
-                      ? 'heading'
-                      : phase === 'build:skills'
-                        ? 'skills'
-                        : phase === 'build:summary'
-                          ? 'summary'
-                          : phase === 'build:done'
-                            ? 'finalize'
-                            : '',
+          // A pinned entry pins the section; otherwise the phase names it. This was one
+          // long ternary whose last branch was the empty string — which is how a question
+          // asked at the career-stage card reached the server with no location on it.
+          currentStepId: pinnedEntry
+            ? stepIdForPhase(`build:${pinnedSectionKey}`)
+            : stepIdForPhase(phase),
           messages: next
             .filter((m) => m.who === 'aria' || m.who === 'user')
             .map((m) => ({ who: m.who, text: m.text })),
           model: modelId,
+          // The step id says which SECTION they are in; this says which CARD is in front
+          // of them, which is what "can you explain the three options?" was about.
+          screen: screenContext({
+            phase,
+            t,
+            nextSection: nextSectionRef.current,
+            entryStage: pinnedStage,
+            sectionKey: pinnedSectionKey,
+          }),
+          // Every other call site sends this. Leaving it off here meant the ONE surface
+          // where people ask open questions was also the one that forgot they had said
+          // they were a student. The server still infers from the draft when absent.
+          stage: careerStage,
           // no focus → a general answer, metered by the shared daily allowance
         });
         push({ who: 'aria', text: r.reply });
@@ -3593,6 +3600,9 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   skipLabel: t('ariaStudio.chat.sectionMenu.summarySkipLabel'),
                 }
               : null;
+
+  // Mirrored for the send handler above, which asks Aria about the card on screen.
+  nextSectionRef.current = nextSection;
 
   // A card may own the stream only once nothing else does — no restore in flight, no
   // Aria turn mid-beat, no tailor-start or scan running.
@@ -4222,17 +4232,14 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                 className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
-                  {revealedRef.current.has(i) ? (
-                    m.text
-                  ) : (
-                    <AriaTypewriter
-                      text={m.text}
-                      reduce={reduce}
-                      onDone={() => revealedRef.current.add(i)}
-                    />
-                  )}
-                </span>
+                <div className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6 break-words">
+                  <AriaMessageText
+                    text={m.text}
+                    typed={revealedRef.current.has(i)}
+                    reduce={reduce}
+                    onDone={() => revealedRef.current.add(i)}
+                  />
+                </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );

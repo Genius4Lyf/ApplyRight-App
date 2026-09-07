@@ -13,9 +13,10 @@ import { useStickToBottom } from '../../hooks/useStickToBottom';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import CVService from '../../services/cv.service';
+import { builderScreenContext } from '../../lib/ariaScreen';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
-import AriaTypewriter from './AriaTypewriter';
+import AriaMessageText from './AriaMessageText';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
@@ -332,7 +333,16 @@ const AriaChat = ({
       return;
     }
     try {
-      const r = await CVService.askAria(id, currentStepId, q, modelId);
+      const r = await CVService.askAria(
+        id,
+        currentStepId,
+        q,
+        modelId,
+        // The builder asks the same career question the Studio card does, on the Target
+        // Job step, and shows it exactly while no stage has been picked — so this is null
+        // on every other step and once they have answered.
+        builderScreenContext({ currentStepId, cvData, t })
+      );
       setMessages((m) => [...m, { who: 'aria', text: r.answer }]);
       setFreeLeft(r.freeRemaining);
       // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
@@ -439,17 +449,14 @@ const AriaChat = ({
                 className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
-                  {revealedRef.current.has(i) ? (
-                    m.text
-                  ) : (
-                    <AriaTypewriter
-                      text={m.text}
-                      reduce={reduce}
-                      onDone={() => revealedRef.current.add(i)}
-                    />
-                  )}
-                </span>
+                <div className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6 break-words">
+                  <AriaMessageText
+                    text={m.text}
+                    typed={revealedRef.current.has(i)}
+                    reduce={reduce}
+                    onDone={() => revealedRef.current.add(i)}
+                  />
+                </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );

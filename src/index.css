@@ -318,6 +318,18 @@
     }
   }
 
+  /* Aria messages are markdown now, so a reply can contain real paragraphs and list
+     items. Those are nested BLOCKS, and the 17px sits on the wrapper — without this they
+     fall back to the browser default on mobile, leaving her prose smaller than the
+     user's own bubble beside it. The rule above only names .aria-response-card, which is
+     a different surface (the cards), so it never reached the message stream. */
+  @media (max-width: 639px) {
+    .aria-md :is(p, li, blockquote) {
+      font-size: 17px;
+      line-height: 1.5;
+    }
+  }
+
   /* Aria one-shot apply-confirm ring (motion-spec 3.2) — a single emerald pulse
      when a suggestion/bullet card is applied. Disabled under reduced motion. */
   .aria-ring-pulse {

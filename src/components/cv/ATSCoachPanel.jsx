@@ -4,6 +4,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { BookOpen } from 'lucide-react';
 import CVService from '../../services/cv.service';
+import { builderScreenContext } from '../../lib/ariaScreen';
 import { computeCvHealth, healthColor } from '../../utils/cvHealth';
 import { roleMatch } from '../../utils/roleMatch';
 import { useCVBuilder } from '../../context/CVContext';
@@ -17,7 +18,7 @@ import AriaChat from './AriaChat';
 import AriaOrbit from './AriaOrbit';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
-import AriaTypewriter from './AriaTypewriter';
+import AriaMessageText from './AriaMessageText';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -136,6 +137,9 @@ const TargetChat = ({
         messages: next,
         focus: undefined,
         model: modelId,
+        // These chips sit on the Target Job step, which is where the builder asks the
+        // career question — so a question about "these" has the same card to point at.
+        screen: builderScreenContext({ currentStepId: 'target_job', cvData, t }),
       });
       setQa((m) => [...m, { who: 'aria', text: rr.reply }]);
       // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
@@ -197,17 +201,14 @@ const TargetChat = ({
                 className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
-                  {revealedRef.current.has(i) ? (
-                    m.text
-                  ) : (
-                    <AriaTypewriter
-                      text={m.text}
-                      reduce={reduce}
-                      onDone={() => revealedRef.current.add(i)}
-                    />
-                  )}
-                </span>
+                <div className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6 break-words">
+                  <AriaMessageText
+                    text={m.text}
+                    typed={revealedRef.current.has(i)}
+                    reduce={reduce}
+                    onDone={() => revealedRef.current.add(i)}
+                  />
+                </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );

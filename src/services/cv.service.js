@@ -319,8 +319,16 @@ const CVService = {
   // Aria's free-form coach chat. Shares one daily free pool with build-with, then
   // 1 credit each. A 402 { code:'CHAT_LIMIT_REACHED' } means out of free chats +
   // credits for today.
-  askAria: async (draftId, currentStepId, question, model) => {
-    const response = await api.post('/coach/ask', { draftId, currentStepId, question, model });
+  // `screen` is the card in front of them (lib/ariaScreen) — without it a question
+  // like "explain the three options" has nothing in the prompt to point at.
+  askAria: async (draftId, currentStepId, question, model, screen) => {
+    const response = await api.post('/coach/ask', {
+      draftId,
+      currentStepId,
+      question,
+      model,
+      screen,
+    });
     return response.data; // { answer, freeRemaining, charged, remainingCredits|null }
   },
 
@@ -339,6 +347,9 @@ const CVService = {
     // instead of the entry interview. Free, like a build turn.
     probe,
     model,
+    // The card on screen, from lib/ariaScreen — what "these three" / "this box" in a
+    // question actually refers to. Bounded server-side before it reaches the prompt.
+    screen,
   }) => {
     const response = await api.post('/coach/chat', {
       draftId,
@@ -353,6 +364,7 @@ const CVService = {
       stage,
       probe,
       model,
+      screen,
     });
     // remainingCredits is the post-charge balance, or null when the turn was free.
     return response.data; // { reply, intent, readyToDraft, description, freeRemaining, charged, remainingCredits|null }

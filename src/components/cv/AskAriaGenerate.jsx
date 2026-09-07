@@ -15,7 +15,7 @@ import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
-import AriaTypewriter from './AriaTypewriter';
+import AriaMessageText from './AriaMessageText';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import GenerationModelRow from './GenerationModelRow';
@@ -804,17 +804,14 @@ const AskAriaGenerate = ({
                 className="aria-row self-start max-w-[92%] flex flex-col items-start gap-1.5"
                 {...bubbleAnim('aria', reduce)}
               >
-                <span className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6">
-                  {revealedRef.current.has(i) ? (
-                    m.text
-                  ) : (
-                    <AriaTypewriter
-                      text={m.text}
-                      reduce={reduce}
-                      onDone={() => revealedRef.current.add(i)}
-                    />
-                  )}
-                </span>
+                <div className="text-[rgb(31,31,31)] dark:text-slate-100 font-normal px-1 text-[17px] leading-6 break-words">
+                  <AriaMessageText
+                    text={m.text}
+                    typed={revealedRef.current.has(i)}
+                    reduce={reduce}
+                    onDone={() => revealedRef.current.add(i)}
+                  />
+                </div>
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
