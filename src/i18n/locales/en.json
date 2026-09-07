@@ -4521,6 +4521,10 @@
         "untitledRole": "This role"
       }
     },
+    "answerCard": {
+      "optionsEyebrow": "What each one means",
+      "compareEyebrow": "Side by side"
+    },
     "modeChooser": {
       "whatAreWeDoing": "What are we doing?",
       "tailorTitle": "Tailor my CV to a job",

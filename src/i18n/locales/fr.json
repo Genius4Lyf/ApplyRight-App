@@ -4517,6 +4517,10 @@
         "untitledRole": "Ce poste"
       }
     },
+    "answerCard": {
+      "optionsEyebrow": "Ce que chaque option signifie",
+      "compareEyebrow": "Côte à côte"
+    },
     "modeChooser": {
       "whatAreWeDoing": "Que faisons-nous ?",
       "tailorTitle": "Adapter mon CV à un poste",

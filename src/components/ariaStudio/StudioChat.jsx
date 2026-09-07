@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaMessageText from '../cv/AriaMessageText';
+import AriaAnswerCard from '../cv/AriaAnswerCard';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
 import {
@@ -3285,7 +3286,10 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
           stage: careerStage,
           // no focus → a general answer, metered by the shared daily allowance
         });
-        push({ who: 'aria', text: r.reply });
+        // layout/blocks ride along on the MESSAGE, so the card survives a refresh with
+        // the rest of the transcript. They never reach the model: the payload builder maps
+        // each turn down to { who, text }, so the window stays exactly as cheap as before.
+        push({ who: 'aria', text: r.reply, layout: r.layout, blocks: r.blocks });
         // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
         if (r.remainingCredits != null) {
           window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
@@ -4240,6 +4244,10 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                     onDone={() => revealedRef.current.add(i)}
                   />
                 </div>
+                {/* The designed shape of the answer, when it earned one. A sibling in the
+                    row rather than a child of the text, so the orbit stays the last item
+                    and the prose above still reads on its own if this renders nothing. */}
+                <AriaAnswerCard layout={m.layout} blocks={m.blocks} />
                 <AriaOrbit size={16} className="aria-mark ml-1" />
               </motion.div>
             );
