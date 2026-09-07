@@ -4,6 +4,42 @@ import react from '@vitejs/plugin-react';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        // Third-party code into its own chunk, separate from ours.
+        //
+        // This does not shrink the first load — the browser still fetches both. What it
+        // buys is CACHING: our source changes on every deploy, React and axios do not.
+        // In one file, shipping a typo fix re-downloaded the entire vendor bundle for
+        // every returning user. Split, the vendor chunk keeps its hash and stays cached.
+        //
+        // ONE vendor chunk, not a library-per-chunk scheme: splitting finer put
+        // react-markdown and its transitive deps in different chunks that imported each
+        // other, and Rollup warned about the circular result. A single boundary has no
+        // such failure mode.
+        // An ALLOWLIST, not "everything in node_modules". That version measured WORSE
+        // than no splitting at all: sweeping every dependency into one eager vendor
+        // chunk dragged recharts — which route-splitting had just moved into the admin
+        // chunks — straight back into the first load. 418 KB became 574 KB.
+        //
+        // So only libraries the first paint already needs are named here. Moving those
+        // cannot pull anything new forward, and everything else stays wherever Rollup
+        // decided it was needed, which for a route-only library is that route.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (
+            /[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler|axios|i18next|react-i18next|i18next-browser-languagedetector)[\\/]/.test(
+              id
+            )
+          ) {
+            return 'vendor';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
   esbuild: {
     // Strip dev-only console noise from PRODUCTION bundles only (dev server is
     // unaffected). Keep console.warn/error so real problems still surface in the

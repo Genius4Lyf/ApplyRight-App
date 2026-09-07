@@ -6,22 +6,12 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { cloneElement, useEffect } from 'react';
+import { cloneElement, lazy, Suspense, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
-import JobSearch from './pages/JobSearch';
-import Profile from './pages/Profile';
-import LandingPage from './pages/LandingPage';
 import MobileHomeRedirect from './components/MobileHomeRedirect';
-import MobileWelcome from './pages/mobile/MobileWelcome';
-import InterviewPrepDetail from './pages/InterviewPrepDetail';
-import InterviewPracticePage from './pages/InterviewPracticePage';
-import PreCallBrief from './pages/PreCallBrief';
-import MockInterviewPage from './pages/MockInterviewPage';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { waitForReady } from './utils/splash';
@@ -29,44 +19,12 @@ import api from './services/api';
 import { hydrateCreditCosts, hydrateSignupCredits } from './lib/credits';
 import { hydrateLaunch } from './lib/launch';
 import { hydratePromos } from './lib/promos';
-import PreLaunch from './pages/PreLaunch';
 import { syncLangFromStoredUser } from './lib/lang';
 import { hydrateModels } from './lib/models';
-import ApplicationReview from './pages/ApplicationReview';
-import ResumeReview from './pages/ResumeReview';
-import AriaStudio from './pages/AriaStudio/AriaStudio';
-import CVBuilderLayout from './pages/CVBuilder/CVBuilderLayout';
-import CvBuilderIndex from './pages/CVBuilder/CvBuilderIndex';
-import InterviewPrepIndex from './pages/InterviewPrepIndex';
-import TargetJob from './pages/CVBuilder/TargetJob';
-import Heading from './pages/CVBuilder/Heading';
-import ProfessionalSummary from './pages/CVBuilder/ProfessionalSummary';
-import Upgrade from './pages/Upgrade';
-import BillingReturn from './pages/BillingReturn';
-import CreditStore from './pages/CreditStore';
-import History from './pages/CVBuilder/History';
-import Projects from './pages/CVBuilder/Projects';
-import Education from './pages/CVBuilder/Education';
-import Skills from './pages/CVBuilder/Skills';
-import Finalize from './pages/CVBuilder/Finalize';
 import ErrorBoundary from './components/ErrorBoundary';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
-import Contact from './pages/Contact';
-import ATSGuide from './pages/ATSGuide';
-import Pricing from './pages/Pricing';
-import HowATSRecruitersWork from './pages/HowATSRecruitersWork';
-import CVBuilderGuide from './pages/CVBuilderGuide';
-import AriaStudioGuide from './pages/AriaStudioGuide';
-import CVHealth from './pages/CVHealth';
-import CVTips from './pages/CVTips';
-import HowToAceYourInterview from './pages/HowToAceYourInterview';
-import FeedbackPage from './pages/FeedbackPage';
-import FeedbackDashboard from './pages/FeedbackDashboard';
 import { isMobile } from './utils/platform';
 import MaintenanceGuard from './components/MaintenanceGuard';
 import RouteSeo from './components/RouteSeo';
-import CvStudioIndex from './pages/CvStudioIndex';
 import useIdleTimeout from './hooks/useIdleTimeout';
 import SessionTimeoutModal from './components/SessionTimeoutModal';
 import TopProgressBar from './components/TopProgressBar';
@@ -221,9 +179,15 @@ const RootLayout = () => {
           Studio — both of which every page already reaches from its top bar. Nothing to
           clear at the bottom of the page any more, so the padding went with it. */}
       <div className="relative z-0">
-        <AnimatePresence mode="wait">
-          {element && cloneElement(element, { key: getPageKey(location.pathname) })}
-        </AnimatePresence>
+        {/* Every lazily-loaded route resolves here. TopProgressBar above already
+            signals navigation, so this fallback only has to hold the space without
+            flashing — a spinner for the fraction of a second a chunk takes on a warm
+            connection would read as jank, not feedback. */}
+        <Suspense fallback={<div className="min-h-screen" aria-busy="true" />}>
+          <AnimatePresence mode="wait">
+            {element && cloneElement(element, { key: getPageKey(location.pathname) })}
+          </AnimatePresence>
+        </Suspense>
       </div>
     </SessionManager>
   );
@@ -245,22 +209,96 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
-// Lazy load admin pages to avoid bloating main bundle if possible, but for now direct import is fine
-import AdminDashboard from './pages/Admin/AdminDashboard';
-import AdminUsers from './pages/Admin/AdminUsers';
-import AdminTransactions from './pages/Admin/AdminTransactions';
-import AdminPayments from './pages/Admin/AdminPayments';
-import AdminAnalytics from './pages/Admin/AdminAnalytics';
-import AdminUserDetails from './pages/Admin/AdminUserDetails';
-import AdminSettings from './pages/Admin/AdminSettings';
-import AdminLaunch from './pages/Admin/AdminLaunch';
-import AdminReportStudio from './pages/Admin/AdminReportStudio';
-import SecretAdminAuth from './pages/Admin/SecretAdminAuth';
-import AdminAIFeedback from './pages/Admin/AdminAIFeedback';
+// ─── ADMIN + AGENT: LOADED ON DEMAND ────────────────────────────────────────────
+//
+// These thirteen pages were static imports, so every visitor downloaded the entire
+// admin console before they could see a login form. They also drag `recharts` in with
+// them — a charting library nobody outside these pages uses, and 84 KB gzipped on its
+// own, roughly a tenth of the whole first load.
+//
+// They are the safest routes in the app to split: reached only behind AdminRoute, by a
+// handful of people, who can afford one extra request. The comment that used to sit
+// here said "for now direct import is fine" — it stopped being fine when users started
+// reporting that the app took seconds to open.
+const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
+const AdminUsers = lazy(() => import('./pages/Admin/AdminUsers'));
+const AdminTransactions = lazy(() => import('./pages/Admin/AdminTransactions'));
+const AdminPayments = lazy(() => import('./pages/Admin/AdminPayments'));
+const AdminAnalytics = lazy(() => import('./pages/Admin/AdminAnalytics'));
+const AdminUserDetails = lazy(() => import('./pages/Admin/AdminUserDetails'));
+const AdminSettings = lazy(() => import('./pages/Admin/AdminSettings'));
+const AdminLaunch = lazy(() => import('./pages/Admin/AdminLaunch'));
+const AdminReportStudio = lazy(() => import('./pages/Admin/AdminReportStudio'));
+const SecretAdminAuth = lazy(() => import('./pages/Admin/SecretAdminAuth'));
+const AdminAIFeedback = lazy(() => import('./pages/Admin/AdminAIFeedback'));
 
 // CV-agent pages (separate CV-only workspace)
-import AgentDashboard from './pages/Agent/AgentDashboard';
-import AgentEarnings from './pages/Agent/AgentEarnings';
+const AgentDashboard = lazy(() => import('./pages/Agent/AgentDashboard'));
+const AgentEarnings = lazy(() => import('./pages/Agent/AgentEarnings'));
+
+// ─── ROUTE-LEVEL CODE SPLITTING ────────────────────────────────────────────────
+//
+// Every page below used to be a static import, which put the WHOLE application into
+// the first download: 3.65 MB, 977 KB gzipped, before anything could paint. Users
+// reported it as "the app takes time to open and shows no information", which is
+// literally what an empty #root and a megabyte of JavaScript produce on mobile data.
+//
+// What is NOT here is the important half. Login, Register and Dashboard stay static:
+// they are the first paint, and making them a second round trip would move the delay
+// rather than remove it. Everything below is reached from one of those, by a user who
+// has already seen the app respond.
+
+// Content, guides and legal — read rarely, never on the way to the dashboard.
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/TermsOfService'));
+const Contact = lazy(() => import('./pages/Contact'));
+const ATSGuide = lazy(() => import('./pages/ATSGuide'));
+const Pricing = lazy(() => import('./pages/Pricing'));
+const HowATSRecruitersWork = lazy(() => import('./pages/HowATSRecruitersWork'));
+const CVBuilderGuide = lazy(() => import('./pages/CVBuilderGuide'));
+const AriaStudioGuide = lazy(() => import('./pages/AriaStudioGuide'));
+const CVHealth = lazy(() => import('./pages/CVHealth'));
+const CVTips = lazy(() => import('./pages/CVTips'));
+const HowToAceYourInterview = lazy(() => import('./pages/HowToAceYourInterview'));
+const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
+const FeedbackDashboard = lazy(() => import('./pages/FeedbackDashboard'));
+const ApplicationReview = lazy(() => import('./pages/ApplicationReview'));
+
+// The landing page and its particle background — see the note above.
+const LandingPage = lazy(() => import('./pages/LandingPage'));
+const MobileWelcome = lazy(() => import('./pages/mobile/MobileWelcome'));
+const PreLaunch = lazy(() => import('./pages/PreLaunch'));
+
+// Billing surfaces — entered deliberately, from a link, never on the critical path.
+const Upgrade = lazy(() => import('./pages/Upgrade'));
+const BillingReturn = lazy(() => import('./pages/BillingReturn'));
+const CreditStore = lazy(() => import('./pages/CreditStore'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Onboarding = lazy(() => import('./pages/Onboarding'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const JobSearch = lazy(() => import('./pages/JobSearch'));
+
+// Live interview — the heaviest surfaces in the app, and reached from a prep page.
+const InterviewPrepDetail = lazy(() => import('./pages/InterviewPrepDetail'));
+const InterviewPracticePage = lazy(() => import('./pages/InterviewPracticePage'));
+const PreCallBrief = lazy(() => import('./pages/PreCallBrief'));
+const MockInterviewPage = lazy(() => import('./pages/MockInterviewPage'));
+const InterviewPrepIndex = lazy(() => import('./pages/InterviewPrepIndex'));
+
+// The CV workspaces. Big, and entered from the dashboard — never before it.
+const ResumeReview = lazy(() => import('./pages/ResumeReview'));
+const AriaStudio = lazy(() => import('./pages/AriaStudio/AriaStudio'));
+const CvStudioIndex = lazy(() => import('./pages/CvStudioIndex'));
+const CVBuilderLayout = lazy(() => import('./pages/CVBuilder/CVBuilderLayout'));
+const CvBuilderIndex = lazy(() => import('./pages/CVBuilder/CvBuilderIndex'));
+const TargetJob = lazy(() => import('./pages/CVBuilder/TargetJob'));
+const Heading = lazy(() => import('./pages/CVBuilder/Heading'));
+const ProfessionalSummary = lazy(() => import('./pages/CVBuilder/ProfessionalSummary'));
+const History = lazy(() => import('./pages/CVBuilder/History'));
+const Projects = lazy(() => import('./pages/CVBuilder/Projects'));
+const Education = lazy(() => import('./pages/CVBuilder/Education'));
+const Skills = lazy(() => import('./pages/CVBuilder/Skills'));
+const Finalize = lazy(() => import('./pages/CVBuilder/Finalize'));
 
 // ... existing router configuration ...
 

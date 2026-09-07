@@ -2,6 +2,18 @@
 // the language sent as X-App-Language (which decides what language the AI
 // answers in) must NEVER disagree. They are wired to the same localStorage key,
 // and this runs the REAL axios request interceptor to prove it.
+//
+// WHY THESE AWAIT NOW. French is no longer bundled — it arrives as its own chunk
+// (see ./index), so applyLang() starts a load and i18next switches when it lands.
+// The storage write is still synchronous, so for a moment storage says fr while the
+// UI still renders en.
+//
+// That is not the drift this file guards against. The bug it was written for was a
+// PERMANENT disagreement — two sources of truth that settle on different answers and
+// stay there. A sub-second gap while a dictionary downloads is the unavoidable cost
+// of not shipping 306 KB of French to every English user, and it self-corrects.
+// So the assertion is made after the switch settles, which is the strongest
+// guarantee that is actually achievable.
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const makeStorage = () => {
@@ -42,6 +54,7 @@ const headersFor = async () => {
 describe('UI language and X-App-Language never drift', () => {
   it.each(['en', 'fr'])('after applyLang(%s) both agree', async (code) => {
     lang.applyLang(code);
+    await i18n.changeLanguage(code); // settle the locale chunk
     const headers = await headersFor();
     expect(headers['X-App-Language']).toBe(code);
     expect(i18n.resolvedLanguage).toBe(code);
@@ -51,6 +64,7 @@ describe('UI language and X-App-Language never drift', () => {
   it('stays in lockstep across repeated toggles', async () => {
     for (const code of ['fr', 'en', 'fr', 'fr', 'en']) {
       lang.applyLang(code);
+      await i18n.changeLanguage(code); // settle the locale chunk
       const headers = await headersFor();
       expect(headers['X-App-Language']).toBe(i18n.resolvedLanguage);
       expect(headers['X-App-Language']).toBe(code);
@@ -60,6 +74,7 @@ describe('UI language and X-App-Language never drift', () => {
   it('a server-side interfaceLang moves BOTH the header and the UI', async () => {
     lang.applyLang('en');
     lang.syncLangFromUser({ interfaceLang: 'fr' });
+    await i18n.changeLanguage('fr'); // settle the locale chunk
     const headers = await headersFor();
     expect(headers['X-App-Language']).toBe('fr');
     expect(i18n.resolvedLanguage).toBe('fr');

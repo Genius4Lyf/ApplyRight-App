@@ -3,7 +3,6 @@ import { initReactI18next } from 'react-i18next';
 import LanguageDetector from 'i18next-browser-languagedetector';
 
 import en from './locales/en.json';
-import fr from './locales/fr.json';
 
 /**
  * i18n setup.
@@ -36,14 +35,61 @@ import fr from './locales/fr.json';
  */
 export const SUPPORTED_LNGS = ['en', 'fr'];
 
+/**
+ * ── WHY FRENCH IS NOT BUNDLED ────────────────────────────────────────────────
+ *
+ * en.json is 271 KB and fr.json is 306 KB, and both used to be static imports —
+ * so every English user downloaded the entire French dictionary before the app
+ * could paint. That was a real slice of a 977 KB first load on phones.
+ *
+ * English STAYS bundled, deliberately: it is `fallbackLng`, so a French user
+ * needs it too for any key French has not translated yet. There is nothing to
+ * save by making it lazy, and plenty to break.
+ *
+ * French is read through a minimal i18next backend rather than loaded once at
+ * boot. The interface is i18next's own (`read(lng, ns, cb)`), which means
+ * `changeLanguage('fr')` awaits the chunk by itself — the language switcher and
+ * every existing test keep working untouched. A one-off boot-time fetch would
+ * have needed both, and would have missed switches made later in a session.
+ *
+ * `partialBundledLanguages` is what lets bundled `resources` and a backend
+ * coexist; without it i18next ignores one of them.
+ */
+const lazyLocaleBackend = {
+  type: 'backend',
+  init() {},
+  read(language, namespace, callback) {
+    // Already in the bundle — answer synchronously so nothing waits on a fetch
+    // that will never happen.
+    if (language === 'en') {
+      callback(null, en);
+      return;
+    }
+    if (language === 'fr') {
+      import('./locales/fr.json')
+        .then((mod) => callback(null, mod.default))
+        // Report the failure to i18next rather than swallowing it: it then falls
+        // back to English, which is a readable app. Swallowing would leave the UI
+        // rendering raw key paths.
+        .catch((err) => callback(err, null));
+      return;
+    }
+    // An unsupported language cannot happen through applyLang, but i18next may
+    // probe one. An empty bundle falls back to English.
+    callback(null, {});
+  },
+};
+
 i18n
+  .use(lazyLocaleBackend)
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources: {
       en: { translation: en },
-      fr: { translation: fr },
     },
+    // Bundled resources AND a backend — see lazyLocaleBackend above.
+    partialBundledLanguages: true,
     // Missing keys fall back to English rather than rendering blank or the raw
     // key path. This is what lets later rounds translate surface by surface: an
     // untranslated page just stays English.

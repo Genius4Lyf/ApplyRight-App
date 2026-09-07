@@ -123,8 +123,17 @@ describe('a chosen language survives a reload (regression)', () => {
     // Next mount: syncLangFromStoredUser must NOT revert to 'en'.
     lang.syncLangFromStoredUser();
     expect(lang.getLang()).toBe('fr');
-    await i18n.changeLanguage(lang.getLang()); // settle i18n's async change
-    expect(i18n.language).toBe('fr');
+    // Settle the locale chunk: loadLanguages resolves when the bundle is actually
+    // present, changeLanguage then switches onto it.
+    await i18n.loadLanguages(lang.getLang());
+    await i18n.changeLanguage(lang.getLang());
+    // resolvedLanguage, not language: `language` is the tag that was REQUESTED and
+    // can keep a region ("fr-FR") that earlier tests in this file left behind, while
+    // `resolvedLanguage` is the one i18next actually renders from. The distinction
+    // never showed while both dictionaries were bundled and every switch was
+    // instant; it does now that French arrives as a chunk. noDrift.test.js has always
+    // asserted resolvedLanguage for exactly this reason.
+    expect(i18n.resolvedLanguage).toBe('fr');
   });
 
   it('WITHOUT the blob write the choice reverts — this is the bug it fixes', () => {
