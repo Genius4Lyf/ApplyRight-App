@@ -11,6 +11,7 @@ import api from '../services/api';
 import { Capacitor } from '@capacitor/core';
 
 import { useTemplatePromo } from '../lib/promos';
+import { isTemplateUnlocked } from '../lib/templateAccess';
 import { toast } from 'sonner';
 
 // Watch-ad-for-credits is native-only; web has no ads and routes to the paid
@@ -35,28 +36,11 @@ const TemplateSelector = ({
   // leave the padlocks on until something else happened to re-render the grid.
   const promo = useTemplatePromo();
 
-  // Active paid status, expiry-aware (mirrors the backend subscription.hasPaidAccess):
-  // honor a subscription's expiry when present, else fall back to the manually-set
-  // `plan` flag (admin grants have no subscription subdoc). So an expired subscriber
-  // reverts to paying credits for premium templates.
-  const isPaidActive = (u = {}) => {
-    const exp = u.subscription?.expiresAt;
-    if (exp) return new Date(exp).getTime() > Date.now();
-    if (u.tier && u.tier !== 'free') return true; // any paid tier unlocks everything
-    return u.plan === 'paid';
-  };
-
-  // Helper to check if template is unlocked
-  const isUnlocked = (template) => {
-    if (!template.isPro) return true; // Free templates always unlocked
-    // Launch promo — every premium template, for everyone, until it expires. The
-    // server enforces the same rule on /billing/unlock-template, so this only decides
-    // what the grid LOOKS like, never what someone is charged.
-    if (promo.active) return true;
-    if (isPaidActive(user)) return true; // Active paid tiers unlock everything
-    if (user.unlockedTemplates && user.unlockedTemplates.includes(template.id)) return true;
-    return false;
-  };
+  // Is this template usable right now? The shared rule (lib/templateAccess) — the same
+  // one the design page uses, so a padlock here and a download block there can no
+  // longer disagree. The server enforces it again on /billing/unlock-template, so this
+  // only decides what the grid LOOKS like, never what someone is charged.
+  const isUnlocked = (template) => isTemplateUnlocked(template, user, promo.active);
 
   const handleSelect = (template) => {
     // Allow selection of all templates for preview

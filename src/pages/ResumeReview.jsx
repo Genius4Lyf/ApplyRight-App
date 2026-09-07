@@ -80,6 +80,8 @@ import {
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
+import { useTemplatePromo } from '../lib/promos';
+import { isTemplateUnlocked } from '../lib/templateAccess';
 import CVService from '../services/cv.service';
 import AdPlayer from '../components/AdPlayer'; // Import AdPlayer
 import LoadingScreen from '../components/LoadingScreen'; // Full-screen loading overlay with rotating tips
@@ -497,6 +499,11 @@ const ResumeReview = () => {
   // Ad & Unlock State
   const [downloadAdOpen, setDownloadAdOpen] = useState(false);
   const [showDownloadPaywall, setShowDownloadPaywall] = useState(false); // Web ₦500 download paywall
+  // The launch promo on premium templates. A hook, not a plain read: it arrives on
+  // GET /auth/config after this page has usually mounted, and a value that cannot
+  // notify would leave the padlocks on until some other state change re-rendered.
+  const promo = useTemplatePromo();
+
   const [unlockModalOpen, setUnlockModalOpen] = useState(false);
   const [templateToUnlock, setTemplateToUnlock] = useState(null);
   const [unlocking, setUnlocking] = useState(false);
@@ -630,34 +637,26 @@ const ResumeReview = () => {
 
   // Listen for global user updates
 
-  // Active paid status (mirrors TemplateSelector.isPaidActive): an unexpired
-  // Flutterwave subscription, OR any non-free tier, OR the legacy manual `plan`
-  // grant. Any of these unlocks every premium template.
-  const isPaidActive = (u = {}) => {
-    const exp = u?.subscription?.expiresAt;
-    if (exp && new Date(exp).getTime() > Date.now()) return true; // active Flutterwave sub
-    if (u?.tier && u.tier !== 'free') return true; // any paid tier
-    return u?.plan === 'paid'; // legacy manual grant
-  };
 
-  // Unlocking Logic
-  const isUnlocked = (templateId) => {
-    const template = TEMPLATES.find((t) => t.id === templateId);
-    if (!template) return true;
-    if (!template.isPro) return true;
-    if (isPaidActive(userProfile)) return true;
-    if (userProfile?.unlockedTemplates && userProfile.unlockedTemplates.includes(templateId))
-      return true;
-    return false;
-  };
+  // Unlocking Logic — the shared rule (lib/templateAccess), which both this page and
+  // TemplateSelector now use. It also guards both download buttons below, which is why
+  // this page having its own slightly different copy was worse than it looked.
+  const isUnlocked = (id) =>
+    isTemplateUnlocked(
+      TEMPLATES.find((t) => t.id === id),
+      userProfile,
+      promo.active
+    );
 
   const handleUnlock = async () => {
     if (!templateToUnlock) return;
     setUnlocking(true);
     try {
+      // Price is server-owned (config/templates) — send only the id. The cost this
+      // used to send was ignored server-side, but a client that appears to set a
+      // price is an invitation to trust one.
       const res = await api.post('/billing/unlock-template', {
         templateId: templateToUnlock.id,
-        cost: templateToUnlock.cost,
       });
 
       if (res.data.success) {
