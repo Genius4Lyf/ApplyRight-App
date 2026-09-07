@@ -28,6 +28,13 @@ const AdminLaunch = () => {
   const [granting, setGranting] = useState(false);
   const [sending, setSending] = useState(false);
   const [testing, setTesting] = useState(false);
+  // The full { sent, failed, remaining, lastError } breakdown from the last live send,
+  // held until the admin dismisses it. A toast alone was the original design, and it
+  // was wrong twice over: it disappears in a few seconds, and — because the endpoint
+  // returns HTTP 200 even when it sent nothing (a bad domain, an auth error) — it was
+  // rendered as toast.success unconditionally, so a real failure looked identical to a
+  // real success. This is the persistent, honest version of that same information.
+  const [result, setResult] = useState(null);
 
   const load = useCallback(async () => {
     try {
@@ -78,9 +85,13 @@ const AdminLaunch = () => {
   };
 
   const sendLive = async () => {
+    // Confirm on sendableToday, not pendingEmail — the cap means those can genuinely
+    // differ, and confirming on the bigger number is exactly the misleading promise the
+    // button label made before.
+    const capped = data.sendableToday < data.pendingEmail;
     if (
       !window.confirm(
-        `Email ${data.pendingEmail} account(s) that ApplyRight is live?\n\n` +
+        `Email ${data.sendableToday} account(s)${capped ? ` — today's cap; ${data.pendingEmail - data.sendableToday} more will wait for later days` : ''}?\n\n` +
           `This cannot be recalled. Send yourself a test first if you have not.`
       )
     )
@@ -88,7 +99,16 @@ const AdminLaunch = () => {
     setSending(true);
     try {
       const res = await api.post('/admin/launch/announce', {}, authConfig());
-      toast.success(res.data.message);
+      setResult(res.data.data);
+      // The endpoint answers 200 whenever it FINISHED RUNNING, which is not the same as
+      // whenever it worked — a domain or auth error stops the batch loop cleanly and
+      // still returns 200 with sent:0. Grade the toast on what actually happened rather
+      // than on the request having succeeded.
+      if (res.data.data.sent > 0 && !res.data.data.lastError) {
+        toast.success(res.data.message);
+      } else {
+        toast.error(res.data.message);
+      }
       await load();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Send failed');
@@ -121,7 +141,9 @@ const AdminLaunch = () => {
         ? 'Maintenance mode is still ON — recipients would land on a closed site.'
         : data.pendingBonus > 0
           ? `${data.pendingBonus} account(s) have not received their credits yet.`
-          : null;
+          : data.pendingEmail > 0 && data.sendableToday === 0
+            ? `Today's ${data.dailyCap}-email cap is used up. The rest are ready tomorrow.`
+            : null;
 
   return (
     <AdminLayout>
@@ -244,7 +266,14 @@ const AdminLaunch = () => {
               ? 'Sending…'
               : data.pendingEmail === 0
                 ? 'Everyone has been emailed'
-                : `Email ${data.pendingEmail} account(s)`}
+                : data.sendableToday === 0
+                  ? "Today's cap reached"
+                  : // The label says what actually happens on click — the daily cap can leave
+                    // a real gap between "not yet emailed" and "will be emailed today", and
+                    // the button that used to promise the bigger number is the bug being fixed.
+                    data.sendableToday < data.pendingEmail
+                    ? `Email ${data.sendableToday} of ${data.pendingEmail} today`
+                    : `Email ${data.pendingEmail} account(s)`}
           </button>
         </div>
 
@@ -255,6 +284,64 @@ const AdminLaunch = () => {
           </p>
         )}
       </div>
+
+      {/* Result — what the last live send actually did, held until dismissed. Not a
+          toast: this is the number the admin came here to confirm, and a message that
+          disappears in three seconds is not a record they can check twice. */}
+      {result && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="launch-send-result-title"
+        >
+          <div className="w-full max-w-sm rounded-xl bg-white p-6 shadow-xl">
+            <h3
+              id="launch-send-result-title"
+              className="flex items-center gap-2 font-bold text-slate-900"
+            >
+              {result.lastError ? (
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+              ) : (
+                <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+              )}
+              {result.lastError ? 'Send stopped early' : 'Announcement sent'}
+            </h3>
+
+            <div className="mt-4 grid grid-cols-2 gap-4">
+              <Stat label="Sent" value={result.sent} />
+              <Stat label="Remaining" value={result.remaining} />
+            </div>
+
+            {result.failed > 0 && (
+              <p className="mt-3 text-sm font-semibold text-rose-700">
+                {result.failed} account(s) were NOT emailed.
+              </p>
+            )}
+
+            {result.lastError && (
+              <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                {result.lastError}
+              </p>
+            )}
+
+            {!result.lastError && result.remaining > 0 && (
+              <p className="mt-3 text-xs text-slate-500">
+                Today's {result.dailyCap}-email cap is reached. Run this again tomorrow for the
+                rest.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setResult(null)}
+              className="mt-5 w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-slate-800"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </AdminLayout>
   );
 };
