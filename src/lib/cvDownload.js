@@ -1,6 +1,6 @@
 import CVService from '../services/cv.service';
 import { downloadBlob } from '../utils/download';
-import { TEMPLATES, paperColor } from '../data/templates';
+import { TEMPLATES, groundColor } from '../data/templates';
 
 // The template a download falls back to when nothing has been chosen. 'ats-clean' is the
 // free, single-column, ATS-parseable one — the safe default to hand someone who never
@@ -67,12 +67,12 @@ export function buildDownloadFilename(userProfile, kind, ext) {
  * paid PDF never contains them.
  *
  * @param {HTMLElement} element the live preview node (#resume-content)
- * @param {{ paperWidth: string, paperHeight: string, paper: string, isDarkTemplate: boolean, templateId: string }} opts
+ * @param {{ paperWidth: string, paperHeight: string, paper: string, isDarkTemplate: boolean, templateId: string, ground?: string }} opts
  * @returns {string} a complete HTML document
  */
 export function buildPrintHtml(
   element,
-  { paperWidth, paperHeight, paper, isDarkTemplate, templateId }
+  { paperWidth, paperHeight, paper, isDarkTemplate, templateId, ground }
 ) {
   const clone = element.cloneNode(true);
   const sidebar = clone.querySelector('[data-cv-sidebar]');
@@ -119,7 +119,13 @@ export function buildPrintHtml(
   // white band under every CV that ran short of a page, in the paid download.
   //
   // Royal Elegance keeps its own dark page (its template is designed against it).
-  const bgColor = isDarkTemplate ? '#0f172a' : paperColor(templateId);
+  //
+  // `ground` is the user's Design-tab choice. The --cv-ground variable rides into the
+  // PDF on the clone for free, but this page sits BEHIND that node — so a chosen
+  // ground has to be passed in explicitly or a short CV prints its new colour above
+  // and the template's original one below. groundColor ignores the choice on any
+  // template that does not allow one.
+  const bgColor = isDarkTemplate ? '#0f172a' : groundColor(templateId, ground);
 
   return `
                 <!DOCTYPE html>
@@ -207,6 +213,7 @@ const isPaywall = (e) => e?.code === 'NEED_DOWNLOAD';
  * @param {string} opts.paperHeight
  * @param {string} opts.paper        'a4' | 'letter'
  * @param {string} opts.templateId
+ * @param {string} [opts.ground] the Design tab's page-colour choice, if the template allows one
  * @param {string} [opts.applicationId]
  * @param {boolean} [opts.isDraft]
  * @param {object} [opts.userProfile]
@@ -219,6 +226,7 @@ export async function downloadPdf({
   paperHeight,
   paper,
   templateId,
+  ground,
   applicationId,
   isDraft,
   userProfile,
@@ -236,6 +244,7 @@ export async function downloadPdf({
       paper,
       isDarkTemplate: templateId === 'luxury-royal',
       templateId,
+      ground,
     });
 
     // The ONLY margin now: the template's own internal padding, plus the 5mm

@@ -261,3 +261,70 @@ export const paperColor = (templateId) =>
  */
 export const sidebarFill = (templateId) =>
   TEMPLATES.find((template) => template.id === templateId)?.sidebar || null;
+
+/**
+ * ── USER-CHOSEN PAGE GROUND ─────────────────────────────────────────────────────
+ *
+ * The Design tab lets the user set the colour of the page itself — but only on the
+ * templates where that is a safe thing to do, which is a much shorter list than it
+ * looks.
+ *
+ * The rule, and why it is an explicit allowlist rather than something derived:
+ *
+ *   A template qualifies only if the ground is the ONLY large colour it has — no
+ *   sidebar, no masthead band, no colour blocks. Recolour the page under a navy
+ *   masthead or a bronze rule and you get a document that fights itself, which is not
+ *   a choice worth offering. Of the 19 live templates exactly 5 qualify: two that are
+ *   already plain white, and three whose only other colour is a 1px section hairline.
+ *
+ * Deriving this from `sidebar`/`paper` would catch the sidebar templates but NOT the
+ * eight that paint a band on a white page — `paper` is undefined for those, so they
+ * would read as "plain white, safe to recolour" when they are the opposite. Hence a
+ * list, checked by eye against each component, and pinned by a test.
+ *
+ * The mechanism is `--cv-ground`, set on #resume-content alongside --cv-accent and
+ * friends. The five templates read it with their own colour as the fallback, so an
+ * unset value is exactly today's behaviour. Because the PDF is built from a CLONE of
+ * that same node, the variable travels into the download for free — but the page
+ * BEHIND the CV does not, which is why groundColor() exists and buildPrintHtml takes
+ * the choice as an argument.
+ */
+export const GROUND_EDITABLE_IDS = [
+  'ats-clean',
+  'student-ats',
+  'modern-professional',
+  'minimal-serif',
+  'the-profile',
+];
+
+/**
+ * The offered grounds. Every value here is a paper colour already used somewhere in the
+ * template set, so each one is known to print and to sit under real CV text — this is
+ * not a general colour picker, and deliberately so. A saturated page is the single
+ * fastest way to make a CV look unserious, and recruiters print.
+ */
+export const GROUND_CHOICES = [
+  { value: '#ffffff', name: 'White' },
+  { value: '#fcfbf7', name: 'Ivory' },
+  { value: '#faf8f4', name: 'Paper' },
+  { value: '#f7f6f2', name: 'Sand' },
+  { value: '#f4f7f7', name: 'Mist' },
+];
+
+/** Whether the Design tab should offer a ground choice for this template at all. */
+export const supportsGround = (templateId) => GROUND_EDITABLE_IDS.includes(templateId);
+
+/**
+ * The page colour to paint, given what the user picked. Falls back to the template's own
+ * paper for an unsupported template, an unset choice, or a value not on the palette —
+ * so a stale localStorage entry from a template that once allowed it cannot leak a
+ * colour onto one that does not.
+ *
+ * @param {string} templateId
+ * @param {string} [ground] the user's choice from GROUND_CHOICES
+ * @returns {string} a CSS colour, never undefined
+ */
+export const groundColor = (templateId, ground) =>
+  ground && supportsGround(templateId) && GROUND_CHOICES.some((c) => c.value === ground)
+    ? ground
+    : paperColor(templateId);

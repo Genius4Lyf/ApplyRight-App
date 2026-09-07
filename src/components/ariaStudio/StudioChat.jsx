@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaMessageText from '../cv/AriaMessageText';
+import CopyMessageButton from '../cv/CopyMessageButton';
 import AriaAnswerCard from '../cv/AriaAnswerCard';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
@@ -3823,17 +3824,20 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
               }
               return (
                 <React.Fragment key={i}>
-                  <motion.div
-                    ref={(el) => {
-                      msgDomRef.current[i] = el;
-                    }}
-                    className={`self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap ${
-                      m.failed ? 'opacity-60' : ''
-                    }`}
-                    {...bubbleAnim('user', reduce)}
-                  >
-                    {m.text}
-                  </motion.div>
+                  <div className="msg-row self-end flex max-w-[92%] flex-col items-end gap-0.5">
+                    <motion.div
+                      ref={(el) => {
+                        msgDomRef.current[i] = el;
+                      }}
+                      className={`bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap ${
+                        m.failed ? 'opacity-60' : ''
+                      }`}
+                      {...bubbleAnim('user', reduce)}
+                    >
+                      {m.text}
+                    </motion.div>
+                    <CopyMessageButton text={m.text} />
+                  </div>
                   {/* Didn't get through. Sits UNDER their own message so it is obvious
                       which one failed, and carries the way forward — retyping it was the
                       only option before. */}
@@ -4235,7 +4239,10 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                     row rather than a child of the text, so the orbit stays the last item
                     and the prose above still reads on its own if this renders nothing. */}
                 <AriaAnswerCard layout={m.layout} blocks={m.blocks} />
-                <AriaOrbit size={16} className="aria-mark ml-1" />
+                <div className="flex items-center gap-1">
+                  <AriaOrbit size={16} className="aria-mark ml-1" />
+                  <CopyMessageButton text={m.text} />
+                </div>
               </motion.div>
             );
           })}

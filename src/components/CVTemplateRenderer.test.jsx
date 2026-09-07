@@ -38,11 +38,16 @@ afterEach(() => {
 describe('CVTemplateRenderer — resolving a template', () => {
   it('renders a CURRENT template rather than falling back', () => {
     // The shipped bug: 'modern-professional' was absent from this component's own map, so
-    // it resolved to ATS Clean. Its distinguishing mark is its warm paper.
+    // it resolved to ATS Clean. Its distinguishing mark is its warm paper — which now
+    // arrives as an inline `var(--cv-ground, …)` rather than a `bg-[#f7f6f2]` class,
+    // because the user can repaint this template's page from the Design tab. The
+    // fingerprint moved; what it identifies did not.
     const { container } = renderCv('modern-professional');
 
     expect(screen.getByText(/Analytical engine specialist/)).toBeTruthy();
-    expect(container.querySelector('.bg-\\[\\#f7f6f2\\]')).toBeTruthy();
+    const root = container.querySelector('[style*="--cv-ground"]');
+    expect(root, 'Modern Professional renders its own root').toBeTruthy();
+    expect(root.getAttribute('style')).toContain('#f7f6f2');
     expect(warn).not.toHaveBeenCalled();
   });
 

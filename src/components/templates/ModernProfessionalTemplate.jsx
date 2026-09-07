@@ -45,8 +45,12 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="mx-auto bg-[#f7f6f2] text-[#25282d]"
+      className="mx-auto text-[#25282d]"
       style={{
+        // The page ground, user-settable on this template (see GROUND_EDITABLE_IDS
+        // in data/templates). Unset falls back to the colour this template shipped
+        // with, so the default document is unchanged.
+        backgroundColor: 'var(--cv-ground, #f7f6f2)',
         lineHeight: 'var(--cv-leading, 1.52)',
         fontFamily: "var(--cv-font, 'Inter', sans-serif)",
         padding: 'var(--cv-margin, 2.7rem 3rem)',

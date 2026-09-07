@@ -6,6 +6,8 @@
   },
   "common": {
     "appName": "ApplyRight",
+    "copy": "Copier",
+    "copied": "Copié",
     "cancel": "Annuler",
     "back": "Retour",
     "processing": "Traitement en cours...",
@@ -1692,7 +1694,6 @@
         "volunteer": "Bénévolat / responsabilité sur le campus",
         "coursework": "Cours"
       },
-      "starterFallback": "Une amorce à développer",
       "hideExample": "Masquer l’exemple",
       "showExample": "Montrez-moi un exemple",
       "exampleFormat": "p. ex. « {{answer}} »",
@@ -5074,7 +5075,6 @@
       "generatingBullets": "Génération de vos puces…",
       "readyForBullets": "D'accord, j'ai tout ce qu'il me faut pour créer vos puces.",
       "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
-      "clickableImpact": "Façons de montrer l’impact — cliquez sur celle qui vous convient :",
       "stageNudge": "Où en êtes-vous dans votre carrière ? Cela change ma façon de questionner.",
       "supportedBy": "D’après votre entretien : {{evidence}}",
       "matchesRequirements": "Correspond à : {{requirements}}"

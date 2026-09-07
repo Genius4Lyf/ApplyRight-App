@@ -17,6 +17,7 @@ import { builderScreenContext } from '../../lib/ariaScreen';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaMessageText from './AriaMessageText';
+import CopyMessageButton from './CopyMessageButton';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import SkillsCard from './SkillsCard';
@@ -436,13 +437,15 @@ const AriaChat = ({
               );
             }
             return m.who === 'user' ? (
-              <motion.div
-                key={i}
-                className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
-                {...bubbleAnim('user', reduce)}
-              >
-                {m.text}
-              </motion.div>
+              <div key={i} className="msg-row self-end flex max-w-[92%] flex-col items-end gap-0.5">
+                <motion.div
+                  className="bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
+                  {...bubbleAnim('user', reduce)}
+                >
+                  {m.text}
+                </motion.div>
+                <CopyMessageButton text={m.text} />
+              </div>
             ) : (
               <motion.div
                 key={i}
@@ -457,7 +460,10 @@ const AriaChat = ({
                     onDone={() => revealedRef.current.add(i)}
                   />
                 </div>
-                <AriaOrbit size={16} className="aria-mark ml-1" />
+                <div className="flex items-center gap-1">
+                  <AriaOrbit size={16} className="aria-mark ml-1" />
+                  <CopyMessageButton text={m.text} />
+                </div>
               </motion.div>
             );
           })}

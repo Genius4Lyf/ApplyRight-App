@@ -16,6 +16,7 @@ import { useGenerationModel } from '../../hooks/useGenerationModel';
 import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaMessageText from './AriaMessageText';
+import CopyMessageButton from './CopyMessageButton';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import GenerationModelRow from './GenerationModelRow';
@@ -128,14 +129,12 @@ const AskAriaGenerate = ({
   // Starter-question chips — only while this section chat is fresh (nothing said yet)
   // and unfocused. Any engagement (send, or focusing a role) drops them for good.
   const [showChips, setShowChips] = useState(savedQA.length === 0);
-  // Role-aware answer scaffolds under Aria's build-with follow-up (from /coach/chat):
-  // tap-to-start starters + a toggleable sample answer. Cleared on send, refreshed
-  // with each new question.
-  const [suggestions, setSuggestions] = useState([]);
+  // A full sample answer under Aria's build-with follow-up (from /coach/chat), behind a
+  // toggle so it never reads as the user's own claim. Cleared on send, refreshed with
+  // each new question. The tap-to-start STARTERS that used to sit beside it are gone —
+  // Aria writes those into her reply as bullets now, so a chip row repeated them.
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
-  // Aria's per-question lead-in over the scaffolds (e.g. "A number you might have:").
-  const [suggestionsLabel, setSuggestionsLabel] = useState('');
   // For a focused PROJECT, ask the project type upfront (chips) before interviewing.
   // Dismissed once the user picks a chip OR types any answer; reset on focus change.
   const [projectTypePicked, setProjectTypePicked] = useState(false);
@@ -349,10 +348,8 @@ const AskAriaGenerate = ({
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setShowChips(false);
     setProjectTypePicked(true); // any send (chip or typed) dismisses the project-type chips
-    setSuggestions([]);
     setExampleAnswer('');
     setExampleOpen(false);
-    setSuggestionsLabel('');
     setThinking(true);
     if (focused) buildTurnsRef.current += 1;
     // Actively CREATE the draft on demand (shared with builder-entry, no duplicate)
@@ -389,9 +386,6 @@ const AskAriaGenerate = ({
         isGradCareer && metricPrompt.test(r.reply || '')
           ? t('cvBuilder.askAria.gradFollowUp')
           : r.reply;
-      const safeSuggestions = isGradCareer
-        ? (r.suggestions || []).filter((s) => !metricPrompt.test(s))
-        : r.suggestions || [];
       const safeExample =
         isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
       setMessages((m) => [...m, { who: 'aria', text: reply }]);
@@ -400,9 +394,7 @@ const AskAriaGenerate = ({
       if (r.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
       }
-      setSuggestions(safeSuggestions);
       setExampleAnswer(safeExample);
-      setSuggestionsLabel(r.suggestionsLabel || '');
       if (r.readyToDraft && focused) {
         const desc =
           (r.description || '').trim() ||
@@ -427,22 +419,6 @@ const AskAriaGenerate = ({
     } finally {
       setThinking(false);
     }
-  };
-
-  // Tap a starter → drop it into the box, editable (never auto-sent). Caret lands on
-  // the "___" placeholder if present, else at the end, so they finish their own words.
-  const applyStarter = (text) => {
-    setInput(text);
-    requestAnimationFrame(() => {
-      const el = inputRef.current;
-      if (!el) return;
-      el.focus();
-      const i = text.indexOf('___');
-      if (i >= 0) el.setSelectionRange(i, i + 3);
-      else el.setSelectionRange(text.length, text.length);
-      el.style.height = 'auto';
-      el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
-    });
   };
 
   // Paid users (or those who chose "Always allow" on this CV) generate straight
@@ -812,7 +788,10 @@ const AskAriaGenerate = ({
                     onDone={() => revealedRef.current.add(i)}
                   />
                 </div>
-                <AriaOrbit size={16} className="aria-mark ml-1" />
+                <div className="flex items-center gap-1">
+                  <AriaOrbit size={16} className="aria-mark ml-1" />
+                  <CopyMessageButton text={m.text} />
+                </div>
               </motion.div>
             );
           })}
@@ -907,36 +886,30 @@ const AskAriaGenerate = ({
             </div>
           )}
 
-          {/* Role-aware answer scaffolds — under Aria's build-with follow-up. Tap a
-              dashed starter to drop an EDITABLE opener into the box (never auto-sent);
-              "Show me an example" toggles a sample answer. Focused build-with only. */}
-          {focused && phase === 'chat' && !thinking && suggestions.length > 0 && (
+          {/* A sample answer, offered under Aria's build-with follow-up.
+
+              The dashed STARTER chips that used to lead this block are gone. `reply` is
+              markdown now, and Aria already writes those same starters as bullets inside
+              her message — so the row underneath was a second copy of text the user had
+              just finished reading, in a style that no longer matched anything else.
+              `suggestions` still comes back from the server and still shapes what she
+              writes; it simply has one surface now instead of two.
+
+              The example is NOT a duplicate — it is a full sample answer she deliberately
+              keeps out of the reply, behind a toggle, so it never reads as the user's own
+              claim. That one stays. */}
+          {focused && phase === 'chat' && !thinking && exampleAnswer && (
             <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
-              <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-                {suggestionsLabel || t('cvBuilder.askAria.starterFallback')}
-              </span>
               <div className="flex flex-wrap gap-1.5">
-                {suggestions.map((s, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => applyStarter(s)}
-                    className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
-                {exampleAnswer && (
-                  <button
-                    type="button"
-                    onClick={() => setExampleOpen((o) => !o)}
-                    className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    {exampleOpen
-                      ? t('cvBuilder.askAria.hideExample')
-                      : t('cvBuilder.askAria.showExample')}
-                  </button>
-                )}
+                <button
+                  type="button"
+                  onClick={() => setExampleOpen((o) => !o)}
+                  className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  {exampleOpen
+                    ? t('cvBuilder.askAria.hideExample')
+                    : t('cvBuilder.askAria.showExample')}
+                </button>
               </div>
               {exampleOpen && exampleAnswer && (
                 <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] text-slate-600 dark:text-slate-300 italic">

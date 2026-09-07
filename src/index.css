@@ -330,6 +330,26 @@
     }
   }
 
+  /* Copy-one-message control. Quiet by default: a visible button under every bubble
+     turns a conversation into a control panel. On a pointer device it appears when the
+     message row is hovered; on touch there is no hover to reveal it, so it sits faintly
+     but permanently visible instead of being unreachable. Keyboard focus always shows
+     it, or it would be a control you can tab to and not see. */
+  .msg-copy {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .aria-row:hover .msg-copy,
+  .msg-row:hover .msg-copy,
+  .msg-copy:focus-visible {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .msg-copy {
+      opacity: 0.55;
+    }
+  }
+
   /* Aria one-shot apply-confirm ring (motion-spec 3.2) — a single emerald pulse
      when a suggestion/bullet card is applied. Disabled under reduced motion. */
   .aria-ring-pulse {

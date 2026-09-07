@@ -70,7 +70,13 @@ import {
   SalesSidebarTemplate,
   SlateTimelineTemplate,
 } from '../components/templates/SignatureCollectionTemplates';
-import { TEMPLATES, paperColor, sidebarFill } from '../data/templates';
+import {
+  TEMPLATES,
+  sidebarFill,
+  groundColor,
+  supportsGround,
+  GROUND_CHOICES,
+} from '../data/templates';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
@@ -188,6 +194,11 @@ const ResumeReview = () => {
     density: 'normal',
     font: '',
     paper: 'a4', // 'a4' | 'letter'
+    // The colour of the page itself. NOT `paper` — that one is the SHEET SIZE, and
+    // the two are a standing invitation to confuse each other. Empty means "whatever
+    // this template ships with", and it is ignored outright on the templates that
+    // do not allow a choice (see supportsGround).
+    ground: '',
   });
 
   // Persist the design choices per-CV in localStorage (keyed by CV id) so they
@@ -737,6 +748,7 @@ const ResumeReview = () => {
         paperHeight,
         paper: design.paper,
         templateId,
+        ground: design.ground,
         applicationId: application._id,
         isDraft: isDraftMode,
         userProfile,
@@ -1740,8 +1752,9 @@ const ResumeReview = () => {
                 // naming two of the four tinted templates from memory, so Modern
                 // Professional and Operations Blueprint got a white page under their
                 // warm content — a hard colour break wherever the CV ran short of the
-                // full A4 height. paperColor reads it off the template's own entry.
-                backgroundColor: paperColor(templateId),
+                // full A4 height. paperColor reads it off the template's own entry,
+                // and groundColor lets the user override it where that is allowed.
+                backgroundColor: groundColor(templateId, design.ground),
                 transform: `scale(${scale})`,
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
@@ -1749,6 +1762,10 @@ const ResumeReview = () => {
                 // Design tab: accent + line-height vars (templates consume them in
                 // 2b) and fully-functional page margins.
                 '--cv-accent': design.accent || undefined,
+                // Read by the five ground-editable templates, each with its own colour as
+                // the fallback. Set here on #resume-content, which is the node the PDF
+                // clones — so the download inherits it without a second code path.
+                '--cv-ground': supportsGround(templateId) ? design.ground || undefined : undefined,
                 '--cv-font': design.font || undefined,
                 '--cv-leading':
                   design.density === 'compact' ? 1.35 : design.density === 'relaxed' ? 1.7 : 1.5,
@@ -2461,6 +2478,51 @@ const ResumeReview = () => {
                     </div>
                   </div>
 
+                  {/* Page colour — sets --cv-ground, and repaints the sheet behind the
+                      CV to match. Shown ONLY for the handful of templates where the
+                      ground is the single large colour on the page (supportsGround).
+                      Everywhere else the page carries a masthead band, a sidebar or
+                      colour blocks that were designed against their own ground, and
+                      letting someone recolour underneath them produces a document that
+                      fights itself — so the control is absent rather than disabled: a
+                      greyed-out row invites "why not?", a missing one reads as "not part
+                      of this template". */}
+                  {supportsGround(templateId) && (
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+                        Page colour
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Default = clear it → the template's own paper. */}
+                        <button
+                          type="button"
+                          onClick={() => setDesign((d) => ({ ...d, ground: '' }))}
+                          className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
+                            design.ground === ''
+                              ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/30 dark:ring-white/30 text-slate-900 dark:text-slate-100'
+                              : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
+                          }`}
+                        >
+                          Default
+                        </button>
+                        {GROUND_CHOICES.map((sw) => (
+                          <button
+                            key={sw.value}
+                            type="button"
+                            onClick={() => setDesign((d) => ({ ...d, ground: sw.value }))}
+                            title={sw.name}
+                            aria-label={sw.name}
+                            className={`w-8 h-8 rounded-full transition-all ${
+                              design.ground === sw.value
+                                ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
+                                : 'ring-1 ring-black/10 dark:ring-white/10 hover:scale-105'
+                            }`}
+                            style={{ backgroundColor: sw.value }}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {/* Margins — fully functional: preview padding + PDF margin. */}
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">

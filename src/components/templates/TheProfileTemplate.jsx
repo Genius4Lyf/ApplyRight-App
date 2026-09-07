@@ -67,8 +67,12 @@ const TheProfileTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="bg-[#faf8f4] mx-auto text-[#221f1c]"
+      className="mx-auto text-[#221f1c]"
       style={{
+        // The page ground, user-settable on this template (see GROUND_EDITABLE_IDS
+        // in data/templates). Unset falls back to the colour this template shipped
+        // with, so the default document is unchanged.
+        backgroundColor: 'var(--cv-ground, #faf8f4)',
         lineHeight: 'var(--cv-leading, 1.56)',
         fontFamily: "var(--cv-font, 'Work Sans', system-ui, sans-serif)",
         padding: 'var(--cv-margin, 2.7rem 2.95rem)',

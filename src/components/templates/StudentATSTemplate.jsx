@@ -38,8 +38,12 @@ const StudentATSTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="mx-auto bg-white text-[#26313d]"
+      className="mx-auto text-[#26313d]"
       style={{
+        // The page ground, user-settable on this template (see GROUND_EDITABLE_IDS
+        // in data/templates). Unset falls back to the colour this template shipped
+        // with, so the default document is unchanged.
+        backgroundColor: 'var(--cv-ground, #ffffff)',
         lineHeight: 'var(--cv-leading, 1.5)',
         fontFamily: "var(--cv-font, Arial, 'Helvetica Neue', sans-serif)",
         padding: 'var(--cv-margin, 2.7rem 3rem)',

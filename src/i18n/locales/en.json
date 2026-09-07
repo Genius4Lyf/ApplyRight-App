@@ -10,6 +10,8 @@
   },
   "common": {
     "appName": "ApplyRight",
+    "copy": "Copy",
+    "copied": "Copied",
     "cancel": "Cancel",
     "back": "Back",
     "processing": "Processing...",
@@ -1696,7 +1698,6 @@
         "volunteer": "Volunteer / campus leadership",
         "coursework": "Coursework"
       },
-      "starterFallback": "A starter to build on",
       "hideExample": "Hide example",
       "showExample": "Show me an example",
       "exampleFormat": "e.g. “{{answer}}”",
@@ -5078,7 +5079,6 @@
       "generatingBullets": "Generating your bullet points…",
       "readyForBullets": "Okay, I have everything I need to create your bullet points.",
       "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
-      "clickableImpact": "Ways to show the impact — click the one that sits well with you:",
       "stageNudge": "Where are you in your career? It changes how I ask.",
       "supportedBy": "From your interview: {{evidence}}",
       "matchesRequirements": "Supports: {{requirements}}"

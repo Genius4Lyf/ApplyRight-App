@@ -64,7 +64,7 @@ const SectionCoach = ({
   const isProject = entry?.section === 'project';
   // Mirrors the backend: a non-'job' experience entry type (internship/part-time/
   // volunteering/coursework) is coached gently even in an experienced session, so the
-  // defensive metric-strip on Aria's reply/suggestions/example also applies here.
+  // defensive metric-strip on Aria's reply and sample example also applies here.
   const entryLevelType =
     entry?.section === 'experience' && !!entry?.entryType && entry.entryType !== 'job';
   const isGradCareer = careerStage === 'grad' || entryLevelType;
@@ -104,7 +104,6 @@ const SectionCoach = ({
   );
   const [applying, setApplying] = useState(false);
   const [wasFree, setWasFree] = useState(!!restored?.wasFree);
-  const [suggestions, setSuggestions] = useState([]);
   const [exampleAnswer, setExampleAnswer] = useState('');
   const [exampleOpen, setExampleOpen] = useState(false);
   // Set when the interview closes; handed to onDone so the parent can offer the
@@ -209,7 +208,6 @@ const SectionCoach = ({
     onPush({ who: 'user', text: val });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
-    setSuggestions([]);
     setExampleAnswer('');
     setExampleOpen(false);
     setThinking(true);
@@ -240,13 +238,9 @@ const SectionCoach = ({
         : isGradCareer && metricPrompt.test(r.reply || '')
           ? t('ariaStudio.sectionCoach.gradFollowUp')
           : r.reply;
-      const safeSuggestions = isGradCareer
-        ? (r.suggestions || []).filter((s) => !metricPrompt.test(s))
-        : r.suggestions || [];
       const safeExample =
         isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
       onPush({ who: 'aria', text: reply });
-      setSuggestions(safeSuggestions);
       setExampleAnswer(safeExample);
       // A metered turn (flagship build-with, or general chat past the daily pool)
       // returns the post-charge balance — keep the wallet pill live without a refresh.
@@ -302,23 +296,6 @@ const SectionCoach = ({
     } finally {
       setThinking(false);
     }
-  };
-
-  // Tap a starter → drop it into the box, EDITABLE and never auto-sent. The caret
-  // lands on the "___" placeholder so the user finishes it in their own words —
-  // the point is to unblock them, not to put words in their mouth.
-  const insertStarter = (text) => {
-    setInput(text);
-    requestAnimationFrame(() => {
-      const el = inputRef.current;
-      if (!el) return;
-      el.focus();
-      const i = text.indexOf('___');
-      if (i >= 0) el.setSelectionRange(i, i + 3);
-      else el.setSelectionRange(text.length, text.length);
-      el.style.height = 'auto';
-      el.style.height = `${Math.min(el.scrollHeight, 140)}px`;
-    });
   };
 
   const toggleExample = () => {
@@ -490,35 +467,30 @@ const SectionCoach = ({
         </div>
       )}
 
-      {/* Answer scaffolds — role-aware starters + a sample, under Aria's follow-up.
-          Only while she's actually asking something. */}
-      {phase === 'chat' && !thinking && suggestions.length > 0 && (
+      {/* A sample answer, offered under Aria's build-with follow-up.
+
+          The dashed STARTER chips that used to lead this block are gone. `reply` is
+          markdown now, and Aria already writes those same starters as bullets inside
+          her message — so the row underneath was a second copy of text the user had
+          just finished reading, in a style that no longer matched anything else.
+          `suggestions` still comes back from the server and still shapes what she
+          writes; it simply has one surface now instead of two.
+
+          The example is NOT a duplicate — it is a full sample answer she deliberately
+          keeps out of the reply, behind a toggle, so it never reads as the user's own
+          claim. That one stays. */}
+      {phase === 'chat' && !thinking && exampleAnswer && (
         <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
-          <span className="font-mono text-[8.5px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-            {t('ariaStudio.sectionCoach.clickableImpact')}
-          </span>
           <div className="flex flex-wrap gap-1.5">
-            {suggestions.map((s, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => insertStarter(s)}
-                className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-dashed border-slate-900 text-slate-900 hover:bg-slate-900 hover:text-white dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-slate-900 transition-colors"
-              >
-                {s}
-              </button>
-            ))}
-            {exampleAnswer && (
-              <button
-                type="button"
-                onClick={toggleExample}
-                className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                {exampleOpen
-                  ? t('cvBuilder.askAria.hideExample')
-                  : t('cvBuilder.askAria.showExample')}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={toggleExample}
+              className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {exampleOpen
+                ? t('cvBuilder.askAria.hideExample')
+                : t('cvBuilder.askAria.showExample')}
+            </button>
           </div>
           {exampleOpen && exampleAnswer && (
             <div

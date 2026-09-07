@@ -45,8 +45,12 @@ const MinimalistSerifTemplate = ({ markdown, userProfile }) => {
 
   return (
     <div
-      className="mx-auto bg-[#fcfbf7] text-[#292724]"
+      className="mx-auto text-[#292724]"
       style={{
+        // The page ground, user-settable on this template (see GROUND_EDITABLE_IDS
+        // in data/templates). Unset falls back to the colour this template shipped
+        // with, so the default document is unchanged.
+        backgroundColor: 'var(--cv-ground, #fcfbf7)',
         lineHeight: 'var(--cv-leading, 1.52)',
         fontFamily: "var(--cv-font, 'Source Sans 3', sans-serif)",
         padding: 'var(--cv-margin, 2.8rem 3.1rem)',
