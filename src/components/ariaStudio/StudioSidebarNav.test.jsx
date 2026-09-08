@@ -56,19 +56,11 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     expect(row('Interview Prep')).toBeTruthy();
   });
 
-  it('offers My CVs and CV Studio everywhere except inside them', () => {
-    // These two were once held out on the grounds that the dashboard carried them. It
-    // doesn't — there is no dashboard — and /cv-studio in particular had exactly one
-    // inbound link in the whole app, on the page that was deleted. This nav is the only
-    // index of the app there is now, so it has to name every workspace.
+  it('offers CV Studio everywhere except inside it', () => {
+    // It was once held out on the grounds that the dashboard carried it. It doesn't —
+    // there is no dashboard — and /cv-studio had exactly one inbound link in the whole
+    // app, on the page that was deleted. This nav is the only index there is now.
     mountAt('/aria-studio');
-    expect(row('My CVs')).toBeTruthy();
-    expect(row('CV Studio')).toBeTruthy();
-    cleanup();
-
-    // ...and each still disappears where it would point at the room you are in.
-    mountAt('/cv-builder/abc/history');
-    expect(row('My CVs')).toBeNull();
     expect(row('CV Studio')).toBeTruthy();
     cleanup();
 
@@ -77,6 +69,31 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     ['/cv-studio', '/resume/abc'].forEach((path) => {
       mountAt(path);
       expect(row('CV Studio')).toBeNull();
+      cleanup();
+    });
+  });
+
+  it('hides My CVs wherever the panel beside it is ALREADY a list of CVs', () => {
+    // The rule above, applied to the LIST rather than the route. "My CVs" sitting
+    // directly over a list of the user's CVs does not read as a destination — it reads as
+    // a mislabelled version of what they are already looking at. Reported from the CV
+    // Studio, where it was the most misleading.
+    //
+    // Three surfaces, three slightly different lists: the builder's drafts, the studio's
+    // finished CVs, and Aria's Recents.
+    ['/cv-builder/abc/history', '/cv-studio', '/resume/abc', '/aria-studio'].forEach((path) => {
+      mountAt(path);
+      expect(row('My CVs')).toBeNull();
+      cleanup();
+    });
+  });
+
+  it('keeps My CVs where the panel lists something else, or nothing', () => {
+    // Interview prep lists APPLICATIONS and the account pages list nothing at all, so on
+    // those it is a real door — and, since the dashboard went, one of the few left to the
+    // CV list. Deleting the row outright would strand /cv-builder.
+    ['/interview-prep/app-1', '/profile'].forEach((path) => {
+      mountAt(path);
       expect(row('My CVs')).toBeTruthy();
       cleanup();
     });

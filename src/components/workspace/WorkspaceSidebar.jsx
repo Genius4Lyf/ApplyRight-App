@@ -46,7 +46,6 @@ const WorkspaceSidebar = ({
   onClose,
   onBuildWithAria,
   onBuildWithBuilder,
-  onUploadCv,
   onInterview,
   inline = false,
 }) => {
@@ -84,7 +83,6 @@ const WorkspaceSidebar = ({
         <NewCvMenu
           onBuildWithAria={onBuildWithAria}
           onBuildWithBuilder={onBuildWithBuilder}
-          onUploadCv={onUploadCv}
           onInterview={onInterview}
         />
       </div>
@@ -194,7 +192,18 @@ const WorkspaceSidebar = ({
 
                     {/* Delete is the only row action here — there is no rename, because a
                     CV's title is editable in the workspace this sidebar sits over. One
-                    action does not earn an overflow menu. */}
+                    action does not earn an overflow menu.
+
+                    ALWAYS VISIBLE. This was `opacity-0 group-hover:opacity-100`, which
+                    meant it did not exist on a phone at all: there is no hover on touch,
+                    so the class that reveals it never applied. It was reported as "there
+                    is no delete button", and on a phone that was literally true. Even
+                    with a mouse it stayed invisible until you happened to be over the
+                    right row, so nothing ever advertised that CVs could be deleted here.
+
+                    Aria Studio's Recents has always shown its row action outright; this
+                    now matches it — a muted icon that darkens on hover, rather than one
+                    that appears out of nothing. */}
                     {onDelete && confirmingId !== row.id && (
                       <button
                         type="button"
@@ -202,7 +211,7 @@ const WorkspaceSidebar = ({
                         aria-label={t('ariaStudio.sessionRail.deleteAria', {
                           heading: row.heading,
                         })}
-                        className="absolute right-1 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 opacity-0 transition-all hover:text-rose-600 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 group-hover:opacity-100 dark:text-slate-600 dark:hover:text-rose-400"
+                        className="absolute right-1 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 transition-colors hover:text-rose-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 dark:text-slate-500 dark:hover:text-rose-400"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

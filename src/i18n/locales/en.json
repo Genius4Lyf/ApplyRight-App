@@ -4119,7 +4119,7 @@
       "listLabel": "Completed CVs",
       "empty": "No completed CVs yet. Finish one with Aria or in the CV builder and it'll appear here, ready to design and download.",
       "indexTitle": "Your finished CVs",
-      "indexBlurb": "Pick one from the sidebar to design and download it, or start a new one."
+      "indexBlurb": "Pick one from the sidebar to design and download it."
     },
     "prep": {
       "title": "Interview prep",

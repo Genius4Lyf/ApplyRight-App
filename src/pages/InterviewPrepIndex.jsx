@@ -20,7 +20,7 @@ import NewCvMenu from '../components/workspace/NewCvMenu';
 const InterviewPrepIndex = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { openSidebar, sidebar, inlineSidebar, railInline, openUploadCv } = useWorkspaceSidebar({
+  const { openSidebar, sidebar, inlineSidebar, railInline } = useWorkspaceSidebar({
     scope: 'prep',
     persistent: true,
   });
@@ -59,7 +59,6 @@ const InterviewPrepIndex = () => {
             <NewCvMenu
               onBuildWithAria={() => navigate('/aria-studio', { state: { start: 'build' } })}
               onBuildWithBuilder={() => navigate('/cv-builder/new')}
-              onUploadCv={openUploadCv}
               onInterview={() => navigate('/aria-studio', { state: { start: 'prep' } })}
             />
           </div>

@@ -8,7 +8,6 @@ import { getCompletionStatus } from '../lib/cvCompleteness';
 import { toCvRow, toPrepRow } from '../lib/workspaceRows';
 import StudioOverlay from '../components/ariaStudio/StudioOverlay';
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar';
-import UploadCvModal from '../components/workspace/UploadCvModal';
 import { useWorkspaceLayout } from './useWorkspaceLayout';
 
 // Everything a page needs to carry the workspace sidebar, so hosting it costs three lines:
@@ -56,19 +55,6 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
 
   const openSidebar = useCallback(() => setOpen(true), []);
   const closeSidebar = useCallback(() => setOpen(false), []);
-
-  // "Upload an existing CV" — the one workflow the deleted dashboard actually RAN, now
-  // reached from the New CV menu that every one of these sidebars carries.
-  //
-  // Closing the drawer first is not tidiness: as a drawer the sidebar is a focus trap,
-  // and opening a dialog inside one is how a modal ends up unclosable on a phone. In
-  // persistent column mode `setOpen(false)` is a no-op on something already closed.
-  const [uploadOpen, setUploadOpen] = useState(false);
-  const openUploadCv = useCallback(() => {
-    setOpen(false);
-    setUploadOpen(true);
-  }, []);
-  const closeUploadCv = useCallback(() => setUploadOpen(false), []);
 
   // The list is "live" whenever it is on screen: an inline panel always, a drawer only
   // while open. The fetch keys off THAT rather than off `open`, or a persistent panel
@@ -192,26 +178,18 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     onDelete: isPrep ? undefined : deleteRow,
     onBuildWithAria: () => navigate('/aria-studio', { state: { start: 'build' } }),
     onBuildWithBuilder: () => navigate('/cv-builder/new'),
-    onUploadCv: openUploadCv,
     onInterview: () => navigate('/aria-studio', { state: { start: 'prep' } }),
   };
 
-  // The upload dialog rides along with `sidebar` rather than being a third thing hosts
-  // must remember to place. Both portal to the body, so where this sits in the tree is
-  // immaterial — and a host that renders the sidebar at all (every one of them, in both
-  // presentations) gets the upload flow without another line.
   const sidebar = (
-    <>
-      <StudioOverlay
-        open={drawerOpen}
-        onClose={closeSidebar}
-        side="left"
-        label={t(`workspace.${copy}.title`)}
-      >
-        <WorkspaceSidebar {...railProps} onClose={closeSidebar} />
-      </StudioOverlay>
-      {uploadOpen && <UploadCvModal onClose={closeUploadCv} />}
-    </>
+    <StudioOverlay
+      open={drawerOpen}
+      onClose={closeSidebar}
+      side="left"
+      label={t(`workspace.${copy}.title`)}
+    >
+      <WorkspaceSidebar {...railProps} onClose={closeSidebar} />
+    </StudioOverlay>
   );
 
   // Mounted bare — NOT inside StudioOverlay. That shell owns a focus trap, a body scroll
@@ -246,8 +224,5 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     // `persistent` is off, so a surface that doesn't opt in is unaffected by any of it.
     inlineSidebar,
     railInline,
-    // For a host that renders its OWN NewCvMenu (the builder index does) rather than
-    // only the one inside the sidebar. The dialog itself already rides with `sidebar`.
-    openUploadCv,
   };
 }

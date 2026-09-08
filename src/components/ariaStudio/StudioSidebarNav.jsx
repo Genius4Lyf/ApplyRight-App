@@ -19,7 +19,9 @@ import { homePathFor } from '../../lib/home';
 // makes this list the only index of the app there is — so the two rows that were removed
 // on the grounds that "the dashboard carries them" are back:
 //
-//   My CVs    — otherwise reachable only by leaving the wizard or an old /my-cvs link
+//   My CVs    — otherwise reachable only by leaving the wizard or an old /my-cvs link.
+//               But NOT everywhere: see panelAlreadyListsCvs below. A row to a list of
+//               CVs, sitting above a list of CVs, is not a destination.
 //   CV Studio — otherwise reachable from NOTHING. Its own address is /resume/:id, a
 //               document rather than a place, so /cv-studio had exactly one inbound
 //               link in the app and it was on the page being deleted.
@@ -61,6 +63,17 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   // itself. Standing in either one, a row pointing at the other reads as a door back into
   // the room you are in.
   const inCvStudio = at('/cv-studio') || at('/resume');
+
+  // "MY CVS" HIDES WHEREVER THE PANEL BESIDE IT IS ALREADY A LIST OF CVs — which is the
+  // rule above applied to the LIST rather than to the route. A row labelled "My CVs"
+  // sitting directly above a list of the user's CVs does not read as a destination; it
+  // reads as a mislabelled version of what they are already looking at.
+  //
+  // That covers three surfaces for three slightly different reasons: the builder's
+  // sidebar lists its drafts, the CV Studio's lists the finished ones, and Aria Studio's
+  // Recents lists the CVs it has written. Interview prep lists APPLICATIONS and the
+  // account pages list nothing, so on those it is a real door and stays.
+  const panelAlreadyListsCvs = inBuilder || inCvStudio || inAriaStudio;
 
   const rowClass =
     'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[17px] sm:text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
@@ -107,7 +120,7 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
             {t('nav.interviewPrep')}
           </button>
         )}
-        {!inBuilder && (
+        {!panelAlreadyListsCvs && (
           <button type="button" onClick={() => navigate('/cv-builder')} className={rowClass}>
             <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             {t('nav.myCvs')}

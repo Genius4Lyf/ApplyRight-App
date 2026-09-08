@@ -1,37 +1,28 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { FilePlus2, ChevronDown, ClipboardCheck, FileUp } from 'lucide-react';
+import { FilePlus2, ChevronDown, ClipboardCheck } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion } from 'framer-motion';
 import AriaOrbit from '../cv/AriaOrbit';
 
-// The ways to start something, in every sidebar in the app.
+// The two ways to start something, in every sidebar in the app.
 //
-// "New CV" is a menu rather than a button because there are genuinely SEVERAL ways to
-// get one — a conversation with Aria, the step-by-step form, or a CV you already have —
-// and which you want is a real choice, not a setting. The hint under each label is what
-// makes it a choice a first-timer can make; without it they read as the same action
-// named twice.
+// "New CV" is a menu rather than a button because there are genuinely TWO ways to build
+// one — a conversation with Aria, or the step-by-step form — and which you want is a real
+// choice, not a setting. The hint under each label is what makes it a choice a first-timer
+// can make; without it the two read as the same action named twice.
+//
+// UPLOADING AN EXISTING CV IS NOT ONE OF THEM, deliberately. Aria owns that: her build
+// session takes a file at the point where it knows the career stage and the target job
+// (StudioUploadCard), so the document lands somewhere that can already do something with
+// it. A second upload here would be the same action in a place with none of that context.
 //
 // Interview sits beside it, not under it: it needs a CV to analyse, so it is the second
 // thing you do here, never the first.
 //
-// `onUploadCv` is OPTIONAL and the row is hidden without it. Uploading an existing CV
-// used to be a card on the dashboard, and moved here when that page was removed — but
-// only onto the surfaces where it means "make me a builder draft". Inside Aria Studio
-// the same file means something different (import INTO this session, see
-// StudioUploadCard), so SessionRail deliberately does not pass this and the row stays
-// off there rather than offering two uploads that do different things.
-//
 // Shared by SessionRail and WorkspaceSidebar. Only the callbacks differ — inside Aria
 // Studio "build with Aria" starts a session in place; everywhere else it navigates there.
-const NewCvMenu = ({
-  onBuildWithAria,
-  onBuildWithBuilder,
-  onUploadCv,
-  onInterview,
-  newCvPrimary = true,
-}) => {
+const NewCvMenu = ({ onBuildWithAria, onBuildWithBuilder, onInterview, newCvPrimary = true }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -138,25 +129,6 @@ const NewCvMenu = ({
                   </span>
                 </span>
               </button>
-
-              {onUploadCv && (
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => pick(onUploadCv)}
-                  className="flex w-full items-start gap-2.5 px-3 py-2 text-left hover:bg-slate-50 focus:bg-slate-50 focus:outline-none dark:hover:bg-slate-800 dark:focus:bg-slate-800"
-                >
-                  <FileUp className="mt-0.5 h-[15px] w-[15px] shrink-0 text-slate-400 dark:text-slate-500" />
-                  <span className="min-w-0">
-                    <span className="block text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                      {t('dashboard.createModal.uploadTitle')}
-                    </span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                      {t('dashboard.createModal.uploadBody')}
-                    </span>
-                  </span>
-                </button>
-              )}
             </motion.div>
           )}
         </AnimatePresence>

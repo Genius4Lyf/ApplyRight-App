@@ -32,27 +32,19 @@ describe('NewCvMenu', () => {
     expect(screen.getAllByRole('menuitem')).toHaveLength(2);
   });
 
-  it('offers the upload path only where a host wired one', async () => {
-    // "Upload an existing CV" was a card on the dashboard, and the only workflow that
-    // page actually RAN. It moved in here when the dashboard was deleted — but only
-    // onto the surfaces where a file means "make me a builder draft". Inside Aria
-    // Studio the same file means "import INTO this session" (StudioUploadCard), so
-    // SessionRail passes no handler and the row must stay off rather than offering two
-    // uploads that do different things under one label.
-    mount();
+  it('offers no upload path — that is Aria’s, and only hers', async () => {
+    // Uploading an existing CV briefly lived in this menu, after the dashboard that
+    // owned it was deleted. It was taken out again on purpose: Aria's build session
+    // takes a file at the point where it already knows the career stage and the target
+    // job (StudioUploadCard), so the document lands somewhere that can do something
+    // with it. A second upload here would be the same action stripped of that context,
+    // and two doors to one feature is how users end up choosing the worse one.
+    mount({ onUploadCv: vi.fn() });
     openMenu();
-    expect(screen.queryByRole('menuitem', { name: /upload/i })).toBeNull();
-    cleanup();
 
-    const onUploadCv = vi.fn();
-    mount({ onUploadCv });
-    openMenu();
-    const item = screen.getByRole('menuitem', { name: /upload/i });
-    fireEvent.click(item);
-    expect(onUploadCv).toHaveBeenCalledTimes(1);
-    // ...and picking it closes the menu, like every other item. `waitFor` because the
-    // popover exits through AnimatePresence rather than unmounting on the same tick.
-    await waitFor(() => expect(screen.queryAllByRole('menuitem')).toHaveLength(0));
+    expect(screen.queryByRole('menuitem', { name: /upload/i })).toBeNull();
+    // ...and the menu is still exactly the two ways to BUILD one.
+    expect(screen.getAllByRole('menuitem')).toHaveLength(2);
   });
 
   it('names what each path IS, not just that it exists', () => {

@@ -4115,7 +4115,7 @@
       "listLabel": "CV terminés",
       "empty": "Aucun CV terminé pour l'instant. Finalisez-en un avec Aria ou dans le générateur de CV et il apparaîtra ici, prêt à être mis en forme et téléchargé.",
       "indexTitle": "Vos CV terminés",
-      "indexBlurb": "Choisissez-en un dans la barre latérale pour le mettre en forme et le télécharger, ou créez-en un nouveau."
+      "indexBlurb": "Choisissez-en un dans la barre latérale pour le mettre en forme et le télécharger."
     },
     "prep": {
       "title": "Préparation d'entretien",

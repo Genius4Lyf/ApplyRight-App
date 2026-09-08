@@ -1,10 +1,8 @@
 import React, { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useWorkspaceSidebar } from '../hooks/useWorkspaceSidebar';
 import WorkspaceShell from '../components/workspace/WorkspaceShell';
 import SidebarToggle from '../components/workspace/SidebarToggle';
-import NewCvMenu from '../components/workspace/NewCvMenu';
 
 // The CV Studio with no CV open — the address the studio needs in order to be LINKABLE,
 // and the third of the same shape as /cv-builder and /interview-prep.
@@ -15,11 +13,11 @@ import NewCvMenu from '../components/workspace/NewCvMenu';
 //
 // Not a list page returning. There is no deck and no search: the list is the sidebar, the
 // same Completed CVs sidebar every other surface carries, and this is only the frame that
-// holds it when no document is loaded.
+// holds it when no document is loaded — so the frame stays a sentence, and every control
+// lives in the one place that has them.
 const CvStudioIndex = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { openSidebar, sidebar, inlineSidebar, railInline, openUploadCv } = useWorkspaceSidebar({
+  const { openSidebar, sidebar, inlineSidebar, railInline } = useWorkspaceSidebar({
     scope: 'cvStudio',
     persistent: true,
   });
@@ -43,9 +41,14 @@ const CvStudioIndex = () => {
 
   return (
     <WorkspaceShell sidebar={sidebar} inlineSidebar={inlineSidebar} header={header}>
-      {/* Behind the list, the ways to MAKE one. This surface only ever lists finished CVs,
-          so arriving with none is the likeliest first visit — and an empty room with no
-          door out is the worst thing to hand someone who followed a link here. */}
+      {/* JUST THE SENTENCE. This used to repeat the New CV menu, which sits three inches
+          away at the top of the sidebar — the same two buttons twice on one screen, and
+          the copy underneath pointing at the sidebar while the controls sat here. The
+          blurb names the sidebar and the sidebar carries the controls.
+
+          Nobody is stranded by that. Where the panel is a column it is always on screen;
+          where it is a drawer this page opens it on arrival, and the header keeps a
+          toggle to bring it back. */}
       <div className="flex h-full items-center justify-center px-6">
         <div className="w-full max-w-xs text-center">
           <h1 className="font-heading text-xl font-bold text-slate-900 dark:text-slate-100">
@@ -54,14 +57,6 @@ const CvStudioIndex = () => {
           <p className="mt-2 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
             {t('workspace.cvStudio.indexBlurb')}
           </p>
-          <div className="mt-6">
-            <NewCvMenu
-              onBuildWithAria={() => navigate('/aria-studio', { state: { start: 'build' } })}
-              onBuildWithBuilder={() => navigate('/cv-builder/new')}
-              onUploadCv={openUploadCv}
-              onInterview={() => navigate('/aria-studio', { state: { start: 'prep' } })}
-            />
-          </div>
         </div>
       </div>
     </WorkspaceShell>
