@@ -628,6 +628,101 @@ const AdminSettings = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Feature toggles.
+
+                    These four lived under the TEMPLATES tab, in a section titled "Feature
+                    Toggles", while the FEATURES tab held only maintenance mode and the
+                    pre-launch campaign. Nobody looking for a feature switch would find
+                    them, and nobody did: the Job Search toggle was reported missing from
+                    the only tab it could reasonably be on. */}
+                <div className="pt-6 border-t border-slate-100">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                    <Cpu className="w-5 h-5 text-primary" />
+                    Feature Toggles
+                  </h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">PDF Generation</h4>
+                        <p className="text-sm text-slate-500">
+                          Allow users to download PDFs via Puppeteer service.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.enablePdfGeneration}
+                          onChange={(e) =>
+                            handleChange('features', 'enablePdfGeneration', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">AI Analysis</h4>
+                        <p className="text-sm text-slate-500">
+                          Enable OpenAI integration for Resume reviews.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.enableAiAnalysis}
+                          onChange={(e) =>
+                            handleChange('features', 'enableAiAnalysis', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">Job Search</h4>
+                        <p className="text-sm text-slate-500">
+                          Enable job search feature (Jobberman — Nigeria only).
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.enableJobSearch}
+                          onChange={(e) =>
+                            handleChange('features', 'enableJobSearch', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
+                      <div>
+                        <h4 className="font-bold text-slate-900">AdMob Ads & Rewards</h4>
+                        <p className="text-sm text-slate-500">
+                          Enable native AdMob rewarded and interstitial ads on Android.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={settings.features.admobEnabled ?? false}
+                          onChange={(e) =>
+                            handleChange('features', 'admobEnabled', e.target.checked)
+                          }
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -773,94 +868,6 @@ const AdminSettings = () => {
                         )}
                       </div>
                       <p className="text-xs text-slate-400">{promoStatus(settings)}</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-6 border-t border-slate-100">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-                    <Cpu className="w-5 h-5 text-primary" />
-                    Feature Toggles
-                  </h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-slate-900">PDF Generation</h4>
-                        <p className="text-sm text-slate-500">
-                          Allow users to download PDFs via Puppeteer service.
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.features.enablePdfGeneration}
-                          onChange={(e) =>
-                            handleChange('features', 'enablePdfGeneration', e.target.checked)
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-slate-900">AI Analysis</h4>
-                        <p className="text-sm text-slate-500">
-                          Enable OpenAI integration for Resume reviews.
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.features.enableAiAnalysis}
-                          onChange={(e) =>
-                            handleChange('features', 'enableAiAnalysis', e.target.checked)
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-slate-900">Job Search</h4>
-                        <p className="text-sm text-slate-500">
-                          Enable job search feature (Jobberman — Nigeria only).
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.features.enableJobSearch}
-                          onChange={(e) =>
-                            handleChange('features', 'enableJobSearch', e.target.checked)
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div>
-                        <h4 className="font-bold text-slate-900">AdMob Ads & Rewards</h4>
-                        <p className="text-sm text-slate-500">
-                          Enable native AdMob rewarded and interstitial ads on Android.
-                        </p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.features.admobEnabled ?? false}
-                          onChange={(e) =>
-                            handleChange('features', 'admobEnabled', e.target.checked)
-                          }
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/30 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-                      </label>
                     </div>
                   </div>
                 </div>
