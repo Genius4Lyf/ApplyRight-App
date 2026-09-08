@@ -4069,7 +4069,7 @@
       "aria": "Start a new CV",
       "withAria": "Build with Aria",
       "withAriaHint": "A conversation that writes it with you",
-      "withBuilder": "Build with CV Studio",
+      "withBuilder": "Build with CV Builder",
       "withBuilderHint": "The step-by-step form"
     },
     "untitledCv": "Untitled CV",

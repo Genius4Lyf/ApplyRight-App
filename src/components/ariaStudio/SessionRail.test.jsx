@@ -105,7 +105,12 @@ describe('SessionRail — the ways to start', () => {
     expect(onNewBuilderCv).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: /start a new cv/i }));
-    fireEvent.click(screen.getByRole('menuitem', { name: /build with cv studio/i }));
+    // "Build with CV BUILDER". It read "Build with CV Studio" until 2026-09-08, which
+    // named a different workspace that genuinely exists — the one where a finished CV is
+    // designed and downloaded — while sending you to the step-by-step wizard instead.
+    // Matched exactly rather than loosely, because /cv studio/i would pass for the wrong
+    // word and that is the whole mistake being guarded against.
+    fireEvent.click(screen.getByRole('menuitem', { name: /build with cv builder/i }));
     expect(onNewBuilderCv).toHaveBeenCalled();
 
     // Two labels are in the markup — the short one for the phone row, the full one for

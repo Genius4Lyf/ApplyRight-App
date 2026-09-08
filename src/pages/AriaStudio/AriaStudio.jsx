@@ -380,13 +380,31 @@ const StudioDesk = () => {
     // The OTHER build path — the step-by-step wizard. It lives on another route, so this
     // one leaves the Studio; the chat is flushed first, exactly as the credit-store trip
     // does, so nothing typed is lost on the way out.
+    //
+    // ORDER IS LOAD-BEARING, and getting it wrong made this button silently do nothing.
+    //
+    // Closing the rail FIRST used to look tidier — dismiss the drawer, then go. But the
+    // drawer is a StudioOverlay, which pushes a history entry on open and pops it on
+    // close so the Android back button dismisses the sheet instead of leaving the Studio.
+    // Its cleanup only pops when `history.state` still says `studioOverlay`, which is the
+    // right guard — and closing before an `await` defeats it:
+    //
+    //   setRailOverlay(false)  → React re-renders during the await, cleanup runs while
+    //                            the state IS still studioOverlay → history.back() queued
+    //   navigate('/cv-builder/new')     → pushes the new route
+    //   ...the queued back() lands       → pops it straight back to the Studio
+    //
+    // So the tap registered, the menu closed, and nothing happened. Closing LAST puts the
+    // navigation into history before the cleanup looks, so the guard sees React Router's
+    // own state and correctly leaves history alone. Nothing else here has this shape:
+    // every other rail handler stays on /aria-studio, where there is no race to lose.
     onNewBuilderCv: async () => {
-      layout.setRailOverlay(false);
       try {
         await flushChats();
       } catch {
         // A best-effort flush must never strand the user on a page they asked to leave.
       }
+      layout.setRailOverlay(false);
       navigate('/cv-builder/new');
     },
     onNewPrep: () => startSession('prep'),
