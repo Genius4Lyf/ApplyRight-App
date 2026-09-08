@@ -4307,7 +4307,7 @@
       "finish": "Start using Studio",
       "steps": {
         "welcome": {
-          "title": "Welcome to your CV workspace.",
+          "title": "Welcome to your career workspace.",
           "body": "ARIA Studio brings the conversation, CV health and live preview into one place, so you can make confident improvements without losing your place.",
           "detailOne": "Start a new CV with ARIA or open a saved CV to tailor it to a job.",
           "detailTwo": "Your work is saved to the CV while you move through the conversation."
