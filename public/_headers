@@ -1,0 +1,17 @@
+# Netlify cache headers.
+#
+# ONLY the hashed build output is declared here. Everything else keeps Netlify's default
+# (`public, max-age=0, must-revalidate`), which is already right for HTML and is what
+# production is serving today — a rule for `/*` in this file would risk overriding the
+# `/assets/*` rule below depending on match order, for no gain.
+#
+# `immutable` is safe here and nowhere else: Vite content-hashes these filenames, so the
+# hash IS the version. Verified rather than assumed — editing one lazy route moved
+# `CVTips-D2YlFVxU.js` to `CVTips-BpQFoncz.js`, and reverting the edit restored the
+# original name exactly. A given URL under /assets/ can never change content.
+#
+# Today every one of these revalidates on every page load: a round trip per chunk, on a
+# connection where the round trip is the expensive part. This is the fix for that.
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable

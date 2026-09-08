@@ -4055,6 +4055,10 @@
     "ctaHaveAccount": "Vous avez déjà un compte ?",
     "ctaHome": "Accueil"
   },
+  "appUpdate": {
+    "available": "Une nouvelle version d’ApplyRight est disponible.",
+    "reload": "Recharger"
+  },
   "workspace": {
     "newCv": {
       "label": "Nouveau CV",

@@ -6,7 +6,7 @@ import {
   Navigate,
 } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
-import { cloneElement, lazy, Suspense, useEffect } from 'react';
+import { cloneElement, Suspense, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -30,6 +30,8 @@ import TopProgressBar from './components/TopProgressBar';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { isDarkEligibleRoute } from './utils/theme';
 import { homePathFor, SEEKER_HOME } from './lib/home';
+import { lazyWithRetry } from './lib/lazyWithRetry';
+import AppUpdateGate from './components/AppUpdateGate';
 
 // Session Manager Component
 const SessionManager = ({ children }) => {
@@ -178,6 +180,8 @@ const RootLayout = () => {
           a given path — the precedence is by construction, not by ordering luck. */}
       <RouteSeo />
       <TopProgressBar />
+      {/* Deploys do not reach tabs that are already open. This is what does. */}
+      <AppUpdateGate />
 
       {/* No bottom tab bar, on either platform. It began as four tabs; two pointed at list
           pages that are sidebars now, and the last two were a whole bar for Home and Aria
@@ -225,21 +229,45 @@ const AdminRoute = ({ children }) => {
 // handful of people, who can afford one extra request. The comment that used to sit
 // here said "for now direct import is fine" — it stopped being fine when users started
 // reporting that the app took seconds to open.
-const AdminDashboard = lazy(() => import('./pages/Admin/AdminDashboard'));
-const AdminUsers = lazy(() => import('./pages/Admin/AdminUsers'));
-const AdminTransactions = lazy(() => import('./pages/Admin/AdminTransactions'));
-const AdminPayments = lazy(() => import('./pages/Admin/AdminPayments'));
-const AdminAnalytics = lazy(() => import('./pages/Admin/AdminAnalytics'));
-const AdminUserDetails = lazy(() => import('./pages/Admin/AdminUserDetails'));
-const AdminSettings = lazy(() => import('./pages/Admin/AdminSettings'));
-const AdminLaunch = lazy(() => import('./pages/Admin/AdminLaunch'));
-const AdminReportStudio = lazy(() => import('./pages/Admin/AdminReportStudio'));
-const SecretAdminAuth = lazy(() => import('./pages/Admin/SecretAdminAuth'));
-const AdminAIFeedback = lazy(() => import('./pages/Admin/AdminAIFeedback'));
+const AdminDashboard = lazyWithRetry(
+  () => import('./pages/Admin/AdminDashboard'),
+  'AdminDashboard'
+);
+const AdminUsers = lazyWithRetry(() => import('./pages/Admin/AdminUsers'), 'AdminUsers');
+const AdminTransactions = lazyWithRetry(
+  () => import('./pages/Admin/AdminTransactions'),
+  'AdminTransactions'
+);
+const AdminPayments = lazyWithRetry(() => import('./pages/Admin/AdminPayments'), 'AdminPayments');
+const AdminAnalytics = lazyWithRetry(
+  () => import('./pages/Admin/AdminAnalytics'),
+  'AdminAnalytics'
+);
+const AdminUserDetails = lazyWithRetry(
+  () => import('./pages/Admin/AdminUserDetails'),
+  'AdminUserDetails'
+);
+const AdminSettings = lazyWithRetry(() => import('./pages/Admin/AdminSettings'), 'AdminSettings');
+const AdminLaunch = lazyWithRetry(() => import('./pages/Admin/AdminLaunch'), 'AdminLaunch');
+const AdminReportStudio = lazyWithRetry(
+  () => import('./pages/Admin/AdminReportStudio'),
+  'AdminReportStudio'
+);
+const SecretAdminAuth = lazyWithRetry(
+  () => import('./pages/Admin/SecretAdminAuth'),
+  'SecretAdminAuth'
+);
+const AdminAIFeedback = lazyWithRetry(
+  () => import('./pages/Admin/AdminAIFeedback'),
+  'AdminAIFeedback'
+);
 
 // CV-agent pages (separate CV-only workspace)
-const AgentDashboard = lazy(() => import('./pages/Agent/AgentDashboard'));
-const AgentEarnings = lazy(() => import('./pages/Agent/AgentEarnings'));
+const AgentDashboard = lazyWithRetry(
+  () => import('./pages/Agent/AgentDashboard'),
+  'AgentDashboard'
+);
+const AgentEarnings = lazyWithRetry(() => import('./pages/Agent/AgentEarnings'), 'AgentEarnings');
 
 // ─── ROUTE-LEVEL CODE SPLITTING ────────────────────────────────────────────────
 //
@@ -254,56 +282,89 @@ const AgentEarnings = lazy(() => import('./pages/Agent/AgentEarnings'));
 // has already seen the app respond.
 
 // Content, guides and legal — read rarely, never on the way to the dashboard.
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
-const TermsOfService = lazy(() => import('./pages/TermsOfService'));
-const Contact = lazy(() => import('./pages/Contact'));
-const ATSGuide = lazy(() => import('./pages/ATSGuide'));
-const Pricing = lazy(() => import('./pages/Pricing'));
-const HowATSRecruitersWork = lazy(() => import('./pages/HowATSRecruitersWork'));
-const CVBuilderGuide = lazy(() => import('./pages/CVBuilderGuide'));
-const AriaStudioGuide = lazy(() => import('./pages/AriaStudioGuide'));
-const CVHealth = lazy(() => import('./pages/CVHealth'));
-const CVTips = lazy(() => import('./pages/CVTips'));
-const HowToAceYourInterview = lazy(() => import('./pages/HowToAceYourInterview'));
-const FeedbackPage = lazy(() => import('./pages/FeedbackPage'));
-const FeedbackDashboard = lazy(() => import('./pages/FeedbackDashboard'));
-const ApplicationReview = lazy(() => import('./pages/ApplicationReview'));
+const PrivacyPolicy = lazyWithRetry(() => import('./pages/PrivacyPolicy'), 'PrivacyPolicy');
+const TermsOfService = lazyWithRetry(() => import('./pages/TermsOfService'), 'TermsOfService');
+const Contact = lazyWithRetry(() => import('./pages/Contact'), 'Contact');
+const ATSGuide = lazyWithRetry(() => import('./pages/ATSGuide'), 'ATSGuide');
+const Pricing = lazyWithRetry(() => import('./pages/Pricing'), 'Pricing');
+const HowATSRecruitersWork = lazyWithRetry(
+  () => import('./pages/HowATSRecruitersWork'),
+  'HowATSRecruitersWork'
+);
+const CVBuilderGuide = lazyWithRetry(() => import('./pages/CVBuilderGuide'), 'CVBuilderGuide');
+const AriaStudioGuide = lazyWithRetry(() => import('./pages/AriaStudioGuide'), 'AriaStudioGuide');
+const CVHealth = lazyWithRetry(() => import('./pages/CVHealth'), 'CVHealth');
+const CVTips = lazyWithRetry(() => import('./pages/CVTips'), 'CVTips');
+const HowToAceYourInterview = lazyWithRetry(
+  () => import('./pages/HowToAceYourInterview'),
+  'HowToAceYourInterview'
+);
+const FeedbackPage = lazyWithRetry(() => import('./pages/FeedbackPage'), 'FeedbackPage');
+const FeedbackDashboard = lazyWithRetry(
+  () => import('./pages/FeedbackDashboard'),
+  'FeedbackDashboard'
+);
+const ApplicationReview = lazyWithRetry(
+  () => import('./pages/ApplicationReview'),
+  'ApplicationReview'
+);
 
 // The landing page and its particle background — see the note above.
-const LandingPage = lazy(() => import('./pages/LandingPage'));
-const MobileWelcome = lazy(() => import('./pages/mobile/MobileWelcome'));
-const PreLaunch = lazy(() => import('./pages/PreLaunch'));
+const LandingPage = lazyWithRetry(() => import('./pages/LandingPage'), 'LandingPage');
+const MobileWelcome = lazyWithRetry(() => import('./pages/mobile/MobileWelcome'), 'MobileWelcome');
+const PreLaunch = lazyWithRetry(() => import('./pages/PreLaunch'), 'PreLaunch');
 
 // Billing surfaces — entered deliberately, from a link, never on the critical path.
-const Upgrade = lazy(() => import('./pages/Upgrade'));
-const BillingReturn = lazy(() => import('./pages/BillingReturn'));
-const CreditStore = lazy(() => import('./pages/CreditStore'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Onboarding = lazy(() => import('./pages/Onboarding'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const JobSearch = lazy(() => import('./pages/JobSearch'));
+const Upgrade = lazyWithRetry(() => import('./pages/Upgrade'), 'Upgrade');
+const BillingReturn = lazyWithRetry(() => import('./pages/BillingReturn'), 'BillingReturn');
+const CreditStore = lazyWithRetry(() => import('./pages/CreditStore'), 'CreditStore');
+const Profile = lazyWithRetry(() => import('./pages/Profile'), 'Profile');
+const Onboarding = lazyWithRetry(() => import('./pages/Onboarding'), 'Onboarding');
+const ForgotPassword = lazyWithRetry(() => import('./pages/ForgotPassword'), 'ForgotPassword');
+const JobSearch = lazyWithRetry(() => import('./pages/JobSearch'), 'JobSearch');
 
 // Live interview — the heaviest surfaces in the app, and reached from a prep page.
-const InterviewPrepDetail = lazy(() => import('./pages/InterviewPrepDetail'));
-const InterviewPracticePage = lazy(() => import('./pages/InterviewPracticePage'));
-const PreCallBrief = lazy(() => import('./pages/PreCallBrief'));
-const MockInterviewPage = lazy(() => import('./pages/MockInterviewPage'));
-const InterviewPrepIndex = lazy(() => import('./pages/InterviewPrepIndex'));
+const InterviewPrepDetail = lazyWithRetry(
+  () => import('./pages/InterviewPrepDetail'),
+  'InterviewPrepDetail'
+);
+const InterviewPracticePage = lazyWithRetry(
+  () => import('./pages/InterviewPracticePage'),
+  'InterviewPracticePage'
+);
+const PreCallBrief = lazyWithRetry(() => import('./pages/PreCallBrief'), 'PreCallBrief');
+const MockInterviewPage = lazyWithRetry(
+  () => import('./pages/MockInterviewPage'),
+  'MockInterviewPage'
+);
+const InterviewPrepIndex = lazyWithRetry(
+  () => import('./pages/InterviewPrepIndex'),
+  'InterviewPrepIndex'
+);
 
 // The CV workspaces. Big, and entered from the dashboard — never before it.
-const ResumeReview = lazy(() => import('./pages/ResumeReview'));
-const AriaStudio = lazy(() => import('./pages/AriaStudio/AriaStudio'));
-const CvStudioIndex = lazy(() => import('./pages/CvStudioIndex'));
-const CVBuilderLayout = lazy(() => import('./pages/CVBuilder/CVBuilderLayout'));
-const CvBuilderIndex = lazy(() => import('./pages/CVBuilder/CvBuilderIndex'));
-const TargetJob = lazy(() => import('./pages/CVBuilder/TargetJob'));
-const Heading = lazy(() => import('./pages/CVBuilder/Heading'));
-const ProfessionalSummary = lazy(() => import('./pages/CVBuilder/ProfessionalSummary'));
-const History = lazy(() => import('./pages/CVBuilder/History'));
-const Projects = lazy(() => import('./pages/CVBuilder/Projects'));
-const Education = lazy(() => import('./pages/CVBuilder/Education'));
-const Skills = lazy(() => import('./pages/CVBuilder/Skills'));
-const Finalize = lazy(() => import('./pages/CVBuilder/Finalize'));
+const ResumeReview = lazyWithRetry(() => import('./pages/ResumeReview'), 'ResumeReview');
+const AriaStudio = lazyWithRetry(() => import('./pages/AriaStudio/AriaStudio'), 'AriaStudio');
+const CvStudioIndex = lazyWithRetry(() => import('./pages/CvStudioIndex'), 'CvStudioIndex');
+const CVBuilderLayout = lazyWithRetry(
+  () => import('./pages/CVBuilder/CVBuilderLayout'),
+  'CVBuilderLayout'
+);
+const CvBuilderIndex = lazyWithRetry(
+  () => import('./pages/CVBuilder/CvBuilderIndex'),
+  'CvBuilderIndex'
+);
+const TargetJob = lazyWithRetry(() => import('./pages/CVBuilder/TargetJob'), 'TargetJob');
+const Heading = lazyWithRetry(() => import('./pages/CVBuilder/Heading'), 'Heading');
+const ProfessionalSummary = lazyWithRetry(
+  () => import('./pages/CVBuilder/ProfessionalSummary'),
+  'ProfessionalSummary'
+);
+const History = lazyWithRetry(() => import('./pages/CVBuilder/History'), 'History');
+const Projects = lazyWithRetry(() => import('./pages/CVBuilder/Projects'), 'Projects');
+const Education = lazyWithRetry(() => import('./pages/CVBuilder/Education'), 'Education');
+const Skills = lazyWithRetry(() => import('./pages/CVBuilder/Skills'), 'Skills');
+const Finalize = lazyWithRetry(() => import('./pages/CVBuilder/Finalize'), 'Finalize');
 
 // ... existing router configuration ...
 

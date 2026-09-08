@@ -4059,6 +4059,10 @@
     "ctaHaveAccount": "Already have an account?",
     "ctaHome": "Home"
   },
+  "appUpdate": {
+    "available": "A new version of ApplyRight is available.",
+    "reload": "Reload"
+  },
   "workspace": {
     "newCv": {
       "label": "New CV",

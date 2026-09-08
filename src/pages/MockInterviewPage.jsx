@@ -57,6 +57,7 @@ import {
 import { createMixedRecorder } from '../lib/recorder';
 import { saveRecording } from '../lib/recordings';
 import { useMinVisible } from '../hooks/useMinVisible';
+import useAutoReloadHold from '../hooks/useAutoReloadHold';
 import { speak, stopSpeaking, startDictation, isSpeechRecognitionSupported } from '../lib/speech';
 import { useTheme } from '../context/ThemeContext';
 
@@ -156,6 +157,16 @@ const MockInterviewPage = () => {
   //        → (conversational, realtime)  intro | connecting | live | grading | review
   //        → (conversational, fallback)  intro | connecting | conversation | grading | review
   const [phase, setPhase] = useState('choose');
+
+  // Never let a post-deploy reload land in the middle of this. Live-interview minutes are
+  // RESERVED server-side the moment the session is minted and reconciled against the
+  // reported duration afterwards, so a reload mid-call does not merely drop the call — it
+  // spends the user's paid minutes on nothing. `grading` counts too: the answer is being
+  // scored and has not been written down yet.
+  //
+  // Only 'choose' and 'review' are safe: one is before anything has been spent, the
+  // other is after the result has been saved.
+  useAutoReloadHold('live interview', phase !== 'choose' && phase !== 'review');
   const [mode, setMode] = useState(null); // 'scripted' | 'conversational'
   const [showReadyCheck, setShowReadyCheck] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
