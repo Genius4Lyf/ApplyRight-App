@@ -151,7 +151,7 @@ describe('PreLaunch — the gate may not even apply to this visitor', () => {
       <MemoryRouter initialEntries={['/pre-launch']}>
         <Routes>
           <Route path="/pre-launch" element={<PreLaunch />} />
-          <Route path="/dashboard" element={<div>APP CONTENT</div>} />
+          <Route path="/aria-studio" element={<div>APP CONTENT</div>} />
         </Routes>
       </MemoryRouter>
     );
@@ -193,7 +193,7 @@ describe('PreLaunch — the gate may not even apply to this visitor', () => {
       <MemoryRouter initialEntries={['/anything']}>
         <Routes>
           <Route path="/anything" element={<PreLaunch launch={LAUNCH} />} />
-          <Route path="/dashboard" element={<div>APP CONTENT</div>} />
+          <Route path="/aria-studio" element={<div>APP CONTENT</div>} />
         </Routes>
       </MemoryRouter>
     );

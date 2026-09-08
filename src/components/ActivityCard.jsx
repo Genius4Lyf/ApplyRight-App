@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FileText, Briefcase, Mic, TrendingUp, Sparkles } from 'lucide-react';
 import UserService from '../services/user.service';
+import { SEEKER_HOME } from '../lib/home';
 
 /**
  * Activity & progress snapshot (Phase 3 of the Profile → Account Hub).
@@ -123,7 +124,7 @@ const ActivityCard = () => {
         </p>
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(SEEKER_HOME)}
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm bg-slate-900 hover:bg-slate-800 text-white transition-colors"
         >
           <Sparkles className="w-4 h-4" />

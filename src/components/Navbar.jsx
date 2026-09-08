@@ -24,6 +24,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
 import { hasWorkspaceSidebar } from '../utils/platform';
+import { homePathFor } from '../lib/home';
 import AriaOrbit from './cv/AriaOrbit';
 import SignOutConfirm from './SignOutConfirm';
 import { useAccountWallet } from '../hooks/useAccountWallet';
@@ -353,7 +354,7 @@ const Navbar = () => {
   // CV agents get a CV-only workspace: no interview prep, no job applications,
   // and no interview-minute wallet. They see Clients instead.
   const isAgent = user?.role === 'agent';
-  const homePath = isAgent ? '/agent' : '/dashboard';
+  const homePath = homePathFor(user);
 
   const { entitlement, isPaid, displayCredits, minutesLeft, freeTasteMin } =
     useAccountWallet(isAuthenticated);

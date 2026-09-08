@@ -1,23 +1,32 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, ClipboardCheck, Plus } from 'lucide-react';
+import { Home, ClipboardCheck, Plus, FileText, LayoutTemplate } from 'lucide-react';
 import AriaOrbit from '../cv/AriaOrbit';
 import { useTranslation } from 'react-i18next';
 import { useAccountWallet } from '../../hooks/useAccountWallet';
+import { homePathFor } from '../../lib/home';
 
-// A sidebar's destination rows + wallet block — Home, and whichever of the two studios
-// you are not currently in. Shared by Aria Studio's rail and the workspace sidebar, so
-// the way OUT of wherever you are is the same set of doors in the same order.
+// A sidebar's destination rows + wallet block — every place in the app you might go from
+// wherever you are. Shared by Aria Studio's rail and the workspace sidebar, so the way
+// OUT is the same set of doors in the same order on every surface.
 //
 // ONE RULE decides which rows appear: a workspace's row is hidden when you are already
 // standing in that workspace. A row that reloads the page you are on reads as broken, and
 // the list it would take you to is the one already open beside it.
 //
-// "My CVs" is gone from all of them. It was hidden in the CV workspace by that rule, and
-// removed from Aria Studio and interview prep by hand — in each, the sidebar you would be
-// clicking it from already lists work of its own, and a second list is a door out of a
-// room you only just walked into. NOTE the consequence: /cv-builder is now reached from
-// the Dashboard, from leaving the wizard, or from an old /my-cvs link — not from here.
+// THIS IS THE WHOLE NAV NOW. It used to be three rows, because a dashboard sat behind
+// Home holding cards for everywhere else. The dashboard is gone (see lib/home.js), which
+// makes this list the only index of the app there is — so the two rows that were removed
+// on the grounds that "the dashboard carries them" are back:
+//
+//   My CVs    — otherwise reachable only by leaving the wizard or an old /my-cvs link
+//   CV Studio — otherwise reachable from NOTHING. Its own address is /resume/:id, a
+//               document rather than a place, so /cv-studio had exactly one inbound
+//               link in the app and it was on the page being deleted.
+//
+// For a job seeker there is no separate Home row: home IS Aria Studio, and two rows to
+// one address is the thing the rule above exists to prevent. Agents keep Home, because
+// theirs is a different workspace and they are held out of the Studio entirely.
 //
 // Dark mode moved into the profile drop-up. It is a setting, and these are destinations;
 // sitting among them it read as a fourth place to go. Account-management links (view profile, manage account, credits & billing)
@@ -25,8 +34,8 @@ import { useAccountWallet } from '../../hooks/useAccountWallet';
 // language — everything you'd go looking for by clicking your own name at the bottom,
 // rather than mixed in with the primary destinations up here. Reuses the SAME
 // useAccountWallet hook the navbar uses so there is only ever one wallet fetch/
-// localStorage-writer active on a page, and the SAME isAgent/homePath derivation the
-// navbar uses (Navbar.jsx) rather than re-deriving it.
+// localStorage-writer active on a page, and the shared homePathFor (lib/home.js) the
+// navbar also uses, rather than re-deriving it.
 const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -40,12 +49,18 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
     console.error('Failed to parse user from local storage', e);
   }
   const isAgent = user?.role === 'agent';
-  const homePath = isAgent ? '/agent' : '/dashboard';
+  const homePath = homePathFor(user);
 
   const { displayCredits, minutesLeft, freeTasteMin } = useAccountWallet(isAuthenticated);
 
-  const inAriaStudio = location.pathname.startsWith('/aria-studio');
-  const inPrep = location.pathname.startsWith('/interview-prep');
+  const at = (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`);
+  const inAriaStudio = at('/aria-studio');
+  const inPrep = at('/interview-prep');
+  const inBuilder = at('/cv-builder');
+  // Two addresses, one workspace: /cv-studio is the list frame, /resume/:id is the studio
+  // itself. Standing in either one, a row pointing at the other reads as a door back into
+  // the room you are in.
+  const inCvStudio = at('/cv-studio') || at('/resume');
 
   const rowClass =
     'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[17px] sm:text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
@@ -71,10 +86,14 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   return (
     <div className="shrink-0 px-2 pb-3 space-y-3">
       <nav>
-        <button type="button" onClick={() => navigate(homePath)} className={rowClass}>
-          <Home className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-          {t('nav.mobile.home')}
-        </button>
+        {/* Agents only. A seeker's home is Aria Studio, which has its own row below —
+            and the rule says one workspace, one row. */}
+        {isAgent && (
+          <button type="button" onClick={() => navigate(homePath)} className={rowClass}>
+            <Home className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            {t('nav.mobile.home')}
+          </button>
+        )}
         {/* Agents are held out of the Studio entirely. */}
         {!isAgent && !inAriaStudio && (
           <button type="button" onClick={() => navigate('/aria-studio')} className={rowClass}>
@@ -86,6 +105,18 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
           <button type="button" onClick={() => navigate('/interview-prep')} className={rowClass}>
             <ClipboardCheck className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
             {t('nav.interviewPrep')}
+          </button>
+        )}
+        {!inBuilder && (
+          <button type="button" onClick={() => navigate('/cv-builder')} className={rowClass}>
+            <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            {t('nav.myCvs')}
+          </button>
+        )}
+        {!inCvStudio && (
+          <button type="button" onClick={() => navigate('/cv-studio')} className={rowClass}>
+            <LayoutTemplate className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
+            {t('workspace.cvStudio.title')}
           </button>
         )}
       </nav>

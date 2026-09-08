@@ -8,6 +8,7 @@ import { getCompletionStatus } from '../lib/cvCompleteness';
 import { toCvRow, toPrepRow } from '../lib/workspaceRows';
 import StudioOverlay from '../components/ariaStudio/StudioOverlay';
 import WorkspaceSidebar from '../components/workspace/WorkspaceSidebar';
+import UploadCvModal from '../components/workspace/UploadCvModal';
 import { useWorkspaceLayout } from './useWorkspaceLayout';
 
 // Everything a page needs to carry the workspace sidebar, so hosting it costs three lines:
@@ -20,6 +21,14 @@ import { useWorkspaceLayout } from './useWorkspaceLayout';
 //   scope 'builder'  — CVs not born in Aria; a row resumes in the wizard
 //   scope 'cvStudio' — FINISHED CVs; a row opens in the document studio
 //   scope 'prep'     — applications with interview prep; a row opens its dashboard
+//   scope 'account'  — NO LIST. Profile, Upgrade and the credit store are account
+//                      surfaces: nothing about them is a collection you pick from, so
+//                      this scope carries only the nav, the wallet and the profile
+//                      block. It exists because those three pages were the last ones
+//                      still wearing the top navbar, and a page with different chrome
+//                      from every other signed-in page reads as a page from another app.
+//                      It fetches NOTHING — a list nobody will see is a request nobody
+//                      asked for.
 //
 // `persistent` opts a surface into the app-shell presentation: on a wide screen the
 // sidebar stops being a drawer and becomes a 248px column the page lays out around
@@ -35,6 +44,7 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
 
   const isPrep = scope === 'prep';
   const isStudio = scope === 'cvStudio';
+  const isAccount = scope === 'account';
 
   const { railInline } = useWorkspaceLayout({ enabled: persistent });
 
@@ -47,6 +57,19 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
   const openSidebar = useCallback(() => setOpen(true), []);
   const closeSidebar = useCallback(() => setOpen(false), []);
 
+  // "Upload an existing CV" — the one workflow the deleted dashboard actually RAN, now
+  // reached from the New CV menu that every one of these sidebars carries.
+  //
+  // Closing the drawer first is not tidiness: as a drawer the sidebar is a focus trap,
+  // and opening a dialog inside one is how a modal ends up unclosable on a phone. In
+  // persistent column mode `setOpen(false)` is a no-op on something already closed.
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const openUploadCv = useCallback(() => {
+    setOpen(false);
+    setUploadOpen(true);
+  }, []);
+  const closeUploadCv = useCallback(() => setUploadOpen(false), []);
+
   // The list is "live" whenever it is on screen: an inline panel always, a drawer only
   // while open. The fetch keys off THAT rather than off `open`, or a persistent panel
   // would sit empty until someone toggled it closed and back.
@@ -55,7 +78,7 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
   // someone came to for something else and most visits never open it. Reopening refetches
   // in the background — the previous rows stay on screen, so a list that is merely stale
   // never flashes a loader at you.
-  const listVisible = drawerOpen || railInline;
+  const listVisible = (drawerOpen || railInline) && !isAccount;
 
   useEffect(() => {
     if (!listVisible) return undefined;
@@ -136,12 +159,13 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     [t]
   );
 
-  const copy = isPrep ? 'prep' : isStudio ? 'cvStudio' : 'builder';
+  const copy = isAccount ? 'account' : isPrep ? 'prep' : isStudio ? 'cvStudio' : 'builder';
 
   // One definition for both presentations, so the inline panel and the drawer cannot
   // drift into being two different lists. Only `onClose` differs: inline it collapses the
   // column, in the drawer it dismisses the overlay.
   const railProps = {
+    showList: !isAccount,
     rows: visible,
     loading,
     activeId,
@@ -168,18 +192,26 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     onDelete: isPrep ? undefined : deleteRow,
     onBuildWithAria: () => navigate('/aria-studio', { state: { start: 'build' } }),
     onBuildWithBuilder: () => navigate('/cv-builder/new'),
+    onUploadCv: openUploadCv,
     onInterview: () => navigate('/aria-studio', { state: { start: 'prep' } }),
   };
 
+  // The upload dialog rides along with `sidebar` rather than being a third thing hosts
+  // must remember to place. Both portal to the body, so where this sits in the tree is
+  // immaterial — and a host that renders the sidebar at all (every one of them, in both
+  // presentations) gets the upload flow without another line.
   const sidebar = (
-    <StudioOverlay
-      open={drawerOpen}
-      onClose={closeSidebar}
-      side="left"
-      label={t(`workspace.${copy}.title`)}
-    >
-      <WorkspaceSidebar {...railProps} onClose={closeSidebar} />
-    </StudioOverlay>
+    <>
+      <StudioOverlay
+        open={drawerOpen}
+        onClose={closeSidebar}
+        side="left"
+        label={t(`workspace.${copy}.title`)}
+      >
+        <WorkspaceSidebar {...railProps} onClose={closeSidebar} />
+      </StudioOverlay>
+      {uploadOpen && <UploadCvModal onClose={closeUploadCv} />}
+    </>
   );
 
   // Mounted bare — NOT inside StudioOverlay. That shell owns a focus trap, a body scroll
@@ -214,5 +246,8 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     // `persistent` is off, so a surface that doesn't opt in is unaffected by any of it.
     inlineSidebar,
     railInline,
+    // For a host that renders its OWN NewCvMenu (the builder index does) rather than
+    // only the one inside the sidebar. The dialog itself already rides with `sidebar`.
+    openUploadCv,
   };
 }

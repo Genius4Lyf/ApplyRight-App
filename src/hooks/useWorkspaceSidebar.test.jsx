@@ -320,3 +320,52 @@ describe('useWorkspaceSidebar — carried as a column', () => {
     expect(localStorage.getItem('workspace:builder:railOpen')).toBeNull();
   });
 });
+
+describe('useWorkspaceSidebar — the account scope has no list', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    localStorage.clear();
+  });
+
+  // Profile, Upgrade and the credit store carry this sidebar so that every signed-in
+  // page in the app wears the same chrome — they were the last three still on the top
+  // navbar. But none of them is a page you pick something from, so the panel is the nav,
+  // the wallet and the profile block, and nothing else.
+
+  it('fetches NOTHING, at any width, open or closed', async () => {
+    // The whole point: a list nobody will see is a request nobody asked for. Checked at
+    // BOTH widths, because the persistent path fetches on mount rather than on open —
+    // which is exactly where an unguarded account scope would leak a request.
+    stubWide();
+    render(<PersistentHost scope="account" persistent />);
+    await waitFor(() => expect(screen.getAllByRole('complementary').length).toBe(1));
+    expect(CVService.listCvs).not.toHaveBeenCalled();
+    expect(InterviewPrepService.list).not.toHaveBeenCalled();
+
+    cleanup();
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+
+    stubWide(false);
+    render(<PersistentHost scope="account" persistent />);
+    fireEvent.click(screen.getByRole('button', { name: 'open' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /start a new cv/i })).toBeTruthy()
+    );
+    expect(CVService.listCvs).not.toHaveBeenCalled();
+    expect(InterviewPrepService.list).not.toHaveBeenCalled();
+  });
+
+  it('draws no list region and no filter, but keeps the ways out', async () => {
+    stubWide();
+    render(<PersistentHost scope="account" persistent />);
+
+    // The New CV menu is the point of keeping the panel rather than writing a nav strip:
+    // being on the billing page is no reason to lose the ability to start a CV.
+    expect(await screen.findByRole('button', { name: /start a new cv/i })).toBeTruthy();
+
+    // No list header, no empty-state copy, no filter — there is no list to describe.
+    expect(screen.queryByText(/completed cvs/i)).toBeNull();
+    expect(screen.queryByRole('list')).toBeNull();
+  });
+});

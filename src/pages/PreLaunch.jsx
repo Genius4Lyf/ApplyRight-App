@@ -6,6 +6,7 @@ import api from '../services/api';
 import { LAUNCH, msUntil, countdownParts } from '../lib/launch';
 import SignOutConfirm from '../components/SignOutConfirm';
 import logo from '../assets/logo/applyright-icon-black.png';
+import { SEEKER_HOME } from '../lib/home';
 
 // Where a gated visitor lands during the pre-launch campaign, instead of the blank
 // "Under Maintenance" page. The campaign pays to get people here, so this page has a job:
@@ -140,7 +141,7 @@ const PreLaunch = ({ launch }) => {
     }
   };
 
-  if (letThrough) return <Navigate to="/dashboard" replace />;
+  if (letThrough) return <Navigate to={SEEKER_HOME} replace />;
 
   return (
     <div

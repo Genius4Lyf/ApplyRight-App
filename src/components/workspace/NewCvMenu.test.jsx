@@ -32,6 +32,29 @@ describe('NewCvMenu', () => {
     expect(screen.getAllByRole('menuitem')).toHaveLength(2);
   });
 
+  it('offers the upload path only where a host wired one', async () => {
+    // "Upload an existing CV" was a card on the dashboard, and the only workflow that
+    // page actually RAN. It moved in here when the dashboard was deleted — but only
+    // onto the surfaces where a file means "make me a builder draft". Inside Aria
+    // Studio the same file means "import INTO this session" (StudioUploadCard), so
+    // SessionRail passes no handler and the row must stay off rather than offering two
+    // uploads that do different things under one label.
+    mount();
+    openMenu();
+    expect(screen.queryByRole('menuitem', { name: /upload/i })).toBeNull();
+    cleanup();
+
+    const onUploadCv = vi.fn();
+    mount({ onUploadCv });
+    openMenu();
+    const item = screen.getByRole('menuitem', { name: /upload/i });
+    fireEvent.click(item);
+    expect(onUploadCv).toHaveBeenCalledTimes(1);
+    // ...and picking it closes the menu, like every other item. `waitFor` because the
+    // popover exits through AnimatePresence rather than unmounting on the same tick.
+    await waitFor(() => expect(screen.queryAllByRole('menuitem')).toHaveLength(0));
+  });
+
   it('names what each path IS, not just that it exists', () => {
     // Two items reading "Build with Aria" and "Build with CV Studio" are the same
     // sentence twice to someone who has used neither. The hint is what makes it a choice.

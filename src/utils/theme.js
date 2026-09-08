@@ -8,6 +8,9 @@
 // NOTE: `/jobs` is included even though it is not behind ProtectedRoute, because
 // it is part of the user experience (product decision).
 const DARK_ELIGIBLE_PREFIXES = [
+  // The page is gone; the ADDRESS is still a redirect (see App.jsx). It stays on the
+  // list so an old bookmark opened in dark mode does not flash white for the frame
+  // before the redirect resolves.
   '/dashboard',
   '/onboarding',
   '/history',

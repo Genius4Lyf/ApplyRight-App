@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import AriaLoader from '../ui/AriaLoader';
+import AriaLoader from './AriaLoader';
 import { Eye } from 'lucide-react';
 
 // Shared toolkit primitives so the generated-artifact rows look identical

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Crown, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation, Trans } from 'react-i18next';
-import Navbar from '../components/Navbar';
+import AccountShell from '../components/workspace/AccountShell';
 import TierCard from '../components/pricing/TierCard';
 import PaymentTrustModal from '../components/PaymentTrustModal';
 import { hasSeenPaymentNotice, markPaymentNoticeSeen } from '../lib/paymentTrust';
@@ -107,10 +107,20 @@ const Upgrade = () => {
   const currentPlanId = entitlement?.tier !== 'free' ? entitlement?.planId : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
-      <Navbar />
-
-      <main className="flex-grow py-12 px-4">
+    // The account app shell (no navbar) — see AccountShell. The trust modal goes in
+    // `overlays` so it sits OUTSIDE the scrolling pane, the way WorkspaceShell intends:
+    // it is viewport-fixed, and a fixed element inside a scroller is one transform away
+    // from being clipped by it.
+    <AccountShell
+      overlays={
+        <PaymentTrustModal
+          open={showTrustModal}
+          onConfirm={confirmTrustModal}
+          onClose={() => setShowTrustModal(false)}
+        />
+      }
+    >
+      <div className="py-12 px-4">
         <div className="max-w-6xl mx-auto">
           <button
             onClick={() => navigate(-1)}
@@ -252,7 +262,10 @@ const Upgrade = () => {
               i18nKey="billing.common.paymentTrustNote"
               components={{
                 mail: (
-                  <a href="mailto:careers@applyright.com.ng" className="underline hover:no-underline" />
+                  <a
+                    href="mailto:careers@applyright.com.ng"
+                    className="underline hover:no-underline"
+                  />
                 ),
               }}
             />
@@ -262,14 +275,8 @@ const Upgrade = () => {
             {t('billing.upgrade.footerNote')}
           </p>
         </div>
-      </main>
-
-      <PaymentTrustModal
-        open={showTrustModal}
-        onConfirm={confirmTrustModal}
-        onClose={() => setShowTrustModal(false)}
-      />
-    </div>
+      </div>
+    </AccountShell>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AriaLoader from '../components/ui/AriaLoader';
 import { useBlocker, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import AccountShell from '../components/workspace/AccountShell';
 import api from '../services/api';
 import {
   User,
@@ -328,9 +328,8 @@ const Profile = () => {
 
   if (!user)
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4">
-        <Navbar />
-        <div className="text-center mt-12">
+      <AccountShell>
+        <div className="flex h-full flex-col items-center justify-center p-4 text-center">
           <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100">
             Failed to load profile
           </h2>
@@ -344,13 +343,23 @@ const Profile = () => {
             Try Again
           </button>
         </div>
-      </div>
+      </AccountShell>
     );
 
+  // The account app shell — no navbar; the sidebar carries the nav, the wallet and the
+  // account menu. See AccountShell.
+  //
+  // `min-h-full` below, where the page root used to say `min-h-screen lg:h-screen`: the
+  // frame is the shell's scrolling pane now, not the viewport. Everything under it is
+  // untouched, so desktop still scrolls the settings column against a fixed tab rail.
+  //
+  // The four modals stay inline rather than moving to the shell's `overlays` slot. Each
+  // is its own `fixed inset-0`, and nothing between here and the viewport establishes a
+  // containing block (no transform, filter or contain in WorkspaceShell), so they still
+  // cover the window rather than the pane — `overflow-hidden` on an ancestor does not
+  // clip a fixed descendant.
   return (
-    <div className="min-h-screen lg:h-screen bg-slate-50 flex flex-col">
-      <Navbar />
-
+    <AccountShell>
       {/* Unsaved Changes Modal */}
       <Modal isOpen={showUnsavedModal} onClose={handleCancelExit} title="Unsaved Changes" size="sm">
         <div className="flex flex-col items-center text-center p-2">
@@ -382,7 +391,7 @@ const Profile = () => {
         </div>
       </Modal>
 
-      <main className="flex-1 lg:min-h-0 w-full max-w-5xl mx-auto px-4 py-8 flex flex-col">
+      <div className="min-h-full w-full max-w-5xl mx-auto px-4 py-8 flex flex-col">
         <div className="mb-6 flex items-center gap-3">
           <User className="w-8 h-8 text-slate-900 dark:text-slate-100" />
           <div>
@@ -456,9 +465,10 @@ const Profile = () => {
                 <div className="space-y-6">
                   <PlanCard />
 
-                  {/* Quick links — surfaces destinations that previously lived in the
-                  Navbar account dropdown so mobile users (where the dropdown is
-                  gone) still have one-tap access. */}
+                  {/* Quick links — destinations that once lived in the navbar's account
+                  dropdown. This page carries the workspace sidebar now rather than a
+                  navbar at all, and that sidebar holds the same doors; these stay
+                  because on a phone the sidebar is a drawer you have to open first. */}
                   <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-2 shadow-sm">
                     <button
                       type="button"
@@ -1076,7 +1086,7 @@ const Profile = () => {
             )}
           </div>
         </div>
-      </main>
+      </div>
 
       {/* Sign-out confirmation modal */}
       {showLogoutModal && (
@@ -1191,7 +1201,7 @@ const Profile = () => {
           </div>
         </div>
       )}
-    </div>
+    </AccountShell>
   );
 };
 

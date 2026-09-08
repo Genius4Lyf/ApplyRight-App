@@ -31,6 +31,7 @@ import CvOriginIcon from './CvOriginIcon';
 // parts that would otherwise be duplicated — NewCvMenu, RailFilter, the nav and profile
 // blocks — which is where the real cost of having two components would have been.
 const WorkspaceSidebar = ({
+  showList = true,
   rows = [],
   loading,
   activeId,
@@ -45,6 +46,7 @@ const WorkspaceSidebar = ({
   onClose,
   onBuildWithAria,
   onBuildWithBuilder,
+  onUploadCv,
   onInterview,
   inline = false,
 }) => {
@@ -82,149 +84,161 @@ const WorkspaceSidebar = ({
         <NewCvMenu
           onBuildWithAria={onBuildWithAria}
           onBuildWithBuilder={onBuildWithBuilder}
+          onUploadCv={onUploadCv}
           onInterview={onInterview}
         />
       </div>
 
       <StudioSidebarNav />
 
+      {/* An account surface has no list — see the 'account' scope in useWorkspaceSidebar.
+        The spacer is what keeps the profile block pinned to the bottom in its absence,
+        so the panel looks like the same panel rather than a shorter one. */}
+      {!showList && <div className="flex-1 min-h-0" />}
+
       {/* The list header: what this region holds, and which slice you are reading. The
         filter appears only when there is something to filter, and never on a surface
         whose list holds only one kind of thing. */}
-      <div className="shrink-0 flex items-center gap-2 px-3 pb-1.5">
-        <FileText
-          aria-hidden="true"
-          className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
-        />
-        {filterOptions?.length && rows.length > 0 ? (
-          <RailFilter
-            value={filter}
-            onChange={onFilterChange}
-            options={filterOptions}
-            ariaLabel={t('workspace.list.filterAria')}
+      {showList && (
+        <div className="shrink-0 flex items-center gap-2 px-3 pb-1.5">
+          <FileText
+            aria-hidden="true"
+            className="h-3.5 w-3.5 shrink-0 text-slate-400 dark:text-slate-500"
           />
-        ) : (
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            {listLabel}
-          </span>
-        )}
-      </div>
+          {filterOptions?.length && rows.length > 0 ? (
+            <RailFilter
+              value={filter}
+              onChange={onFilterChange}
+              options={filterOptions}
+              ariaLabel={t('workspace.list.filterAria')}
+            />
+          ) : (
+            <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+              {listLabel}
+            </span>
+          )}
+        </div>
+      )}
 
       {/* The ONLY scrolling region. `chat-scroll` contains overscroll, so exhausting this
         list cannot chain-scroll the page behind the scrim. */}
-      <div
-        className={`flex-1 min-h-0 chat-scroll pb-3 ${
-          loading || rows.length === 0 ? 'flex items-center justify-center' : ''
-        }`}
-      >
-        {loading && (
-          <div role="status" aria-label={t('ariaStudio.sessionRail.loading')}>
-            <span className="aria-orbit-slow inline-block">
-              <AriaOrbit size={44} working />
-            </span>
-          </div>
-        )}
+      {showList && (
+        <div
+          className={`flex-1 min-h-0 chat-scroll pb-3 ${
+            loading || rows.length === 0 ? 'flex items-center justify-center' : ''
+          }`}
+        >
+          {loading && (
+            <div role="status" aria-label={t('ariaStudio.sessionRail.loading')}>
+              <span className="aria-orbit-slow inline-block">
+                <AriaOrbit size={44} working />
+              </span>
+            </div>
+          )}
 
-        {!loading && rows.length === 0 && (
-          <p className="px-4 text-center text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
-            {emptyLabel}
-          </p>
-        )}
+          {!loading && rows.length === 0 && (
+            <p className="px-4 text-center text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
+              {emptyLabel}
+            </p>
+          )}
 
-        {rows.length > 0 && (
-          <ul className="divide-y divide-slate-200 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
-            {rows.map((row) => {
-              const active = row.id === activeId;
-              return (
-                <li key={row.id} className="group relative">
-                  {/* Active marker — a rule, not a fill. */}
-                  {active && (
-                    <span
-                      aria-hidden="true"
-                      className="absolute left-0 inset-y-0 w-0.5 bg-slate-900 dark:bg-white"
-                    />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => onSelect?.(row)}
-                    aria-current={active ? 'true' : undefined}
-                    className={`w-full text-left pl-4 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 ${
-                      onDelete ? 'pr-10' : 'pr-4'
-                    } ${active ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
-                  >
-                    <span className="flex items-baseline gap-2">
+          {rows.length > 0 && (
+            <ul className="divide-y divide-slate-200 dark:divide-slate-800 border-t border-slate-200 dark:border-slate-800">
+              {rows.map((row) => {
+                const active = row.id === activeId;
+                return (
+                  <li key={row.id} className="group relative">
+                    {/* Active marker — a rule, not a fill. */}
+                    {active && (
                       <span
-                        className={`min-w-0 flex-1 truncate text-[17px] sm:text-[13px] ${
-                          active
-                            ? 'font-semibold text-slate-900 dark:text-slate-50'
-                            : 'font-medium text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {row.heading}
-                      </span>
-                      {/* Null on an application row, which has no author to name. */}
-                      <CvOriginIcon origin={row.origin} />
-                      {row.value && (
-                        <span
-                          className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${
-                            BAND_TEXT[row.band] || BAND_TEXT.neutral
-                          }`}
-                        >
-                          {row.value}
-                        </span>
-                      )}
-                    </span>
-                    {row.meta && (
-                      <span className="mt-0.5 block truncate font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
-                        {row.meta}
-                      </span>
+                        aria-hidden="true"
+                        className="absolute left-0 inset-y-0 w-0.5 bg-slate-900 dark:bg-white"
+                      />
                     )}
-                  </button>
-
-                  {/* Delete is the only row action here — there is no rename, because a
-                    CV's title is editable in the workspace this sidebar sits over. One
-                    action does not earn an overflow menu. */}
-                  {onDelete && confirmingId !== row.id && (
                     <button
                       type="button"
-                      onClick={() => setConfirmingId(row.id)}
-                      aria-label={t('ariaStudio.sessionRail.deleteAria', { heading: row.heading })}
-                      className="absolute right-1 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 opacity-0 transition-all hover:text-rose-600 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 group-hover:opacity-100 dark:text-slate-600 dark:hover:text-rose-400"
+                      onClick={() => onSelect?.(row)}
+                      aria-current={active ? 'true' : undefined}
+                      className={`w-full text-left pl-4 py-2.5 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-900 dark:focus-visible:ring-slate-100 ${
+                        onDelete ? 'pr-10' : 'pr-4'
+                      } ${active ? 'bg-transparent' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}`}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-
-                  {onDelete && confirmingId === row.id && (
-                    <div className="flex items-center gap-3 border-t border-slate-100 bg-rose-50/50 px-4 py-2 dark:border-slate-800 dark:bg-rose-500/5">
-                      <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600 dark:text-slate-300">
-                        {t('workspace.delete.ask')}
+                      <span className="flex items-baseline gap-2">
+                        <span
+                          className={`min-w-0 flex-1 truncate text-[17px] sm:text-[13px] ${
+                            active
+                              ? 'font-semibold text-slate-900 dark:text-slate-50'
+                              : 'font-medium text-slate-700 dark:text-slate-300'
+                          }`}
+                        >
+                          {row.heading}
+                        </span>
+                        {/* Null on an application row, which has no author to name. */}
+                        <CvOriginIcon origin={row.origin} />
+                        {row.value && (
+                          <span
+                            className={`shrink-0 font-mono text-[11px] font-bold tabular-nums ${
+                              BAND_TEXT[row.band] || BAND_TEXT.neutral
+                            }`}
+                          >
+                            {row.value}
+                          </span>
+                        )}
                       </span>
+                      {row.meta && (
+                        <span className="mt-0.5 block truncate font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+                          {row.meta}
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Delete is the only row action here — there is no rename, because a
+                    CV's title is editable in the workspace this sidebar sits over. One
+                    action does not earn an overflow menu. */}
+                    {onDelete && confirmingId !== row.id && (
                       <button
                         type="button"
-                        onClick={() => {
-                          setConfirmingId(null);
-                          onDelete(row);
-                        }}
-                        className="shrink-0 text-[12px] font-semibold text-rose-600 hover:underline dark:text-rose-400"
+                        onClick={() => setConfirmingId(row.id)}
+                        aria-label={t('ariaStudio.sessionRail.deleteAria', {
+                          heading: row.heading,
+                        })}
+                        className="absolute right-1 top-1.5 flex h-8 w-8 items-center justify-center rounded-lg text-slate-300 opacity-0 transition-all hover:text-rose-600 focus:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 group-hover:opacity-100 dark:text-slate-600 dark:hover:text-rose-400"
                       >
-                        {t('common.delete')}
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmingId(null)}
-                        className="shrink-0 text-[12px] font-medium text-slate-500 hover:underline dark:text-slate-400"
-                      >
-                        {t('common.cancel')}
-                      </button>
-                    </div>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </div>
+                    )}
+
+                    {onDelete && confirmingId === row.id && (
+                      <div className="flex items-center gap-3 border-t border-slate-100 bg-rose-50/50 px-4 py-2 dark:border-slate-800 dark:bg-rose-500/5">
+                        <span className="min-w-0 flex-1 truncate text-[12px] text-slate-600 dark:text-slate-300">
+                          {t('workspace.delete.ask')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setConfirmingId(null);
+                            onDelete(row);
+                          }}
+                          className="shrink-0 text-[12px] font-semibold text-rose-600 hover:underline dark:text-rose-400"
+                        >
+                          {t('common.delete')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirmingId(null)}
+                          className="shrink-0 text-[12px] font-medium text-slate-500 hover:underline dark:text-slate-400"
+                        >
+                          {t('common.cancel')}
+                        </button>
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      )}
 
       <StudioSidebarProfile />
     </div>

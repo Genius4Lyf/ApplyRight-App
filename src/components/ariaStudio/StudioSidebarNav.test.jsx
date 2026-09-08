@@ -56,13 +56,28 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     expect(row('Interview Prep')).toBeTruthy();
   });
 
-  it('never offers My CVs, on any surface', () => {
-    // Every sidebar that renders this nav already shows a list of its own; a row to a
-    // SECOND list is a door out of a room you just walked into. /cv-builder is reached
-    // from the Dashboard, from leaving the wizard, or from an old /my-cvs link.
-    ['/aria-studio', '/interview-prep/app-1', '/cv-builder/abc', '/resume/abc'].forEach((path) => {
+  it('offers My CVs and CV Studio everywhere except inside them', () => {
+    // These two were once held out on the grounds that the dashboard carried them. It
+    // doesn't — there is no dashboard — and /cv-studio in particular had exactly one
+    // inbound link in the whole app, on the page that was deleted. This nav is the only
+    // index of the app there is now, so it has to name every workspace.
+    mountAt('/aria-studio');
+    expect(row('My CVs')).toBeTruthy();
+    expect(row('CV Studio')).toBeTruthy();
+    cleanup();
+
+    // ...and each still disappears where it would point at the room you are in.
+    mountAt('/cv-builder/abc/history');
+    expect(row('My CVs')).toBeNull();
+    expect(row('CV Studio')).toBeTruthy();
+    cleanup();
+
+    // /cv-studio is the list frame and /resume/:id is the studio itself: ONE workspace at
+    // two addresses, so the row hides at both.
+    ['/cv-studio', '/resume/abc'].forEach((path) => {
       mountAt(path);
-      expect(row('My CVs')).toBeNull();
+      expect(row('CV Studio')).toBeNull();
+      expect(row('My CVs')).toBeTruthy();
       cleanup();
     });
   });
@@ -81,8 +96,18 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     expect(row('Interview Prep')).toBeNull();
   });
 
-  it('always offers Home', () => {
-    mountAt('/aria-studio');
+  it('gives an agent a Home row, and a seeker none', () => {
+    // The same ONE RULE, applied to home itself. A seeker's home IS Aria Studio (see
+    // lib/home.js), so a Home row beside the Aria Studio row would be two doors to one
+    // address — and inside the Studio, a door to the room you are standing in.
+    //
+    // An agent's home is a different workspace, so theirs stays.
+    mountAt('/cv-builder/abc', { role: 'agent' });
     expect(row('Home')).toBeTruthy();
+    cleanup();
+
+    mountAt('/profile');
+    expect(row('Home')).toBeNull();
+    expect(row('Aria Studio')).toBeTruthy();
   });
 });

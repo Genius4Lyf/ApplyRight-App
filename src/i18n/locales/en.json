@@ -735,7 +735,9 @@
       "scoreLabel": "CV Health Score",
       "needsWork": "Needs work",
       "gettingThere": "Getting there",
-      "strong": "Strong 75+"
+      "strong": "Strong 75+",
+      "editInBuilder": "Review & edit in builder",
+      "skipToPreview": "Skip to preview"
     },
     "fit": {
       "title": "Your fit",
@@ -4104,6 +4106,9 @@
         "inProgress": "In progress",
         "complete": "Complete"
       }
+    },
+    "account": {
+      "title": "Account"
     },
     "cvStudio": {
       "title": "CV Studio",

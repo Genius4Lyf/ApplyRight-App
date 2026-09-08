@@ -10,7 +10,6 @@ import { cloneElement, lazy, Suspense, useEffect } from 'react';
 import { Toaster } from 'sonner';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Dashboard from './pages/Dashboard';
 import MobileHomeRedirect from './components/MobileHomeRedirect';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -30,6 +29,7 @@ import SessionTimeoutModal from './components/SessionTimeoutModal';
 import TopProgressBar from './components/TopProgressBar';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { isDarkEligibleRoute } from './utils/theme';
+import { homePathFor, SEEKER_HOME } from './lib/home';
 
 // Session Manager Component
 const SessionManager = ({ children }) => {
@@ -76,6 +76,10 @@ const SessionManager = ({ children }) => {
 // Job-seeker-only routes that a CV agent should never land on (they have a
 // CV-only workspace at /agent). Agents keep access to /cv-builder,
 // /upgrade and /profile, which they need to build and pay for client CVs.
+//
+// `/dashboard` stays on this list even though the page is gone. It is a redirect to
+// /aria-studio now, and an agent following an old bookmark must be turned around HERE
+// rather than being forwarded into the Studio they are held out of.
 const AGENT_BLOCKED_PREFIXES = ['/dashboard', '/history', '/interview-prep', '/jobs'];
 
 const readUser = () => {
@@ -104,7 +108,7 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
-// Guest Route Component (redirects to dashboard if already authenticated)
+// Guest Route Component (redirects home if already authenticated)
 const GuestRoute = ({ children }) => {
   const token = localStorage.getItem('token');
   if (token) {
@@ -118,7 +122,7 @@ const GuestRoute = ({ children }) => {
     // could only ever read `false` and would be a comment describing something that
     // never happens. During the campaign MaintenanceGuard swaps the countdown in on
     // arrival; only the URL differs, and only on this one already-signed-in path.
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={SEEKER_HOME} replace />;
   }
   return children;
 };
@@ -131,7 +135,7 @@ const AgentRoute = ({ children }) => {
   }
   const user = readUser();
   if (user.role !== 'agent') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePathFor(user)} replace />;
   }
   return children;
 };
@@ -156,8 +160,9 @@ const RootLayout = () => {
     // Keep ONE stable key for the whole builder so neither switching steps NOR the
     // 'new'→realId swap (create-on-entry) remounts CVBuilderLayout — the swap would
     // otherwise flash a refetch/remount. (A direct /cv-builder/A→/cv-builder/B jump
-    // without leaving the builder would no longer remount, but CV switches go via the
-    // dashboard, so that flow doesn't occur.)
+    // without leaving the builder would no longer remount. The builder's own sidebar
+    // CAN do exactly that — a row switches CVs in place — so CVBuilderLayout has to
+    // refetch on an :id change rather than relying on a remount to do it for it.)
     return pathname.startsWith('/cv-builder') ? '/cv-builder' : pathname;
   };
 
@@ -203,7 +208,7 @@ const AdminRoute = ({ children }) => {
   }
 
   if (user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePathFor(user)} replace />;
   }
 
   return children;
@@ -406,19 +411,32 @@ const router = createBrowserRouter([
         path: '/forgot-password',
         element: <ForgotPassword />,
       },
+      // THE DASHBOARD IS GONE. It was a page of cards pointing at the four places you
+      // might want to be — and every one of those is now a row in the sidebar that each
+      // signed-in surface carries. So it had become a stop on the way to somewhere, on
+      // the first screen after sign-in. Aria Studio is home instead: the work itself.
+      //
+      // Kept as a redirect rather than deleted, for the same reason /my-cvs and /history
+      // are. It was the post-login landing for the app's whole life — it is in bookmarks,
+      // in browser history, and in the back stack of the installed Android app. A dead
+      // link is a worse answer than the place the thing actually went.
+      //
+      // Still inside ProtectedRoute: a signed-out visitor with the old bookmark must land
+      // on /login, not be bounced to a Studio that would only bounce them again. And
+      // AGENT_BLOCKED_PREFIXES still lists it, so an agent is turned around here rather
+      // than forwarded into the Studio they are held out of.
       {
         path: '/dashboard',
         element: (
-          <MaintenanceGuard>
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          </MaintenanceGuard>
+          <ProtectedRoute>
+            <Navigate to={SEEKER_HOME} replace />
+          </ProtectedRoute>
         ),
       },
       {
-        // Aria Studio — standalone agentic tailor chat. Deliberately NOT nested under
-        // /cv-builder: it owns its own document via AriaStudioProvider.
+        // Aria Studio — standalone agentic tailor chat, and HOME since the dashboard was
+        // removed. Deliberately NOT nested under /cv-builder: it owns its own document
+        // via AriaStudioProvider.
         path: '/aria-studio',
         element: (
           <MaintenanceGuard>

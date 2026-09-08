@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
+import { SEEKER_HOME } from '../lib/home';
 
 const TIPS = [
   'Tailor your CV to every job description for better results.',
@@ -19,7 +20,7 @@ const CVTips = () => {
 
   const buildCV = () => {
     const token = localStorage.getItem('token');
-    navigate(token ? '/dashboard' : '/register');
+    navigate(token ? SEEKER_HOME : '/register');
   };
 
   return (

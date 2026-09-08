@@ -5,6 +5,7 @@ import PublicNavbar from '../components/PublicNavbar';
 import Footer from '../components/Footer';
 import AriaOrbit from '../components/cv/AriaOrbit';
 import { useNavigate, Link } from 'react-router-dom';
+import { SEEKER_HOME } from '../lib/home';
 
 const fadeIn = {
   hidden: { opacity: 0, y: 30 },
@@ -125,7 +126,7 @@ const CVHealth = () => {
   // Logged in → straight to their CVs; logged out → register first.
   const buildCV = () => {
     const token = localStorage.getItem('token');
-    navigate(token ? '/dashboard' : '/register');
+    navigate(token ? SEEKER_HOME : '/register');
   };
 
   return (

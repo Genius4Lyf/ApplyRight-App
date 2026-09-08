@@ -8,6 +8,7 @@ import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { signalReady } from '../utils/splash';
 import { syncLangFromUser } from '../lib/lang';
 import { useTranslation } from 'react-i18next';
+import { SEEKER_HOME } from '../lib/home';
 
 const Login = () => {
   const { t } = useTranslation();
@@ -60,7 +61,7 @@ const Login = () => {
         // walked them straight past the access they were just given. The server decides
         // who qualifies and says so on the login response.
         const gated = LAUNCH.enabled && res.data.bypassesMaintenance !== true;
-        navigate(gated ? '/pre-launch' : '/dashboard');
+        navigate(gated ? '/pre-launch' : SEEKER_HOME);
       }
     } catch (err) {
       setError(err.response?.data?.message || t('errors.loginFailed'));

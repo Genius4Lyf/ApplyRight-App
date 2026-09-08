@@ -11,10 +11,14 @@ import { useNavigate } from 'react-router-dom';
 // else. Here it IS the page, so it opens on arrival. The pane behind it is not a
 // placeholder waiting for content: it repeats the two ways to start, so someone who
 // dismisses the sidebar still has every door in front of them rather than an empty room.
+//
+// The menu here is the SAME NewCvMenu the sidebar carries, wired to the same handlers —
+// including the upload flow the dashboard used to own. Two menus that offered different
+// sets of ways to start would be worse than one.
 const CvBuilderIndex = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { openSidebar, sidebar } = useWorkspaceSidebar({ scope: 'builder' });
+  const { openSidebar, sidebar, openUploadCv } = useWorkspaceSidebar({ scope: 'builder' });
 
   useEffect(() => {
     openSidebar();
@@ -44,6 +48,7 @@ const CvBuilderIndex = () => {
             <NewCvMenu
               onBuildWithAria={() => navigate('/aria-studio', { state: { start: 'build' } })}
               onBuildWithBuilder={() => navigate('/cv-builder/new')}
+              onUploadCv={openUploadCv}
               onInterview={() => navigate('/aria-studio', { state: { start: 'prep' } })}
             />
           </div>

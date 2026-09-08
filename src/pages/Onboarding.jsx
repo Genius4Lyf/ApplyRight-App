@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import CustomSelect from '../components/ui/CustomSelect';
 import WelcomeModal from '../components/onboarding/WelcomeModal';
 import { LAUNCH } from '../lib/launch';
+import { SEEKER_HOME } from '../lib/home';
 
 // Academic journey (university/discipline/graduation year) used to be a second
 // onboarding step, but not every user has been to school — it's now collected
@@ -99,10 +100,10 @@ const Onboarding = () => {
   };
 
   const handleWelcomeComplete = () => {
-    // End of the welcome tips. During the campaign the dashboard does not exist yet for
-    // this person, so send them to the countdown by name rather than letting the guard
-    // swap it in under /dashboard — the URL should say what is on screen.
-    navigate(LAUNCH.enabled ? '/pre-launch' : '/dashboard');
+    // End of the welcome tips. During the campaign the app does not exist yet for this
+    // person, so send them to the countdown by name rather than letting the guard swap
+    // it in underneath — the URL should say what is on screen.
+    navigate(LAUNCH.enabled ? '/pre-launch' : SEEKER_HOME);
   };
 
   return (

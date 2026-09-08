@@ -990,8 +990,11 @@ const ResumeReview = () => {
             Unavailable
           </h2>
           <p className="text-slate-600 dark:text-slate-300 mb-6">{error}</p>
-          <button onClick={() => navigate('/dashboard')} className="w-full btn-primary py-3">
-            Return to Dashboard
+          {/* The CV this address named cannot be opened. The studio's own list is the
+              honest place to land — the CVs that CAN be opened, one click from here.
+              (It used to say "Return to Dashboard"; there is no dashboard.) */}
+          <button onClick={() => navigate('/cv-studio')} className="w-full btn-primary py-3">
+            {t('workspace.cvStudio.title')}
           </button>
         </div>
       </div>

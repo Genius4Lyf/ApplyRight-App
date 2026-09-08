@@ -54,8 +54,12 @@ describe('Navbar — the left-hand slot', () => {
   });
 
   it('keeps the wordmark ON the home page', () => {
-    // The one page whose own name is the right thing to show.
-    mountAt('/dashboard');
+    // The one page whose own name is the right thing to show. Home is Aria Studio now
+    // that the dashboard is gone (lib/home.js) — and note that the Studio carries a
+    // sidebar rather than this bar, so in the running app this branch is reached only
+    // by an agent at /agent. Held anyway: `atHome` is what decides it, and it must keep
+    // agreeing with homePathFor rather than with a route that no longer exists.
+    mountAt('/aria-studio');
     expect(screen.getByAltText('ApplyRight')).toBeTruthy();
     expect(screen.queryByRole('link', { name: /^home$/i })).toBeNull();
   });

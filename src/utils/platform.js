@@ -27,6 +27,12 @@ export const WORKSPACE_PREFIXES = [
   // /resume/:id — this is the frame that holds its list when no document is open.
   '/cv-studio',
   '/interview-prep',
+  // The account surfaces. They were the last signed-in pages still wearing the navbar;
+  // they carry the nav-only 'account' sidebar now (see AccountShell), so they belong on
+  // this list for the same reason the workspaces do.
+  '/profile',
+  '/upgrade',
+  '/credits',
 ];
 
 const matchesPrefix = (pathname, prefixes) =>

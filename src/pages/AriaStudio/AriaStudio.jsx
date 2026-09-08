@@ -27,6 +27,7 @@ import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
 import StudioWelcomeGuide from '../../components/ariaStudio/StudioWelcomeGuide';
 import EditModeUnlockedGuide from '../../components/ariaStudio/EditModeUnlockedGuide';
 import TargetJobStrip from '../../components/ariaStudio/TargetJobStrip';
+import { signalReady } from '../../utils/splash';
 
 const STUDIO_WELCOME_GUIDE_KEY = 'ariaStudio:welcome-guide-seen:v1';
 const STUDIO_EDIT_GUIDE_KEY = 'ariaStudio:edit-mode-guide-seen:v1';
@@ -136,6 +137,13 @@ const StudioDesk = () => {
       console.error('Failed to load studio sessions', err);
     } finally {
       setLoadingSessions(false);
+      // RELEASE THE NATIVE SPLASH. This is home now (see lib/home.js), so on Android
+      // this page is what the app boots into — and the dashboard, which used to own
+      // this call, is gone. Without it every cold start would sit on the splash for
+      // the full 8s safety net in App.jsx before showing a Studio that had been ready
+      // for seconds. In the `finally` on purpose: a failed sessions fetch still leaves
+      // a usable Studio, and holding the splash over a working page is the worse bug.
+      signalReady();
     }
   }, []);
 

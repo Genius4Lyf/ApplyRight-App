@@ -731,7 +731,9 @@
       "scoreLabel": "Santé du CV",
       "needsWork": "À retravailler",
       "gettingThere": "En bonne voie",
-      "strong": "Solide 75+"
+      "strong": "Solide 75+",
+      "editInBuilder": "Relire et modifier dans le créateur",
+      "skipToPreview": "Passer à l’aperçu"
     },
     "fit": {
       "title": "Votre adéquation",
@@ -4100,6 +4102,9 @@
         "inProgress": "En cours",
         "complete": "Complets"
       }
+    },
+    "account": {
+      "title": "Compte"
     },
     "cvStudio": {
       "title": "CV Studio",

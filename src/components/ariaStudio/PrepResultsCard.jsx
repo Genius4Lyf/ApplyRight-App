@@ -5,7 +5,7 @@ import AriaCard from './AriaCard';
 import FitScoreCard from '../FitScoreCard';
 import GenerationModelRow from '../cv/GenerationModelRow';
 import CreditGate from '../CreditGate';
-import { ReadyChip, GhostButton, InkButton } from '../dashboard/ToolkitButtons';
+import { ReadyChip, GhostButton, InkButton } from '../ui/ToolkitButtons';
 import { CREDIT_COSTS } from '../../lib/credits';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { hasInterviewPrep } from '../../utils/interviewPrep';

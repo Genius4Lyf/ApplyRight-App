@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
+import { SEEKER_HOME } from '../lib/home';
 
 // Flutterwave redirects here after hosted checkout with query params:
 //   ?status=successful|cancelled&tx_ref=AR-...&transaction_id=123456
@@ -49,7 +50,7 @@ const BillingReturn = () => {
   });
 
   const successPath = (() => {
-    if (!returnTo) return '/dashboard';
+    if (!returnTo) return SEEKER_HOME;
     const hashIndex = returnTo.indexOf('#');
     const pathAndQuery = hashIndex === -1 ? returnTo : returnTo.slice(0, hashIndex);
     const hash = hashIndex === -1 ? '' : returnTo.slice(hashIndex);

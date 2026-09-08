@@ -224,7 +224,10 @@ export const CVBuilderProvider = ({ children }) => {
         console.error('Error loading draft', error);
         const status = error.response?.status;
         if (status === 404 || status === 401) {
-          navigate('/dashboard');
+          // The CV you asked for is gone. The builder index is the honest landing:
+          // it is the list of the CVs you DO have, one click from starting another.
+          // (It used to be the dashboard, which no longer exists.)
+          navigate('/cv-builder');
         } else {
           toast.error('Failed to load CV data.');
         }
@@ -549,7 +552,11 @@ export const CVBuilderProvider = ({ children }) => {
     if (prevStep) {
       navigate(`/cv-builder/${id}/${prevStep.path}`);
     } else {
-      navigate('/dashboard');
+      // Back from the FIRST step is leaving the wizard, so it lands exactly where
+      // exitWizard lands rather than somewhere else of its own. (It used to send you
+      // to the dashboard; there isn't one.) `exitWizard` is declared below but only
+      // read here on click, by which point it is assigned.
+      exitWizard();
     }
   };
 
