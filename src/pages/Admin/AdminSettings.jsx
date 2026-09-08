@@ -827,7 +827,7 @@ const AdminSettings = () => {
                       <div>
                         <h4 className="font-bold text-slate-900">Job Search</h4>
                         <p className="text-sm text-slate-500">
-                          Enable job search feature (Adzuna, Jobberman, Indeed).
+                          Enable job search feature (Jobberman — Nigeria only).
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">

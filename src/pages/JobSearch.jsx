@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Briefcase, Globe, MapPin, TrendingUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Briefcase, ChevronLeft, ChevronRight } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import GlobalBanner from '../components/GlobalBanner';
 import JobSearchBar from '../components/jobs/JobSearchBar';
@@ -9,11 +9,15 @@ import JobDetailPanel from '../components/jobs/JobDetailPanel';
 import jobSearchService from '../services/jobSearchService';
 import { toast } from 'sonner';
 
-const TABS = [
-  { id: 'all', label: 'All', icon: TrendingUp },
-  { id: 'global', label: 'Global', icon: Globe },
-  { id: 'local', label: 'Local', icon: MapPin },
-];
+// THE GLOBAL / LOCAL SPLIT IS GONE, because the split was Adzuna vs Jobberman and
+// Adzuna has been removed (see jobSearch.service for why: it publishes no Nigeria
+// index, so every NG query was silently answered from the UNITED KINGDOM one).
+//
+// With one board left, "Global" could only ever render an empty list and "All" was the
+// same list as "Local" — three tabs for one thing, one of them permanently broken. The
+// page shows that one list directly. `loadTabData` and the tab-keyed state survive
+// intact so a second board can bring the tabs back without rebuilding the page.
+const ONLY_TAB = 'all';
 
 const PAGE_SIZE = 10;
 
@@ -21,11 +25,10 @@ const JobSearch = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab] = useState(ONLY_TAB);
 
   const [tabData, setTabData] = useState({});
   const [tabLoading, setTabLoading] = useState({});
-  const [tabPage, setTabPage] = useState({ all: 1, global: 1, local: 1 });
 
   const [searchResult, setSearchResult] = useState(null);
   const [searchPagination, setSearchPagination] = useState(null);
@@ -39,7 +42,7 @@ const JobSearch = () => {
   const [detailOpen, setDetailOpen] = useState(false);
 
   useEffect(() => {
-    loadTabData('all', 1);
+    loadTabData(ONLY_TAB, 1);
   }, []);
 
   useEffect(() => {
@@ -56,20 +59,8 @@ const JobSearch = () => {
     setTabLoading((prev) => ({ ...prev, [tab]: true }));
 
     try {
-      let data;
-      switch (tab) {
-        case 'all':
-          data = await jobSearchService.getTrending('mixed', page, PAGE_SIZE);
-          break;
-        case 'global':
-          data = await jobSearchService.getTrending('global', page, PAGE_SIZE);
-          break;
-        case 'local':
-          data = await jobSearchService.getTrending('local', page, PAGE_SIZE);
-          break;
-        default:
-          return;
-      }
+      // 'mixed' is still what the API takes; with one board it means 'everything'.
+      const data = await jobSearchService.getTrending('mixed', page, PAGE_SIZE);
 
       setTabData((prev) => ({
         ...prev,
@@ -88,20 +79,7 @@ const JobSearch = () => {
     }
   }, []);
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setIsSearchActive(false);
-    setSearchResult(null);
-    setSearchPagination(null);
-
-    const page = tabPage[tab] || 1;
-    if (!tabData[tab]?.results?.length) {
-      loadTabData(tab, page);
-    }
-  };
-
   const handleTabPageChange = (newPage) => {
-    setTabPage((prev) => ({ ...prev, [activeTab]: newPage }));
     loadTabData(activeTab, newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -172,7 +150,7 @@ const JobSearch = () => {
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Find Jobs</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Discover jobs from Nigeria and around the world
+            Openings across Nigeria, from Jobberman
           </p>
         </div>
 
@@ -182,26 +160,6 @@ const JobSearch = () => {
             loading={searchLoading}
             onClear={isSearchActive ? handleClearSearch : undefined}
           />
-        </div>
-
-        <div className="flex gap-1 mb-4 p-0.5 bg-slate-100 dark:bg-slate-900 rounded-lg w-fit max-w-full overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${
-                  activeTab === tab.id && !isSearchActive
-                    ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-300 shadow-sm'
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
         </div>
 
         {isSearchActive && (

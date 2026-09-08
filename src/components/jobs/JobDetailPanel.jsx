@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { X, ExternalLink, Building2, MapPin, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import jobSearchService from '../../services/jobSearchService';
+import { sourceLabel } from '../../lib/jobSources';
 
 /**
  * Detect if text contains meaningful HTML tags (not just entities)
@@ -148,7 +149,7 @@ const sanitizeHTML = (html) => {
 };
 
 /**
- * Format a flat text blob (like Adzuna descriptions) into readable HTML.
+ * Format a flat text blob — a description with no markup — into readable HTML.
  * Splits on sentence boundaries to create paragraphs, and detects
  * section-like patterns to add headers.
  */
@@ -162,7 +163,7 @@ const formatPlainText = (text) => {
     return formatMultilineText(str);
   }
 
-  // Single blob of text (typical Adzuna) — split into readable chunks
+  // Single blob of text, no markup at all — split into readable chunks
   return formatTextBlob(str);
 };
 
@@ -225,7 +226,7 @@ const formatMultilineText = (text) => {
 };
 
 /**
- * Handle a single text blob with no line breaks (e.g. Adzuna).
+ * Handle a single text blob with no line breaks.
  * Splits by sentence and groups into paragraphs of 2-3 sentences.
  * Detects embedded section keywords and creates headers.
  */
@@ -398,14 +399,8 @@ const JobDetailPanel = ({ result, searchId, isOpen, onClose, onApplyClick }) => 
 
               {/* Meta info */}
               <div className="flex flex-wrap gap-2 text-xs">
-                <span
-                  className={`px-2 py-1 rounded-full ${
-                    result.source === 'jobberman'
-                      ? 'bg-green-50 text-green-600'
-                      : 'bg-blue-50 text-blue-600'
-                  }`}
-                >
-                  {result.source === 'jobberman' ? 'Local' : 'Global'}
+                <span className="px-2 py-1 rounded-full bg-green-50 text-green-600">
+                  {sourceLabel(result.source)}
                 </span>
                 {result.category && (
                   <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-600">

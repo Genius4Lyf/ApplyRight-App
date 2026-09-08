@@ -1,7 +1,7 @@
 import api from './api';
 
 const jobSearchService = {
-  // Search jobs from both sources (paginated)
+  // Search jobs (paginated). One board — Jobberman — since Adzuna was removed.
   search: (params) => api.post('/job-search/search', params).then((r) => r.data),
 
   // Trending jobs (paginated)

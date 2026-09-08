@@ -22,7 +22,6 @@ import Modal from '../components/Modal';
 import AuthShell, { DEFAULT_VALUE_PROPS } from '../components/AuthShell';
 import { SIGNUP_CREDITS } from '../lib/credits';
 import { useTranslation } from 'react-i18next';
-import LanguageSwitcher from '../components/LanguageSwitcher';
 import { getLang, syncLangFromUser } from '../lib/lang';
 
 // Left-panel value props shown when signing up as a CV agent — reframes the
@@ -56,30 +55,20 @@ const AccountTypeCard = ({ selected, icon, title, onClick }) => {
       aria-checked={selected}
       onClick={onClick}
       className={`flex items-center gap-2.5 px-3 py-2.5 rounded-lg border text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400 ${
-        selected ? 'border-slate-900 bg-slate-900' : 'border-slate-200 bg-white hover:bg-slate-50'
+        selected ? 'border-slate-900 bg-slate-50' : 'border-slate-200 bg-white hover:bg-slate-50'
       }`}
     >
-      <span
-        className={`flex items-center justify-center w-7 h-7 rounded-md shrink-0 ${
-          selected ? 'bg-white/15 text-white' : 'bg-slate-100 text-slate-500'
-        }`}
-      >
+      <span className="flex items-center justify-center w-7 h-7 rounded-md shrink-0 bg-white border border-slate-200 text-slate-600">
         {icon}
       </span>
       <span
         className={`flex-1 min-w-0 text-sm font-semibold truncate ${
-          selected ? 'text-white' : 'text-slate-800'
+          selected ? 'text-slate-900' : 'text-slate-700'
         }`}
       >
         {title}
       </span>
-      <span
-        className={`flex items-center justify-center w-4 h-4 rounded-full border-2 shrink-0 ${
-          selected ? 'border-white bg-white' : 'border-slate-300'
-        }`}
-      >
-        {selected && <span className="w-1.5 h-1.5 rounded-full bg-slate-900" />}
-      </span>
+      {selected && <Check className="w-4 h-4 text-slate-900 shrink-0" />}
     </button>
   );
 };
@@ -332,6 +321,7 @@ const Register = () => {
         leftSubcopy={t(isAgent ? 'auth.register.leftSubcopyAgent' : 'auth.register.leftSubcopy')}
         valueProps={isAgent ? AGENT_VALUE_PROPS : DEFAULT_VALUE_PROPS}
         accent={isAgent ? 'agent' : 'ink'}
+        showLanguageSwitcher
         badge={
           isAgent
             ? { icon: <Briefcase className="w-3.5 h-3.5" />, label: t('auth.register.badgeAgent') }
@@ -404,21 +394,6 @@ const Register = () => {
                 onClick={() => selectAudience(true)}
               />
             </div>
-          </div>
-
-          {/* Language — defaults to the DETECTED language (browser locale, or an
-              earlier explicit choice). Changing it switches the page immediately AND
-              is sent as interfaceLang so the account is created in that language. */}
-          <div className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
-            <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {t('common.language.label')}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-snug text-slate-500">
-                {t('auth.register.languageHint')}
-              </p>
-            </div>
-            <LanguageSwitcher className="shrink-0" />
           </div>
 
           {error && (

@@ -1,5 +1,6 @@
 import React from 'react';
 import { MapPin, Building2, Clock, ExternalLink } from 'lucide-react';
+import { sourceLabel } from '../../lib/jobSources';
 
 const JobResultCard = ({ result, searchId, onViewDetails, onApplyClick }) => {
   const timeAgo = (date) => {
@@ -51,14 +52,8 @@ const JobResultCard = ({ result, searchId, onViewDetails, onApplyClick }) => {
 
           <div className="flex items-center justify-between mt-auto pt-3">
             <div className="flex items-center gap-2">
-              <span
-                className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                  result.source === 'jobberman'
-                    ? 'bg-green-50 text-green-600'
-                    : 'bg-blue-50 text-blue-600'
-                }`}
-              >
-                {result.source === 'jobberman' ? 'Local' : 'Global'}
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-green-50 text-green-600">
+                {sourceLabel(result.source)}
               </span>
               {result.postedDate && (
                 <span className="flex items-center gap-1 text-[10px] text-slate-400">

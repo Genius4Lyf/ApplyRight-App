@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Gauge, ShieldCheck, Zap, Check } from 'lucide-react';
 import logoBlack from '../assets/logo/applyright-icon-black.png';
 import logoWhite from '../assets/logo/applyright-icon-white.png';
+import LanguageSwitcher from './LanguageSwitcher';
 
 /**
  * AuthShell
@@ -29,6 +30,9 @@ import logoWhite from '../assets/logo/applyright-icon-white.png';
  *                  'agent' (the CV-agent signup path)
  *   badge        - optional { icon, label } pill shown above the headings to
  *                  signal a special signup context (e.g. "CV Agent sign-up")
+ *   showLanguageSwitcher - shows a small EN/FR toggle above the form heading.
+ *                  Locale is chrome, not a form field, so it stays out of the
+ *                  field flow — no label, no explanation, just the control.
  *   children     - the actual form
  */
 // Full, static class strings per accent so Tailwind keeps them at build time.
@@ -67,6 +71,7 @@ const AuthShell = ({
   trustSignals = [],
   accent = 'ink',
   badge = null,
+  showLanguageSwitcher = false,
   children,
 }) => {
   const { t } = useTranslation();
@@ -194,6 +199,11 @@ const AuthShell = ({
               index.css, which is scoped to this shell precisely because every other form
               in the app still lives inside a card, where the tighter density is right. */}
           <div>
+            {showLanguageSwitcher && (
+              <div className="flex justify-end mb-4">
+                <LanguageSwitcher />
+              </div>
+            )}
             <div className="mb-8 text-center">
               {badge && (
                 <span
