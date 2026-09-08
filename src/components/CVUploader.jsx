@@ -125,7 +125,11 @@ const CVUploader = ({
             <p className="text-slate-600 dark:text-slate-300 font-medium mb-1">
               Click or drag to upload
             </p>
-            <p className="text-xs text-slate-400 dark:text-slate-500">PDF, DOCX (Max 5MB)</p>
+            {/* DOC is named because it now genuinely works. The picker has always
+                accepted it, but the server routed it to a .docx-only reader, so every
+                legacy Word CV failed — while this line quietly told the truth about what
+                was supported and the file dialog did not. */}
+            <p className="text-xs text-slate-400 dark:text-slate-500">PDF, DOC, DOCX (Max 5MB)</p>
           </div>
         ) : (
           <div className="w-full text-center">
@@ -160,7 +164,9 @@ const CVUploader = ({
           <div className="absolute inset-0 bg-white/60 dark:bg-slate-900/60 backdrop-blur-[1px] flex items-center justify-center rounded-xl z-20">
             <div className="flex flex-col items-center">
               <AriaLoader inline size={32} label="Processing your document…" />
-              <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">Processing Document...</p>
+              <p className="mt-2 text-sm font-medium text-slate-600 dark:text-slate-300">
+                Processing Document...
+              </p>
             </div>
           </div>
         )}
