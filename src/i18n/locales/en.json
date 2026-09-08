@@ -4480,7 +4480,7 @@
       "roleLabel": "Target role",
       "jdLabel": "Job description",
       "jdPlaceholder": "Paste the full job description here…",
-      "jdTooShort": "Add at least {{count}} characters so ARIA has enough detail to read.",
+      "jdTooShort": "Add at least {{min}} characters so ARIA has enough detail to read.",
       "preserveNotice": "Your existing CV content will stay unchanged. ARIA will guide you through anything worth reviewing.",
       "saveAndReread": "Save and reread",
       "rereading": "Rereading job…",

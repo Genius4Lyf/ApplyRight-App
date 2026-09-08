@@ -153,14 +153,19 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     expect(pushedTexts(onPush)).toContain(i18n.t('ariaStudio.sectionCoach.gradFollowUp'));
     expect(pushedTexts(onPush)).not.toContain(SLIP.reply);
 
-    // 2. The metric STARTER is filtered out; the safe one survives — the strip must not
-    //    take the whole rail down and leave the user staring at a blank prompt.
-    await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'I was trusted with ___' })).toBeTruthy()
-    );
-    expect(screen.queryByRole('button', { name: 'I improved efficiency by ___%' })).toBeNull();
-
-    // 3. No worked EXAMPLE: its toggle only renders when one survived the strip.
+    // 2. No worked EXAMPLE: its toggle only renders when one survived the strip.
+    //
+    //    What used to sit here was an assertion about the dashed STARTER CHIPS — that
+    //    the metric one was filtered out and the safe one survived. Those chips were
+    //    deliberately removed: `reply` is markdown now and Aria writes the same
+    //    starters as bullets inside her own message, so the rail underneath was a
+    //    second copy of text the user had just read. `suggestions` still comes back
+    //    from the server and still shapes what she writes, but the client no longer
+    //    reads it at all — so there is nothing left on this surface to strip, and an
+    //    assertion about it could only ever fail.
+    //
+    //    The strip itself is untouched and still covered: it runs on `reply` (1) and
+    //    on `exampleAnswer` (below), which are the two surfaces that survived.
     expect(
       screen.queryByRole('button', { name: i18n.t('cvBuilder.askAria.showExample') })
     ).toBeNull();
@@ -178,12 +183,13 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     await waitFor(() => expect(onPush.mock.calls.length).toBeGreaterThan(1));
 
     expect(pushedTexts(onPush)).toContain(SLIP.reply);
+    // The starter-chip half of this regression went with the chips themselves (see the
+    // test above). The example is the surface that remains, and it must survive.
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'I improved efficiency by ___%' })).toBeTruthy()
+      expect(
+        screen.getByRole('button', { name: i18n.t('cvBuilder.askAria.showExample') })
+      ).toBeTruthy()
     );
-    expect(
-      screen.getByRole('button', { name: i18n.t('cvBuilder.askAria.showExample') })
-    ).toBeTruthy();
   });
 
   it('leaves an entry with no captured type to the session stage alone', async () => {

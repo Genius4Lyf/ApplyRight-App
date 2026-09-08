@@ -36,7 +36,6 @@ export const CREDIT_COSTS = {
   // Coach: AI-generate bullets from a described role/project (Aria build-with).
   // The count picker charges count × this.
   GENERATE_BULLET: 1,
-  REWRITE_ROLE: 1,
   // Coach: AI-generate one career-stage-aware, JD-tailored summary (each re-roll charges).
   GENERATE_SUMMARY: 3,
   // Aria Studio — generate a typical role profile from just a job title. Always runs

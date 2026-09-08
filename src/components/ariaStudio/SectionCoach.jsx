@@ -385,7 +385,12 @@ const SectionCoach = ({
         onSend={send}
         disabled={thinking}
         busy={thinking}
-        placeholder="Tell ARIA..."
+        // Was the hard-coded English string "Tell ARIA...". The translation has existed
+        // in both locales all along (activityPlaceholder), so a French user was reading
+        // English here — and SectionCoach.test.jsx, which finds the composer BY that
+        // locale string, could not find it: seven tests in this file have been failing
+        // ever since, none of them for the reason they are named after.
+        placeholder={t('ariaStudio.sectionCoach.activityPlaceholder')}
         modelId={modelId}
         onSelectModel={selectModel}
         showModelPicker

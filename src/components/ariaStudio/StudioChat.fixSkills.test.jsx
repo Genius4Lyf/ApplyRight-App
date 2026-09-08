@@ -239,15 +239,21 @@ describe('applying picks', () => {
   it('a fix-workflow pending rehydrates straight onto the picker', async () => {
     // The refresh case: the user already paid, so they must land on the suggestions —
     // not back on a consent card offering to sell them the same thing again.
+    //
+    // Waited on the generated SKILLS, not on their category headings: SkillsCard
+    // regroups rows by "best for this role" vs the rest and carries the category on
+    // each row, so the category name is no longer a heading anywhere on screen. That
+    // it still reaches the CV correctly is the next test, and is asserted where it
+    // actually matters — on cvData.
     await mountStudio(withPending());
-    expect(await screen.findByText('Guest Service')).toBeTruthy();
-    expect(screen.getByText('Operations')).toBeTruthy();
+    expect(await screen.findByText('Guest relations')).toBeTruthy();
+    expect(screen.getByText('Shift scheduling')).toBeTruthy();
     expect(screen.queryByText(t('ariaStudio.skillsBuild.bodyWithJob'))).toBeNull();
   });
 
   it('lands the skills WITH their real categories, clears the pending, and re-scores', async () => {
     await mountStudio(withPending());
-    await screen.findByText('Guest Service');
+    await screen.findByText('Guest relations');
 
     fireEvent.click(screen.getByText('Guest relations'));
     fireEvent.click(screen.getByText('Shift scheduling'));
@@ -275,7 +281,7 @@ describe('applying picks', () => {
     // all. (The dupe GUARD still matters, and is exercised through the manual input,
     // which accepts free text and so can produce one.)
     await mountStudio(withPending({ skills: [{ name: 'Guest relations', category: 'Other' }] }));
-    await screen.findByText('Guest Service');
+    await screen.findByText('Shift scheduling');
 
     expect(screen.getByText(t('cvBuilder.skillsCard.onCv'))).toBeTruthy();
     // Nothing selectable is selected, so the footer offers no count to add.
@@ -284,22 +290,46 @@ describe('applying picks', () => {
 });
 
 describe('the free manual route', () => {
-  const typeSkills = (text) => {
-    const input = screen.getByPlaceholderText(t('ariaStudio.skillsBuild.manualPlaceholder'));
-    fireEvent.change(input, { target: { value: text } });
+  // The route is no longer one comma-separated box. It is a category dropdown beside a
+  // single-skill input: the user says WHERE the skill goes, then names it, and Enter
+  // files it. That is why the dropdown is offered at all — filing everything under one
+  // bucket is the flat wall this whole card replaced.
+  //
+  // Categories come from the CV's own skills, plus a "new category" option for a CV
+  // that has none yet.
+  const chooseCategory = (name) => {
+    const select = screen.getByLabelText(t('cvBuilder.skills.categoryName'));
+    if ([...select.options].some((o) => o.value === name)) {
+      fireEvent.change(select, { target: { value: name } });
+      return;
+    }
+    fireEvent.change(select, { target: { value: '__new__' } });
+    fireEvent.change(screen.getByLabelText(t('cvBuilder.skills.categoryName')), {
+      target: { value: name },
+    });
+  };
+
+  const typeSkill = (name, category) => {
+    if (category) chooseCategory(category);
+    const input = screen.getByPlaceholderText(t('cvBuilder.skills.addSkillPlaceholder'));
+    fireEvent.change(input, { target: { value: name } });
     fireEvent.keyDown(input, { key: 'Enter' });
   };
 
-  it('adds comma-separated skills under a REAL category, without closing the fix', async () => {
+  it('files each skill under the category the user chose, without closing the fix', async () => {
     await mountStudio(fixingSkills());
     await screen.findByText(t('ariaStudio.skillsBuild.bodyWithJob'));
 
-    typeSkills('Guest relations, Shift scheduling');
+    typeSkill('Guest relations', 'Guest Service');
+    await waitFor(() => expect(ctx.cvData.skills.length).toBe(1));
+    typeSkill('Shift scheduling', 'Operations');
 
     await waitFor(() => expect(ctx.cvData.skills.length).toBe(2));
-    // 'Other' is a real bucket a reader understands; 'Uncategorized' is the blanket that
-    // made the old section read as one undifferentiated wall.
-    ctx.cvData.skills.forEach((s) => expect(s.category).toBe('Other'));
+    // THE POINT: a real category the reader understands, per skill — not one
+    // undifferentiated bucket, which is the flat wall this card replaced.
+    const byName = Object.fromEntries(ctx.cvData.skills.map((sk) => [sk.name, sk.category]));
+    expect(byName['Guest relations']).toBe('Guest Service');
+    expect(byName['Shift scheduling']).toBe('Operations');
     // Typing is not finishing — the user keeps going until they press Done.
     expect(CVService.studioRecompute).not.toHaveBeenCalled();
     expect(has('fixend')).toBe(false);
@@ -311,7 +341,7 @@ describe('the free manual route', () => {
     await mountStudio(fixingSkills({ skills: [{ name: 'Guest relations', category: 'Other' }] }));
     await screen.findByText(t('ariaStudio.skillsBuild.bodyWithJob'));
 
-    typeSkills('Guest relations');
+    typeSkill('Guest relations');
 
     expect(await screen.findByText(t('ariaStudio.chat.manualSkillsAllDupes'))).toBeTruthy();
     expect(ctx.cvData.skills.length).toBe(1);
@@ -322,7 +352,9 @@ describe('the free manual route', () => {
     await mountStudio(fixingSkills());
     await screen.findByText(t('ariaStudio.skillsBuild.bodyWithJob'));
 
-    typeSkills('Guest relations, Shift scheduling');
+    typeSkill('Guest relations', 'Guest Service');
+    await waitFor(() => expect(ctx.cvData.skills.length).toBe(1));
+    typeSkill('Shift scheduling', 'Operations');
     await waitFor(() => expect(ctx.cvData.skills.length).toBe(2));
 
     // Done only appears once something has been added — before that the card offers Skip.

@@ -46,6 +46,14 @@ const SkillsBuildCard = ({
   const [manualCategory, setManualCategory] = useState(UNCATEGORIZED);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [creatingNewCategory, setCreatingNewCategory] = useState(false);
+  // SkillsCard wants NAMES (it lowercases them into a dupe set); the category
+  // dropdown below wants the OBJECTS, because a bare name carries no category. The
+  // caller used to flatten to names before passing them, which quietly meant this
+  // dropdown offered nothing but "Uncategorized" however many categories the CV
+  // already had — so the free manual route could not file a skill where it belonged.
+  const existingNames = existingSkills
+    .map((skill) => (typeof skill === 'string' ? skill : skill?.name))
+    .filter(Boolean);
   const categories = [
     UNCATEGORIZED,
     ...Array.from(
@@ -80,7 +88,7 @@ const SkillsBuildCard = ({
             suggestions={data.suggestions}
             bestForRole={data.bestForRole}
             reviewGroups={data.reviewGroups}
-            existingSkills={existingSkills}
+            existingSkills={existingNames}
             onAdd={onAdd}
             onProveSkill={onProveSkill}
             onDecline={onDecline}

@@ -1,0 +1,30 @@
+# LINE ENDINGS
+#
+# `.prettierrc` sets endOfLine: "crlf", and 435 of the 458 source files already are —
+# but nothing enforced it, so 23 files had quietly drifted to LF or to a mix of both.
+# That was 2,035 lint errors: 70% of the entire frontend lint run, saying nothing
+# whatever about the code, and drowning the ~840 findings that do.
+#
+# Without this file the answer depends on each machine's core.autocrlf, which means a
+# fresh clone can reintroduce the whole problem. eol=crlf pins it for every checkout on
+# every platform, so the working tree always matches what Prettier is configured to want.
+* text=auto eol=crlf
+
+# The exceptions, which must stay LF wherever they run.
+# gradlew is a shell script — CRLF makes the shebang unusable and the Android build
+# fails with "bad interpreter" on any Linux runner.
+android/gradlew text eol=lf
+*.sh text eol=lf
+
+# Never touched, never diffed.
+*.jar binary
+*.keystore binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary

@@ -4476,9 +4476,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   phase={skillsData ? 'card' : 'consent'}
                   data={skillsData}
                   hasJob={!!cvData?.targetJob?.description}
-                  existingSkills={(cvData?.skills || []).map((s) =>
-                    typeof s === 'string' ? s : s.name
-                  )}
+                  existingSkills={cvData?.skills || []}
                   busy={roleBusy === 'skills'}
                   cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
                   onGenerate={generateBuildSkills}
@@ -4827,9 +4825,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   phase={fixSkillsData ? 'card' : 'consent'}
                   data={fixSkillsData}
                   hasJob={!!cvData?.targetJob?.description}
-                  existingSkills={(cvData?.skills || []).map((s) =>
-                    typeof s === 'string' ? s : s.name
-                  )}
+                  existingSkills={cvData?.skills || []}
                   busy={roleBusy === 'skills' || applyingFix}
                   cost={costForActionTier('GENERATE_SKILLS', tierOf(genModelId)) ?? 10}
                   onGenerate={generateFixSkills}

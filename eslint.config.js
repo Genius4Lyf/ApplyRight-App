@@ -8,7 +8,16 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import { defineConfig, globalIgnores } from 'eslint/config';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  // BUILD OUTPUT IS NOT SOURCE.
+  //
+  // Only `dist` was ignored, so `npm run lint` was also linting the Capacitor Android
+  // project — which contains a COPY of the built web bundle, minified, plus two more
+  // copies under build/intermediates. That produced 1,975 problems (41% of the entire
+  // lint run) about generated code nobody can edit, and it is why the real numbers were
+  // never worth reading.
+  //
+  // playwright-report and test-results are likewise generated on every e2e run.
+  globalIgnores(['dist', 'android', 'playwright-report', 'test-results', 'coverage']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -35,6 +44,35 @@ export default defineConfig([
       'prettier/prettier': 'error',
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
     },
+  },
+  {
+    // NODE CONTEXT, not browser.
+    //
+    // The base config gives every file `globals.browser`, so these — which run under
+    // Node, not in a page — reported `process`, `require` and `__dirname` as undefined.
+    // Ten errors that were never bugs.
+    //
+    // The point is not the ten. `no-undef` is the rule that catches a real crash: a
+    // symbol referenced but never imported, which throws a ReferenceError the moment
+    // that line runs. One such bug was hiding in this list — TemplatePreviewThumb's
+    // fallback still named a component that had stopped being imported, so an unknown
+    // template id would have taken the picker down instead of falling back. It was
+    // indistinguishable from ten complaints about `process`. Now any no-undef is real.
+    files: [
+      'vite.config.js',
+      'playwright.config.js',
+      'replace_theme.js',
+      'scripts/**/*.js',
+      'e2e/**/*.js',
+      '**/*.test.{js,jsx}',
+    ],
+    languageOptions: { globals: { ...globals.node } },
+  },
+  {
+    // The service worker has neither `window` nor `document`, and does have
+    // `importScripts` and `self`.
+    files: ['sw.js'],
+    languageOptions: { globals: { ...globals.serviceworker } },
   },
   {
     // Aria Studio — TDZ guard, scoped.

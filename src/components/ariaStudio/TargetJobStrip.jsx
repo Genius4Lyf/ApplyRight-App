@@ -186,7 +186,7 @@ const TargetJobStrip = ({ model }) => {
                   />
                   {description.trim().length > 0 && description.trim().length < MIN_JD_LENGTH && (
                     <p className="mt-1 text-[10.5px] text-amber-600 dark:text-amber-400">
-                      {t('ariaStudio.targetJobStrip.jdTooShort', { count: MIN_JD_LENGTH })}
+                      {t('ariaStudio.targetJobStrip.jdTooShort', { min: MIN_JD_LENGTH })}
                     </p>
                   )}
                 </div>

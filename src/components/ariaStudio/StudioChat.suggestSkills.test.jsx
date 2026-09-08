@@ -219,13 +219,15 @@ describe('StudioChat — suggestSkills in a BUILD session', () => {
         studioPending: { kind: 'skills', data: { suggestions: SUGGESTIONS, bestForRole: [] } },
       })
     );
-    // Rehydrated onto the picker, as a refresh would.
-    expect(await screen.findByText('Guest Service')).toBeTruthy();
+    // Rehydrated onto the picker, as a refresh would. Waited on a generated SKILL, not
+    // on its category name: SkillsCard regroups rows by "best for this role" vs the rest
+    // and carries the category per row, so the category is no longer a heading anywhere.
+    expect(await screen.findByText('Guest relations')).toBeTruthy();
 
     await suggest();
 
     await waitFor(() => expect(consentCard()).toBeTruthy());
-    expect(screen.queryByText('Guest Service')).toBeNull();
+    expect(screen.queryByText('Guest relations')).toBeNull();
     // The PAID pending itself is left alone — it is bought output, and this command is not
     // a decision to throw it away.
     expect(ctx.cvData.studioPending?.data?.suggestions).toHaveLength(2);

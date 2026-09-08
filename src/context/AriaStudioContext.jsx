@@ -904,9 +904,15 @@ export const AriaStudioProvider = ({ children }) => {
   // on the CV) and save. Returns { added } so the chat can confirm.
   const applySkills = useCallback(
     async (newSkills) => {
-      if (!cvData) return { ok: false, added: 0 };
+      // The LIVE skills, via the ref, not the ones captured when this callback was built.
+      // The free manual route adds ONE skill at a time, so the second add runs from a
+      // handler created before the first landed: merging onto that stale list quietly
+      // REPLACED everything the user had already typed. Same class of bug, and the same
+      // fix, as the removal-undo that this ref was introduced for.
+      const current = cvDataRef.current;
+      if (!current) return { ok: false, added: 0 };
       const nameOf = (s) => (typeof s === 'string' ? s : s?.name || '').toLowerCase();
-      const previous = cvData.skills || [];
+      const previous = current.skills || [];
       const have = new Set(previous.map(nameOf));
       const additions = (newSkills || []).filter((s) => !have.has(nameOf(s)));
       if (!additions.length) return { ok: true, added: 0 };
@@ -925,7 +931,7 @@ export const AriaStudioProvider = ({ children }) => {
       }
       return { ok: true, added: additions.length };
     },
-    [cvData, draftId]
+    [draftId]
   );
 
   // Reconcile a role/project's bullets against a toggle record: ADD checked bullets that

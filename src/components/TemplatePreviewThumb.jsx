@@ -6,8 +6,6 @@ import React from 'react';
 // thumbnails. One list now.
 import { TEMPLATE_COMPONENTS } from '../lib/templateComponents';
 
-
-
 // A4 width in px at 96dpi (210mm). The inner page renders at this width and is
 // scaled down to fit the thumbnail; overflow is clipped so only the top of the
 // CV shows.
@@ -93,7 +91,11 @@ const TemplatePreviewThumb = ({
   width = 150,
   height = Math.round(width * (A4_HEIGHT_PX / A4_WIDTH_PX)),
 }) => {
-  const Comp = TEMPLATE_COMPONENTS[templateId] || ATSCleanTemplate;
+  // Falls back through the shared map rather than to a locally-imported component:
+  // this line used to name `ATSCleanTemplate`, which stopped being imported when the
+  // map moved to lib/templateComponents. An unknown id would have thrown a
+  // ReferenceError here — a crash instead of the fallback it was written to be.
+  const Comp = TEMPLATE_COMPONENTS[templateId] || TEMPLATE_COMPONENTS['ats-clean'];
 
   return (
     <div style={{ width, height, overflow: 'hidden', position: 'relative' }} aria-hidden="true">

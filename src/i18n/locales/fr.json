@@ -4476,7 +4476,7 @@
       "roleLabel": "Poste cible",
       "jdLabel": "Description du poste",
       "jdPlaceholder": "Collez ici la description complète du poste…",
-      "jdTooShort": "Ajoutez au moins {{count}} caractères pour qu'ARIA puisse analyser le poste.",
+      "jdTooShort": "Ajoutez au moins {{min}} caractères pour qu'ARIA puisse analyser le poste.",
       "preserveNotice": "Le contenu actuel de votre CV restera inchangé. ARIA vous guidera sur les éléments à revoir.",
       "saveAndReread": "Enregistrer et relire",
       "rereading": "Relecture du poste…",
