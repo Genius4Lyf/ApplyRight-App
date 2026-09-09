@@ -112,7 +112,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   if (editing) {
     return (
       <AriaCard cardKey="contactedit">
-        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
+        <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
           <CardEyebrow icon={sectionIcon('contact')}>
             {isEmpty
               ? t('ariaStudio.contactConfirm.howReachYou')
@@ -279,7 +279,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
 
   return (
     <AriaCard cardKey="contactconfirm">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
         <CardEyebrow icon={sectionIcon('contact')}>
           {t('ariaStudio.contactConfirm.reviewDetails')}
         </CardEyebrow>

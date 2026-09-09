@@ -428,13 +428,21 @@ const SessionRail = ({
                                   {duplicating
                                     ? t('ariaStudio.sessionRail.duplicating')
                                     : t('ariaStudio.sessionRail.duplicate')}
-                                  {duplicateReady && !duplicating && (
-                                    <span className="shrink-0 rounded border border-slate-200 px-1 py-px font-mono text-[9px] uppercase tracking-[0.08em] text-slate-500 dark:border-slate-700 dark:text-slate-400">
-                                      {t('cvBuilder.common.creditChip', {
-                                        n: CREDIT_COSTS.DUPLICATE_CV,
-                                      })}
-                                    </span>
-                                  )}
+                                  {/* Only when it actually costs something. Duplicating is
+                                      free now, and a "0 cr" badge is worse than no badge:
+                                      it puts the idea of a price in front of someone who
+                                      is not being charged one. The chip stays wired to the
+                                      configured cost so it reappears by itself if the
+                                      price is ever turned back on from the admin panel. */}
+                                  {duplicateReady &&
+                                    !duplicating &&
+                                    CREDIT_COSTS.DUPLICATE_CV > 0 && (
+                                      <span className="shrink-0 rounded border border-slate-200 px-1 py-px font-mono text-[9px] uppercase tracking-[0.08em] text-slate-500 dark:border-slate-700 dark:text-slate-400">
+                                        {t('cvBuilder.common.creditChip', {
+                                          n: CREDIT_COSTS.DUPLICATE_CV,
+                                        })}
+                                      </span>
+                                    )}
                                 </span>
                                 {!duplicateReady && (
                                   <span className="mt-0.5 block text-[11px] leading-snug text-slate-400 dark:text-slate-500">

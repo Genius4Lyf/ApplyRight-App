@@ -15,7 +15,7 @@ const TargetJobAskCard = ({ onYes, onNo }) => {
   const { t } = useTranslation();
   return (
     <AriaCard cardKey="jobask">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
         <CardEyebrow>{t('ariaStudio.targetJobAsk.oneThingFirst')}</CardEyebrow>
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.targetJobAsk.areYouAiming')}

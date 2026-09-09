@@ -102,7 +102,7 @@ const SkillsBuildCard = ({
 
   return (
     <AriaCard cardKey="skillsconsent">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
         <div className="flex items-start justify-between gap-3">
           <CardEyebrow icon={sectionIcon('skills')}>
             {t('ariaStudio.studioFlow.sections.skills')}

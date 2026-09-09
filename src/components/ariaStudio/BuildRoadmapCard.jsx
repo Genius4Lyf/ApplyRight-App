@@ -22,7 +22,7 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting, onUploadInstead }) =
   const { t } = useTranslation();
   return (
     <AriaCard cardKey="roadmap">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
         <CardEyebrow>{t('ariaStudio.buildRoadmap.heresThePlan')}</CardEyebrow>
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.buildRoadmap.sixSections')}

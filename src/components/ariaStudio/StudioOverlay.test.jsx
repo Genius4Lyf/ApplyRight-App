@@ -151,3 +151,58 @@ describe('StudioOverlay — the working panel is a side sheet, not a bottom one'
     expect(onClose).toHaveBeenCalled();
   });
 });
+
+describe('StudioOverlay — more than one open at once', () => {
+  // Not hypothetical: Aria Studio's rail and working panel are independent booleans, and
+  // the CV Studio has a left CV-list drawer alongside its right design sheet. Before the
+  // stack, two mounted together meant one Escape closed both and one back press popped
+  // three history entries — the second overlay's cleanup read `history.state` before the
+  // first one's queued `history.back()` had applied, so it called back() again.
+  const twoOpen = () => {
+    const first = vi.fn();
+    const second = vi.fn();
+    const a = render(
+      <StudioOverlay open onClose={first} side="left" label="Sessions">
+        <button type="button">a</button>
+      </StudioOverlay>
+    );
+    const b = render(
+      <StudioOverlay open onClose={second} side="right" label="Design">
+        <button type="button">b</button>
+      </StudioOverlay>
+    );
+    return { first, second, a, b };
+  };
+
+  it('gives Escape to the top sheet only', () => {
+    historyStateIs({ studioOverlay: true });
+    const { first, second } = twoOpen();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('gives the back button to the top sheet only', () => {
+    historyStateIs({ studioOverlay: true });
+    const { first, second } = twoOpen();
+
+    fireEvent.popState(window);
+
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(first).not.toHaveBeenCalled();
+  });
+
+  it('hands control back to the one underneath when the top closes', () => {
+    // A stack, not a mute: closing the top sheet must not leave the one below deaf.
+    historyStateIs({ studioOverlay: true });
+    const { first, second, b } = twoOpen();
+
+    b.unmount();
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(first).toHaveBeenCalledTimes(1);
+    expect(second).not.toHaveBeenCalled();
+  });
+});

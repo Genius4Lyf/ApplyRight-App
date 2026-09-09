@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react';
+import useMedia from './useMedia';
 
 // The workspace sidebar's responsive contract — the sibling of useStudioLayout, for the
 // surfaces that host WorkspaceSidebar rather than Aria Studio's SessionRail.
@@ -14,34 +14,6 @@ import { useCallback, useSyncExternalStore } from 'react';
 // content is byte-for-byte as wide as it is today. So the panel appears only once there
 // is room to seat a third column, never merely because the page went two-column.
 export const WORKSPACE_PANEL_MIN = 1280;
-
-// jsdom does not implement matchMedia, and suites that never cared about widths do not
-// stub it. Guarding HERE rather than in each consumer means a hook that only *might* ask
-// about the viewport can be called from such a test and simply read as "not matching",
-// instead of throwing on render.
-const query = (q) =>
-  typeof window !== 'undefined' && window.matchMedia ? window.matchMedia(q) : null;
-
-// matchMedia IS an external store, so subscribe to it as one — same reasoning as
-// useStudioLayout: the current value is read on every render rather than mirrored into
-// state, so there is no cascading render and no window where React disagrees with the
-// viewport.
-function useMedia(q) {
-  const subscribe = useCallback(
-    (onChange) => {
-      const mq = query(q);
-      if (!mq) return () => {};
-      mq.addEventListener('change', onChange);
-      return () => mq.removeEventListener('change', onChange);
-    },
-    [q]
-  );
-  return useSyncExternalStore(
-    subscribe,
-    () => query(q)?.matches ?? false,
-    () => false // server/prerender: assume the widest layout
-  );
-}
 
 /**
  * Whether a workspace sidebar has an inline home at this width.

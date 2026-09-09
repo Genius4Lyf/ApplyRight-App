@@ -61,13 +61,31 @@ beforeEach(() => localStorage.setItem('token', 't'));
 afterEach(() => cleanup());
 
 describe('SessionRail — Duplicate', () => {
-  it('offers it on a finished CV session, with the price stated up front', () => {
-    // The price belongs on the item, not in a surprise after the click.
+  it('offers it on a finished CV session, with no price on it', () => {
+    // Duplicating is FREE (config/creditCosts.js). A "0 cr" badge is worse than no
+    // badge: it puts the idea of a price in front of someone who is not being charged
+    // one. The chip is still wired to the configured cost, so it comes back by itself
+    // if the price is turned back on — which is what the next test holds.
     mount();
     openMenu('Product Designer CV');
     expect(duplicateItem()).toBeTruthy();
     expect(duplicateItem().disabled).toBe(false);
-    expect(duplicateItem().textContent).toMatch(/\d+\s*cr/i);
+    expect(duplicateItem().textContent).not.toMatch(/\d+\s*cr/i);
+  });
+
+  it('states the price again the moment there IS one', async () => {
+    // The chip reads the live cost config rather than a constant, so an admin turning
+    // the price back on is enough — no deploy, and no second place to remember.
+    const credits = await import('../../lib/credits');
+    const original = credits.CREDIT_COSTS.DUPLICATE_CV;
+    credits.CREDIT_COSTS.DUPLICATE_CV = 20;
+    try {
+      mount();
+      openMenu('Product Designer CV');
+      expect(duplicateItem().textContent).toMatch(/20\s*cr/i);
+    } finally {
+      credits.CREDIT_COSTS.DUPLICATE_CV = original;
+    }
   });
 
   it('hands the whole session back when clicked', () => {

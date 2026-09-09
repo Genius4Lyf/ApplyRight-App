@@ -4025,15 +4025,19 @@
     }
   },
   "cvStudio": {
-    "bestChoices": {
-      "ariaLabel": "Meilleurs choix de modèles de CV",
-      "eyebrow": "Tendances de la semaine",
-      "title": "Meilleurs choix",
-      "subtitle": "Choisissez-en un pour voir votre CV changer instantanément. Nous sélectionnons ces cinq modèles chaque semaine.",
-      "available": "Disponible",
-      "keepShowing": "Continuer à afficher les meilleurs choix",
-      "dontShow": "Ne plus afficher les meilleurs choix",
-      "showAgain": "Afficher à nouveau les meilleurs choix"
+    "atsDesign": {
+      "heading": "Une machine pourra-t-elle le lire ?",
+      "clear": "Rien à signaler",
+      "caution": "À savoir",
+      "clearBody": "Rien ici ne gêne un analyseur de CV.",
+      "showSingleColumn": "Voir les modèles à une colonne"
+    },
+    "designPanel": {
+      "label": "Design et modèles"
+    },
+    "renameCv": "Nom du CV",
+    "templateFilter": {
+      "ariaLabel": "Filtrer les modèles par style"
     }
   },
   "preLaunch": {

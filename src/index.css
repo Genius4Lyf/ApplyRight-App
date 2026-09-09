@@ -107,6 +107,24 @@
 
 /* Base Variable Definitions */
 @layer base {
+  /* THE HAND CURSOR ON BUTTONS.
+
+     Tailwind v3 Preflight set `cursor: pointer` on buttons. **v4 removed it** to match
+     the raw browser default, which for a <button> is an arrow. So the upgrade silently
+     took the hand cursor off every button in the app at once — nothing in this repo
+     changed, and no single page could be blamed for it.
+
+     This is the remedy Tailwind documents for the change. `:not(:disabled)` matters:
+     a hand over a control that cannot be pressed is a promise the button does not keep.
+
+     <a href> and <summary> already get the hand from the browser, so they are not here.
+     Anything that only LOOKS like a button (a div with an onClick) still needs
+     `cursor-pointer` of its own — and should probably be a button instead. */
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+
   :root {
     --color-primary: #0f172a;
     /* Slate 900 (ink) */

@@ -4029,15 +4029,19 @@
     }
   },
   "cvStudio": {
-    "bestChoices": {
-      "ariaLabel": "Best Choice CV templates",
-      "eyebrow": "Trending this week",
-      "title": "Best Choices",
-      "subtitle": "Pick one to see your CV change instantly. We curate these five every week.",
-      "available": "Available",
-      "keepShowing": "Keep showing me Best Choices",
-      "dontShow": "Don’t show me Best Choices",
-      "showAgain": "Show Best Choices again"
+    "atsDesign": {
+      "heading": "Will a machine read this?",
+      "clear": "Clear",
+      "caution": "Worth knowing",
+      "clearBody": "Nothing here gets in a parser’s way.",
+      "showSingleColumn": "Show single-column templates"
+    },
+    "designPanel": {
+      "label": "Design and templates"
+    },
+    "renameCv": "CV name",
+    "templateFilter": {
+      "ariaLabel": "Filter templates by style"
     }
   },
   "preLaunch": {

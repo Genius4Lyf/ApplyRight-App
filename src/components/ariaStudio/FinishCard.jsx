@@ -44,7 +44,7 @@ const FinishCard = ({
 
   return (
     <AriaCard cardKey="finish">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 p-5">
         {/* Emerald rather than the usual slate — this is the one card in the run that
             reports a finished thing, and the colour is carrying that, not decorating it.
             Still CardEyebrow, so it shares the size and line-box of every other card
@@ -203,12 +203,21 @@ const FinishCard = ({
               <button
                 type="button"
                 onClick={onOpenPanel}
-                className="mt-2 flex w-full items-baseline justify-center gap-1.5 rounded-lg px-3 py-2 text-[14px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white"
+                // The same button as the one above it, in white: same width, same shape,
+                // same weight of type. It was a bare text link with the note trailing on
+                // the same line, which on a card this narrow wrapped the LABEL and left
+                // the note stranded beside a two-line "Edit it / here".
+                //
+                // Two doors of equal size, one filled and one not, is the honest picture:
+                // they are alternatives, and the fill says which one we would pick.
+                className="btn-secondary mt-2 w-full flex-col gap-0.5 px-4 py-2 text-[16px]"
               >
                 {t('ariaStudio.finishCard.editHere')}
-                {/* Mono so the mobile rescale leaves it alone. Without it the note and the
-                    label it qualifies both land on 17px and it stops reading as an aside. */}
-                <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                {/* Under the label, not beside it — and mono, so the mobile rescale in
+                    index.css leaves it alone. Non-mono it would be forced to 17px, land
+                    on the same size as the label above it, and stop reading as a note at
+                    all. */}
+                <span className="font-mono text-[10px] font-normal leading-tight text-slate-500 dark:text-slate-400">
                   {t('ariaStudio.finishCard.editHereNote')}
                 </span>
               </button>

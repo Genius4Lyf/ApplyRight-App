@@ -25,6 +25,30 @@ import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 // tap, so the panel's own close control (all three render one when handed `onClose`),
 // Escape, and the Android back button are the entire way out. That is why the history
 // entry below is not a nicety.
+// ONLY THE TOP SHEET LISTENS.
+//
+// More than one of these can be open at once, and today that is not hypothetical: Aria
+// Studio's rail and its working panel are independent booleans, and the CV Studio has a
+// left CV-list drawer alongside its right design sheet. When two were mounted together,
+// three things went wrong at once, all of them invisible until someone pressed a key:
+//
+//   ESCAPE CLOSED BOTH. Both listeners are on `document` in the capture phase, and
+//   `e.stopPropagation()` does not stop a sibling listener on the SAME node — only
+//   stopImmediatePropagation would. So the guard below read as protective and was not.
+//
+//   ONE BACK PRESS POPPED THREE ENTRIES. Both handlers fired `onClose`, then both
+//   cleanups read `history.state` — which still said `studioOverlay` for the second one,
+//   because the first one's `history.back()` had only been queued — and both called
+//   back() again. One press, three pops, and the user was off the page entirely.
+//
+//   FOCUS WENT TO WHICHEVER MOUNTED LAST, regardless of which sheet the user opened.
+//
+// A module-level stack, in the same spirit as the counter in useBodyScrollLock: each open
+// overlay pushes a token, and every global handler returns early unless its own token is
+// on top. Closing the top one hands the keyboard and the back button back to the one
+// underneath, which is what a stack of sheets should do.
+const openStack = [];
+
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -48,7 +72,14 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
     restoreRef.current = document.activeElement;
     window.history.pushState({ studioOverlay: true }, '');
 
+    // Identity by object rather than by index: overlays do not necessarily close in the
+    // order they opened, so the cleanup has to find its own entry rather than pop blindly.
+    const token = {};
+    openStack.push(token);
+    const isTop = () => openStack[openStack.length - 1] === token;
+
     const onKey = (e) => {
+      if (!isTop()) return;
       if (e.key === 'Escape') {
         e.stopPropagation();
         onClose?.();
@@ -71,18 +102,24 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
       }
     };
 
-    const onPop = () => onClose?.();
+    const onPop = () => {
+      if (!isTop()) return;
+      onClose?.();
+    };
 
     document.addEventListener('keydown', onKey, true);
     window.addEventListener('popstate', onPop);
 
     // Move focus in so the trap has something to hold, and screen readers land inside.
     const raf = requestAnimationFrame(() => {
+      if (!isTop()) return;
       const nodes = panelRef.current?.querySelectorAll(FOCUSABLE);
       (nodes?.[0] || panelRef.current)?.focus?.();
     });
 
     return () => {
+      const at = openStack.indexOf(token);
+      if (at > -1) openStack.splice(at, 1);
       document.removeEventListener('keydown', onKey, true);
       window.removeEventListener('popstate', onPop);
       cancelAnimationFrame(raf);

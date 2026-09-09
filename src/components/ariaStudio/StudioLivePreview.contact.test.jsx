@@ -408,7 +408,9 @@ describe('StudioLivePreview — the job title', () => {
     render(<StudioLivePreview />);
     openEdit();
 
-    fireEvent.change(screen.getByLabelText(/your professional title/i), { target: { value: 'Plumber' } });
+    fireEvent.change(screen.getByLabelText(/your professional title/i), {
+      target: { value: 'Plumber' },
+    });
     fireEvent.click(saveBtn());
 
     await waitFor(() => expect(mockUpdatePersonalInfo).toHaveBeenCalledTimes(1));

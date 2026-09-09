@@ -93,6 +93,12 @@ export default defineConfig([
       'src/pages/AriaStudio/**/*.{js,jsx}',
       'src/hooks/useStudioLayout.js',
       'src/lib/studioFlow.js',
+      // Added 2026-09-09 after the SECOND outage of this exact class: a railProps object
+      // referencing `isUnlocked`, a const arrow function declared 250 lines lower. The
+      // file had only two pre-existing hits and both were moved rather than suppressed,
+      // so this stays zero-noise. See ResumeReview.smoke.test.jsx for the runtime half.
+      'src/pages/ResumeReview.jsx',
+      'src/components/cv/StudioDesignRail.jsx',
     ],
     rules: {
       'no-use-before-define': ['error', { variables: true, functions: false, classes: false }],

@@ -4449,7 +4449,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                   cardKey={`sections-${nextSection.key}`}
                   key={`sections-${nextSection.key}`}
                 >
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
                     <CardEyebrow icon={nextSection.icon}>{nextSection.eyebrow}</CardEyebrow>
                     <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                       {nextSection.blurb}
@@ -4669,7 +4669,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 half-working in-chat build, and the round trip back here is the point. */}
               {ready && phase === 'build' && (
                 <AriaCard cardKey="build" key="build">
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                       {t('ariaStudio.chat.buildNewCvHeading')}
                     </p>
@@ -4735,7 +4735,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               {/* The scan offer — the one charged action, priced before it's taken. */}
               {ready && phase === 'scanoffer' && (
                 <AriaCard cardKey="scanoffer" key="scanoffer">
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
+                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
                     <div className="flex items-start justify-between gap-3">
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                         {t('ariaStudio.chat.scanOffer.heading')}

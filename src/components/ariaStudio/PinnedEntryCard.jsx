@@ -43,7 +43,7 @@ const COPY = {
 // (see the render), so the border/background/shadow that make them read as one sheet are
 // written once here rather than typed twice and left to drift apart.
 const CARD_CHROME =
-  'border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-md dark:shadow-black/20';
+  'border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur';
 
 // ─── Which captured fields can be corrected in place ───
 //

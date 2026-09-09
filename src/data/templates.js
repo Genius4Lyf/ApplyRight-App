@@ -1,16 +1,28 @@
-// Curated manually each week. StudioBestChoices preserves this order, so changing
-// the five ids here updates the Best Choices shelf in CV Studio.
-export const WEEKLY_TRENDING_TEMPLATE_IDS = [
-  'applyright-band-twin',
-  'the-ascent',
-  'minimal-serif',
-  'executive-energy',
-  'navy-portrait',
+// THE ORDER THE PICKER OFFERS THEM IN, and the set of filters it draws.
+//
+// It runs plainest → most designed, so the first thing anyone meets is the layout that
+// is right for the most people and the hardest to get wrong. The picker shows ONE group
+// at a time: nineteen templates in a stacked list meant scrolling past four families to
+// reach the fifth, and the two free ATS layouts — the ones a first-time user should
+// probably take — were at the top of a scroll nobody finished.
+//
+// Data, not a literal in the picker, so adding a group to TEMPLATES below and forgetting
+// to list it here is visible in one place. Any group NOT named here simply is not
+// offered, which is the safe direction: a new group is invisible until it is deliberately
+// added, rather than appearing unannounced at the end.
+export const TEMPLATE_GROUP_ORDER = [
+  'Simple',
+  'Editorial',
+  'Professional',
+  'Industry',
+  'Sidebar',
+  'ApplyRight',
 ];
 
 export const TEMPLATES = [
   {
     id: 'applyright-navy',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '34%', className: 'bg-[#0c1627]' },
     name: 'ApplyRight Navy',
     group: 'ApplyRight',
@@ -22,6 +34,7 @@ export const TEMPLATES = [
   },
   {
     id: 'applyright-band',
+    rendersPhoto: true,
     name: 'ApplyRight Band',
     group: 'ApplyRight',
     isPro: true,
@@ -42,6 +55,7 @@ export const TEMPLATES = [
   },
   {
     id: 'applyright-mono',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '32%', className: 'bg-[#f5f5f2] border-r-2 border-[#111318]' },
     name: 'ApplyRight Mono',
     group: 'ApplyRight',
@@ -73,6 +87,7 @@ export const TEMPLATES = [
   },
   {
     id: 'modern-professional',
+    rendersPhoto: true,
     paper: '#f7f6f2',
     name: 'Modern Professional',
     group: 'Professional',
@@ -84,6 +99,7 @@ export const TEMPLATES = [
   },
   {
     id: 'slate-timeline',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '35%', className: 'bg-[#343d4d]' },
     name: 'Slate Timeline',
     group: 'Sidebar',
@@ -95,6 +111,7 @@ export const TEMPLATES = [
   },
   {
     id: 'navy-portrait',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '36%', className: 'bg-[#193e57]' },
     name: 'Navy Portrait',
     group: 'Sidebar',
@@ -116,6 +133,7 @@ export const TEMPLATES = [
   },
   {
     id: 'sales-sidebar',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '38%', className: 'bg-[#d5dfe7]' },
     name: 'Sales Sidebar',
     group: 'Sidebar',
@@ -127,6 +145,7 @@ export const TEMPLATES = [
   },
   {
     id: 'modern',
+    rendersPhoto: true,
     name: 'Modern Clean',
     group: 'Professional',
     isPro: true,
@@ -158,6 +177,7 @@ export const TEMPLATES = [
   },
   {
     id: 'minimal-serif',
+    rendersPhoto: true,
     paper: '#fcfbf7',
     name: 'The Author',
     group: 'Editorial',
@@ -169,6 +189,7 @@ export const TEMPLATES = [
   },
   {
     id: 'minimal-grid',
+    rendersPhoto: true,
     sidebar: { side: 'left', width: '30%', className: 'bg-[#f2f1ed] border-r border-[#d7d5cf]' },
     name: 'Nordic Grid',
     group: 'Sidebar',
@@ -179,6 +200,7 @@ export const TEMPLATES = [
   },
   {
     id: 'the-profile',
+    rendersPhoto: true,
     paper: '#faf8f4',
     name: 'The Profile',
     group: 'Editorial',
@@ -190,6 +212,7 @@ export const TEMPLATES = [
   },
   {
     id: 'executive-energy',
+    rendersPhoto: true,
     name: 'Energy / Industrial',
     group: 'Industry',
     isPro: true,
@@ -212,6 +235,16 @@ export const TEMPLATES = [
 ];
 
 /** The colour of unprinted paper. Every template that doesn't say otherwise is white. */
+// Which filter a template belongs under, defaulting to the first group rather than to
+// nothing: a template whose group is missing or misspelt must still be REACHABLE. It
+// would otherwise vanish from a UI that only ever shows one group at a time, and nothing
+// on screen would say why.
+export const templateGroupOf = (templateId) => {
+  const found = TEMPLATES.find((t) => t.id === templateId);
+  const group = found?.group;
+  return TEMPLATE_GROUP_ORDER.includes(group) ? group : TEMPLATE_GROUP_ORDER[0];
+};
+
 export const DEFAULT_PAPER = '#ffffff';
 
 /**

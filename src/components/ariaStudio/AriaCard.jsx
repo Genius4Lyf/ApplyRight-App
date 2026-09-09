@@ -40,9 +40,20 @@ export const CardCollapseProvider = CardCollapseContext.Provider;
 // Every card fills the chat column's full width. The chat column's own padding still
 // bounds it, so nothing can overflow horizontally.
 //
-// Every card's own root div supplies the shadow (shadow-sm/shadow-md classes) — this
-// wrapper only handles the bloom animation and the trailing mark — so a card always
-// reads as a raised, clickable surface rather than a flat message.
+// CARDS DO NOT CAST A SHADOW. They used to — `shadow-md dark:shadow-black/20` on every
+// card's own root — and the effect was that every one of them lifted off the page as a
+// panel hovering above the conversation. In a chat that reads as the software asserting
+// itself: a dialog has appeared, deal with it. Aria is meant to read as someone talking
+// to you, and the things she puts in front of you are part of that conversation, not
+// windows opened over it.
+//
+// The hairline border does the separating now, which is enough — a card is a different
+// SHAPE from a message bubble (full width, square-cornered on the left, its own eyebrow),
+// and shape is a quieter signal than elevation.
+//
+// What still casts a shadow, deliberately: modals, dropdowns, the mobile sheets and the
+// transient "applied" receipt. Those genuinely ARE above the page, and one of them
+// arriving should feel like it.
 const AriaCard = React.forwardRef(({ cardKey, children }, ref) => {
   const reduce = useReducedMotion();
   const collapse = useContext(CardCollapseContext);

@@ -1,6 +1,7 @@
 import CVService from '../services/cv.service';
 import { downloadBlob } from '../utils/download';
 import { TEMPLATES, groundColor } from '../data/templates';
+import { PDF_PAGE_MARGIN } from './cvPageGeometry';
 
 // The template a download falls back to when nothing has been chosen. 'ats-clean' is the
 // free, single-column, ATS-parseable one — the safe default to hand someone who never
@@ -253,7 +254,11 @@ export async function downloadPdf({
     // padding only applies once at the very start/end of the whole flowing document,
     // not per page break). Puppeteer's own page margin is removed entirely so nothing
     // stacks on top of that.
-    const pdfMargin = '0px';
+    //
+    // Imported, not written here: lib/cvPageGeometry derives the usable page height
+    // from this same value, and the two drifted the last time it changed — the page
+    // maths went on reserving a 10px margin that had already been removed.
+    const pdfMargin = PDF_PAGE_MARGIN;
     const blob = await CVService.generatePdf(
       fullHtml,
       { margin: { top: pdfMargin, right: pdfMargin, bottom: pdfMargin, left: pdfMargin } },

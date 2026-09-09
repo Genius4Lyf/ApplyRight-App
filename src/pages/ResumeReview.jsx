@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useState, useRef, useLayoutEffect, useMemo, useCallback } from 'react';
 import AriaLoader from '../components/ui/AriaLoader';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -72,11 +72,18 @@ import {
 } from '../components/templates/SignatureCollectionTemplates';
 import {
   TEMPLATES,
+  TEMPLATE_GROUP_ORDER,
+  templateGroupOf,
   sidebarFill,
   groundColor,
   supportsGround,
   GROUND_CHOICES,
 } from '../data/templates';
+import { paperGeometry, pageCountFor, RAW_PAGE_HEIGHT_PX } from '../lib/cvPageGeometry';
+import { resolveDesign } from '../lib/cvDesign';
+import StudioDesignRail from '../components/cv/StudioDesignRail';
+import StudioOverlay from '../components/ariaStudio/StudioOverlay';
+import useCvRailInline from '../hooks/useCvRailLayout';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
 import { downloadPdf, downloadDocx } from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
@@ -91,7 +98,6 @@ import DownloadPaywallModal from '../components/DownloadPaywallModal';
 import LengthCoach from '../components/cv/LengthCoach';
 import SummaryTrim from '../components/cv/SummaryTrim';
 import RoleTrim from '../components/cv/RoleTrim';
-import StudioBestChoices from '../components/cv/StudioBestChoices';
 import { extractSummary, replaceSummaryInMarkdown } from '../lib/summaryMarkdown';
 import { localizeCvMarkdown } from '../lib/cvLabels';
 import CvLanguageToggle from '../components/cv/CvLanguageToggle';
@@ -105,7 +111,7 @@ import {
   ZoomIn,
   ZoomOut,
   Maximize2,
-  MoreHorizontal,
+  Palette,
   Expand,
   Shrink,
   SlidersHorizontal,
@@ -118,8 +124,6 @@ const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatf
 // The sidebar-fill registry moved to data/templates (sidebarFill) so Aria Studio's
 // template preview can render the same band. It only existed here, which is why a
 // sidebar template looked right in CV Studio and stopped halfway down the page there.
-
-const STUDIO_BEST_CHOICES_PREFERENCE_KEY = 'cvStudio:showBestChoices';
 
 const ResumeReview = () => {
   const { t } = useTranslation();
@@ -161,7 +165,10 @@ const ResumeReview = () => {
   // Every CV you own, not just the ones the wizard built — this is where a finished CV
   // lives, whoever wrote it, so the list here has to match. Drawn over the page: the
   // studio spends its whole width on the document and its design controls.
-  const { openSidebar, sidebar } = useWorkspaceSidebar({ scope: 'cvStudio', activeId: id });
+  const { openSidebar, closeSidebar, sidebar } = useWorkspaceSidebar({
+    scope: 'cvStudio',
+    activeId: id,
+  });
   const toggleImmersive = () => setImmersive((v) => !v);
 
   // Accuracy advisory — reminds users that AI-generated content can include
@@ -180,18 +187,24 @@ const ResumeReview = () => {
   // Studio rail: collapsible insights strip + Templates/Design tab switch.
   const [insightsOpen, setInsightsOpen] = useState(true);
   const [railTab, setRailTab] = useState('templates'); // 'templates' | 'design'
-  const [showBestChoices, setShowBestChoices] = useState(
-    () => localStorage.getItem(STUDIO_BEST_CHOICES_PREFERENCE_KEY) !== 'false'
-  );
-  const updateBestChoicesPreference = (show) => {
-    localStorage.setItem(STUDIO_BEST_CHOICES_PREFERENCE_KEY, String(show));
-    setShowBestChoices(show);
-  };
+  // Which family of templates the picker is showing. It shows ONE at a time — see
+  // TEMPLATE_GROUP_ORDER — and opens on the family the CV is ALREADY using, so the
+  // current template is on screen and ticked rather than hidden behind a chip.
+  const [templateGroup, setTemplateGroup] = useState(() => templateGroupOf(templateId));
+  // The draft's real templateId arrives from the server after mount, so the initialiser
+  // above ran against the 'ats-clean' placeholder. Follow it ONCE — a latch, not a sync:
+  // after this the filter belongs to the user, and re-deriving it on every templateId
+  // change would yank the panel back to another group the moment they picked something.
+  const groupFollowedRef = useRef(false);
+  useEffect(() => {
+    if (groupFollowedRef.current || !templateId) return;
+    groupFollowedRef.current = true;
+    setTemplateGroup(templateGroupOf(templateId));
+  }, [templateId]);
   // Design tab controls — drive CSS vars on #resume-content. accent '' = each
   // template's own default. Margins are fully live (preview + PDF) this chunk;
   // accent + density set their vars now and go live when templates read them (2b).
   const [design, setDesign] = useState({
-    accent: '',
     margins: 'normal',
     density: 'normal',
     font: '',
@@ -203,19 +216,31 @@ const ResumeReview = () => {
     ground: '',
   });
 
-  // Persist the design choices per-CV in localStorage (keyed by CV id) so they
-  // survive a reload. Frontend-only — templateId still persists via its own
-  // backend save. Load once the id is known, merging saved over the defaults.
+  // Where the design comes from when a CV opens: defaults, then this device's copy,
+  // then the server's — which wins, because it is the one that crosses devices.
+  //
+  // ONCE, AND THEN NEVER AGAIN. A latch, not a sync. The save effect below is armed only
+  // after this has run, and that ordering is the whole point: without it, the save could
+  // fire before the local copy had been merged, write DEFAULTS to the server, and then
+  // server-wins would beat the user's real choice permanently the next time they opened
+  // the CV anywhere. Re-merging on every `application` identity change would be its own
+  // bug — it would yank a half-made edit back to the stored copy mid-adjustment.
+  const designHydratedRef = useRef(false);
   useEffect(() => {
-    const id = application?._id;
-    if (!id) return;
+    const cvId = application?._id;
+    if (!cvId || designHydratedRef.current) return;
+    let stored = null;
     try {
-      const saved = localStorage.getItem(`cvDesign:${id}`);
-      if (saved) setDesign((d) => ({ ...d, ...JSON.parse(saved) }));
+      stored = JSON.parse(localStorage.getItem(`cvDesign:${cvId}`) || 'null');
     } catch {
-      /* localStorage unavailable — non-fatal */
+      /* localStorage unavailable, or the stored value is not JSON — non-fatal */
     }
-  }, [application?._id]);
+    // Both sources are filtered: the local copy predates the server field and still
+    // carries keys for controls that no longer exist (`accent`), which must not be
+    // resurrected — least of all into the database.
+    setDesign(resolveDesign(stored, application.design));
+    designHydratedRef.current = true;
+  }, [application?._id, application?.design]);
 
   // Save on every change.
   useEffect(() => {
@@ -263,6 +288,51 @@ const ResumeReview = () => {
   // Splice a new professional summary into the CV markdown: updates the live
   // preview (which re-flows → the page-count badge re-counts) and persists via the
   // same saveDraft path the title uses.
+  // Inline summary-trim modal (length-coach entry point).
+  const [showSummaryTrim, setShowSummaryTrim] = useState(false);
+
+  const mergedUserProfile = React.useMemo(() => {
+    if (!userProfile) return null;
+
+    // If we have draft data, merge it in
+    if (isDraftMode && application?.personalInfo) {
+      const draftInfo = application.personalInfo;
+
+      return {
+        ...userProfile,
+        // Direct overrides
+        email: draftInfo.email || userProfile.email,
+        phone: draftInfo.phone || userProfile.phone,
+        location: draftInfo.address || userProfile.location, // Address field maps to location
+
+        // LinkedIn & Website (CV Builder uses 'linkedin'/'website', Profile uses 'linkedinUrl'/'portfolioUrl')
+        linkedinUrl: draftInfo.linkedin || userProfile.linkedinUrl,
+        portfolioUrl: draftInfo.website || userProfile.portfolioUrl,
+        photoUrl: draftInfo.photoUrl || userProfile.photoUrl,
+
+        // THE TITLE PRINTED UNDER THE NAME BY EVERY TEMPLATE.
+        //
+        // Missing from this merge until now, which is why a job title set on the CV
+        // itself — in Aria Studio's preview editor, which writes personalInfo
+        // .currentJobTitle — saved correctly and then never appeared on the document.
+        // The templates read `userProfile.currentJobTitle`, and without this line that
+        // only ever resolved to the ACCOUNT-wide title from Profile settings. A CV aimed
+        // at Plumber and one aimed at Maintenance Technician need different titles (see
+        // the field's own note in DraftCV.js); the draft's value has to win.
+        currentJobTitle: draftInfo.currentJobTitle || userProfile.currentJobTitle,
+
+        // Name splitting if needed (Profile uses first/last, Draft uses fullName)
+        firstName: draftInfo.fullName ? draftInfo.fullName.split(' ')[0] : userProfile.firstName,
+        lastName: draftInfo.fullName
+          ? draftInfo.fullName.split(' ').slice(1).join(' ')
+          : userProfile.lastName,
+        otherName: '', // Draft usually just has full name
+      };
+    }
+
+    return userProfile;
+  }, [userProfile, application, isDraftMode]);
+
   const applySummary = async (newText) => {
     if (!application) return;
     const md = replaceSummaryInMarkdown(application.optimizedCV || '', newText);
@@ -276,15 +346,6 @@ const ResumeReview = () => {
       toast.error('Summary changed here, but saving failed — try again.');
     }
   };
-
-  // Score → editorial band accent (>=75 emerald / >=50 amber / else rose).
-  const bandText = (s) =>
-    s >= 75
-      ? 'text-emerald-600 dark:text-emerald-400'
-      : s >= 50
-        ? 'text-amber-600 dark:text-amber-400'
-        : 'text-rose-600 dark:text-rose-400';
-  const bandDot = (s) => (s >= 75 ? 'bg-emerald-500' : s >= 50 ? 'bg-amber-500' : 'bg-rose-500');
 
   // Collapsible controls pill — expanded shows zoom + fit + fullscreen toggle;
   // collapsed shows just a single icon. Auto-collapses on entering immersive.
@@ -369,32 +430,47 @@ const ResumeReview = () => {
   }, [showLoader, application, activeTab]);
 
   // Paper geometry (A4 vs US Letter) + a live one-page-fit indicator derived from
-  // the ResizeObserver-measured content height. Approximate — an indicator, not
-  // an exact paginator.
-  const paperWidth = design.paper === 'letter' ? '8.5in' : '210mm';
-  const paperHeight = design.paper === 'letter' ? '11in' : '297mm';
-  const paperLabel = design.paper === 'letter' ? 'Letter' : 'A4';
-  const pageHeightPx = design.paper === 'letter' ? 1056 : 1122; // raw page height @96dpi
-  // The PDF reserves margin on EVERY page, so the badge must divide by the real
-  // per-page CONTENT height, not the raw page height — otherwise a CV that measures
-  // ~1120px reads as "1 page" but prints as 2. These constants MUST stay in sync
-  // with performDownload: PDF_MARGIN_PX ↔ pdfMargin ('10px'), and SPACER_MM ↔ the
-  // thead/tfoot .margin-spacer height (5mm), which repeats on every printed page.
-  const MM_TO_PX = 96 / 25.4; // ≈3.7795 px per mm @96dpi
-  const PDF_MARGIN_PX = 10; // matches pdfMargin in performDownload
-  const SPACER_MM = 5; // matches the thead/tfoot .margin-spacer height
-  // Every page loses: Puppeteer top+bottom margin + the repeating table spacers (top+bottom).
-  const reservedPerPagePx = 2 * PDF_MARGIN_PX + 2 * SPACER_MM * MM_TO_PX; // ≈57.8px
-  const effectivePageHeightPx = pageHeightPx - reservedPerPagePx; // A4≈1064, Letter≈998
-  const pageCount = contentHeight
-    ? Math.max(1, Math.ceil(contentHeight / effectivePageHeightPx))
-    : 1;
+  // the ResizeObserver-measured content height. Approximate — an indicator, not an
+  // exact paginator.
+  //
+  // The numbers moved to lib/cvPageGeometry, next to the reason for each. They were
+  // three loose constants here and they had already drifted: this file reserved a 10px
+  // Puppeteer margin that lib/cvDownload had deliberately removed, which made every
+  // page 20px shorter than it really is. Survivable for a badge; not survivable for a
+  // line drawn across the document, which is what they now also feed.
+  const { width: paperWidth, height: paperHeight, label: paperLabel } = paperGeometry(design.paper);
+  // The RAW sheet height, not the usable one: the preview must never draw a sheet
+  // shorter than a physical page, even for a half-empty CV.
+  const rawPageHeightPx = RAW_PAGE_HEIGHT_PX[design.paper] || RAW_PAGE_HEIGHT_PX.a4;
+  const pageCount = pageCountFor(contentHeight, design.paper);
 
   const [error, setError] = useState(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  // The design panel's presentation, derived rather than synced: widening past the
+  // breakpoint dismisses the sheet for free, with no effect to keep in step.
+  const railInline = useCvRailInline();
+  const [designWanted, setDesignWanted] = useState(false);
+  const designOverlay = designWanted && !railInline;
+  const closeDesign = useCallback(() => setDesignWanted(false), []);
+  // ONE SHEET AT A TIME. The CV-list drawer is also a StudioOverlay, also z-50, and it
+  // opens at EVERY width (its hook is not asked for a persistent column). Two mounted at
+  // once means two focus traps, and — because both listen on `document` in the capture
+  // phase — one Escape closing both and one back press popping three history entries.
+  // Making them exclusive here is what stops that being possible.
+  const openDesign = useCallback(() => {
+    closeSidebar();
+    setDesignWanted(true);
+  }, [closeSidebar]);
+  const openCvList = useCallback(() => {
+    setDesignWanted(false);
+    openSidebar();
+  }, [openSidebar]);
+  // Picking a template should dismiss the SHEET and do nothing to the column. The rail
+  // does not know which one it is in, so the decision lives here and reaches it as
+  // `onClose` — passed by the sheet, omitted by the column.
+  const selectTemplate = useCallback((nextId) => {
+    setTemplateId(nextId);
+  }, []);
 
-  // Inline summary-trim modal (length-coach entry point).
-  const [showSummaryTrim, setShowSummaryTrim] = useState(false);
   const [showRoleTrim, setShowRoleTrim] = useState(false);
   const [roleTrimDraft, setRoleTrimDraft] = useState(null);
   const [roleTrimLoading, setRoleTrimLoading] = useState(false);
@@ -615,28 +691,39 @@ const ResumeReview = () => {
     }
   }, [id, navigate, checkoutTemplateId]);
 
-  // Auto-save template preference for both Applications and DraftCVs. Drafts used
-  // to skip this entirely, so reopening Studio always fell back to ATS Clean.
+  // Auto-save how this CV is PRESENTED — its template and its design — for both
+  // Applications and DraftCVs. Drafts used to skip the template entirely, so reopening
+  // Studio always fell back to ATS Clean; the design half was never saved at all and
+  // lived only in this browser.
+  //
+  // Deps are `application?._id`, not `application`: only the id is read, and the object's
+  // identity changes on edits that have nothing to do with presentation (applySummary,
+  // syncTrimmedDraft), each of which used to re-arm this debounce for no reason.
   useEffect(() => {
-    if (!application || !templateId) return;
+    if (!application?._id || !templateId) return;
+    // Nothing is saved until the design has been hydrated. See the latch above: saving
+    // first would write defaults over a real choice.
+    if (!designHydratedRef.current) return;
 
-    const saveTemplate = setTimeout(async () => {
+    const savePresentation = setTimeout(async () => {
       try {
         if (isDraftMode) {
-          await CVService.saveDraft({ _id: application._id, templateId });
+          await CVService.saveDraft({ _id: application._id, templateId, design });
         } else {
-          await api.patch(`/applications/${application._id}/template`, { templateId });
+          await api.patch(`/applications/${application._id}/presentation`, {
+            templateId,
+            design,
+          });
         }
       } catch (error) {
-        console.error('Failed to save template preference', error);
+        console.error('Failed to save presentation', error);
       }
     }, 2000); // 2 second debounce
 
-    return () => clearTimeout(saveTemplate);
-  }, [templateId, application, isDraftMode]);
+    return () => clearTimeout(savePresentation);
+  }, [templateId, design, application?._id, isDraftMode]);
 
   // Listen for global user updates
-
 
   // Unlocking Logic — the shared rule (lib/templateAccess), which both this page and
   // TemplateSelector now use. It also guards both download buttons below, which is why
@@ -647,6 +734,29 @@ const ResumeReview = () => {
       userProfile,
       promo.active
     );
+
+  // Everything the panel needs, in one object so the two hosts cannot drift apart —
+  // the whole failure this extraction exists to prevent is the column and the sheet
+  // slowly becoming two different panels.
+  const railProps = {
+    application,
+    isDraftMode,
+    activeTab,
+    atsReadiness,
+    userProfile,
+    railTab,
+    setRailTab,
+    insightsOpen,
+    setInsightsOpen,
+    templateGroup,
+    setTemplateGroup,
+    design,
+    setDesign,
+    templateId,
+    onSelectTemplate: selectTemplate,
+    isUnlocked,
+    navigate,
+  };
 
   const handleUnlock = async () => {
     if (!templateToUnlock) return;
@@ -934,47 +1044,6 @@ const ResumeReview = () => {
   );
 
   // MERGE PROFILE DATA: Prioritize draft personal info (CV Builder) over user profile
-  const mergedUserProfile = React.useMemo(() => {
-    if (!userProfile) return null;
-
-    // If we have draft data, merge it in
-    if (isDraftMode && application?.personalInfo) {
-      const draftInfo = application.personalInfo;
-
-      return {
-        ...userProfile,
-        // Direct overrides
-        email: draftInfo.email || userProfile.email,
-        phone: draftInfo.phone || userProfile.phone,
-        location: draftInfo.address || userProfile.location, // Address field maps to location
-
-        // LinkedIn & Website (CV Builder uses 'linkedin'/'website', Profile uses 'linkedinUrl'/'portfolioUrl')
-        linkedinUrl: draftInfo.linkedin || userProfile.linkedinUrl,
-        portfolioUrl: draftInfo.website || userProfile.portfolioUrl,
-        photoUrl: draftInfo.photoUrl || userProfile.photoUrl,
-
-        // THE TITLE PRINTED UNDER THE NAME BY EVERY TEMPLATE.
-        //
-        // Missing from this merge until now, which is why a job title set on the CV
-        // itself — in Aria Studio's preview editor, which writes personalInfo
-        // .currentJobTitle — saved correctly and then never appeared on the document.
-        // The templates read `userProfile.currentJobTitle`, and without this line that
-        // only ever resolved to the ACCOUNT-wide title from Profile settings. A CV aimed
-        // at Plumber and one aimed at Maintenance Technician need different titles (see
-        // the field's own note in DraftCV.js); the draft's value has to win.
-        currentJobTitle: draftInfo.currentJobTitle || userProfile.currentJobTitle,
-
-        // Name splitting if needed (Profile uses first/last, Draft uses fullName)
-        firstName: draftInfo.fullName ? draftInfo.fullName.split(' ')[0] : userProfile.firstName,
-        lastName: draftInfo.fullName
-          ? draftInfo.fullName.split(' ').slice(1).join(' ')
-          : userProfile.lastName,
-        otherName: '', // Draft usually just has full name
-      };
-    }
-
-    return userProfile;
-  }, [userProfile, application, isDraftMode]);
 
   if (showLoader)
     return (
@@ -1447,14 +1516,35 @@ const ResumeReview = () => {
           {/* mr-auto, not a flex order change: the row is justify-end with an absolutely
               centred title, and this is the least invasive way to pin one control left
               without disturbing either. */}
-          <SidebarToggle onClick={openSidebar} className="mr-auto -ml-1" />
+          {/* openCvList, not openSidebar: opening one sheet closes the other. */}
+          <SidebarToggle onClick={openCvList} className="mr-auto -ml-1" />
 
           {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-9rem)] lg:max-w-[calc(100%-26rem)]">
             {isDraftMode ? (
-              <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
-                {titleValue || 'Untitled draft'}
-              </h1>
+              /* The CV's name, edited in place. It was a boxed input at the top of the
+                 design panel — which is not a design control, and which put the only
+                 rename on this page behind a drawer. Bare transparent text, no box and
+                 no ring: the same treatment the Aria Studio recents row and the CV
+                 Builder's top bar already use for a title you can just type over. */
+              <input
+                type="text"
+                value={titleValue}
+                onChange={(e) => setTitleValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') e.currentTarget.blur();
+                  // Escape abandons the edit. Without it the only way out of a
+                  // half-typed name is to finish typing it.
+                  if (e.key === 'Escape') {
+                    setTitleValue(application?.title || '');
+                    e.currentTarget.blur();
+                  }
+                }}
+                onBlur={commitDraftTitle}
+                placeholder="Untitled draft"
+                aria-label={t('cvStudio.renameCv')}
+                className="min-w-0 flex-1 truncate border-0 bg-transparent p-0 font-heading text-base font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-slate-100"
+              />
             ) : (
               <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                 {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
@@ -1744,7 +1834,7 @@ const ResumeReview = () => {
             style={{
               width: `calc(${paperWidth} * ${scale})`,
               height: contentHeight
-                ? `${Math.max(contentHeight, pageHeightPx) * scale}px`
+                ? `${Math.max(contentHeight, rawPageHeightPx) * scale}px`
                 : `calc(${paperHeight} * ${scale})`,
             }}
           >
@@ -1774,7 +1864,7 @@ const ResumeReview = () => {
                 WebkitTouchCallout: 'none',
                 // Design tab: accent + line-height vars (templates consume them in
                 // 2b) and fully-functional page margins.
-                '--cv-accent': design.accent || undefined,
+
                 // Read by the five ground-editable templates, each with its own colour as
                 // the fallback. Set here on #resume-content, which is the node the PDF
                 // clones — so the download inherits it without a second code path.
@@ -2131,13 +2221,18 @@ const ResumeReview = () => {
               onEditInBuilder={openEditInBuilder}
               triggerClassName="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
             />
+            {/* The way into templates and design. It was a MoreHorizontal labelled
+                "More options", which named the menu pattern rather than the thing behind
+                it — and what is behind it is the whole panel this page exists for. */}
             <button
               type="button"
-              onClick={() => setMobileSidebarOpen(true)}
+              onClick={openDesign}
+              aria-haspopup="dialog"
+              aria-expanded={designOverlay}
+              aria-label={t('cvStudio.designPanel.label')}
               className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
-              aria-label="More options"
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <Palette className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -2194,527 +2289,41 @@ const ResumeReview = () => {
           </>
         )}
 
-        {/* Mobile Sidebar Overlay */}
-        {mobileSidebarOpen && (
-          <div
-            className="lg:hidden fixed inset-0 bg-black/40 z-40"
-            onClick={() => setMobileSidebarOpen(false)}
-          />
+        {/* The design panel, in whichever home this width has for it.
+            CONDITIONALLY MOUNTED, not CSS-hidden: below the breakpoint it renders inside
+            StudioOverlay, which portals to the body, traps focus and pushes a history
+            entry. Kept mounted-but-hidden on a desktop it would quietly steal Tab and
+            eat a back press on a page that shows no sheet at all. */}
+        {railInline ? (
+          <div className="relative z-20 w-96 h-full flex flex-col bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 shadow-xl">
+            <StudioDesignRail {...railProps} />
+          </div>
+        ) : (
+          <StudioOverlay
+            open={designOverlay}
+            onClose={closeDesign}
+            side="right"
+            label={t('cvStudio.designPanel.label')}
+          >
+            {/* The sheet is FULL WIDTH on a phone, so there is no scrim left to tap —
+                StudioOverlay says so itself. This ✕ and the back button are the way out,
+                which is why the shell deliberately renders no chrome of its own. */}
+            <div className="flex shrink-0 items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+                {t('cvStudio.designPanel.label')}
+              </span>
+              <button
+                type="button"
+                onClick={closeDesign}
+                aria-label={t('common.close')}
+                className="-mr-2 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 dark:text-slate-500 dark:hover:bg-slate-800"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <StudioDesignRail {...railProps} onClose={closeDesign} />
+          </StudioOverlay>
         )}
-
-        {/* RIGHT: Sidebar Tools */}
-        <div
-          className={`
-          fixed lg:relative inset-x-0 bottom-0 z-50 lg:z-20
-          w-full lg:w-96 bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-700 flex flex-col shadow-xl
-          lg:h-full
-          transition-transform duration-300 ease-in-out
-          ${mobileSidebarOpen ? 'translate-y-0' : 'translate-y-full lg:translate-y-0'}
-          h-[85vh] lg:max-h-none
-          rounded-t-2xl lg:rounded-none
-        `}
-        >
-          {/* Mobile drag handle */}
-          <div className="lg:hidden flex justify-center pt-3 pb-1">
-            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-600 rounded-full"></div>
-          </div>
-
-          {/* Mobile close — drawer dismiss on phones (drag handle sits above). */}
-          <div className="lg:hidden flex justify-end px-4 pb-1 -mt-1">
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors text-slate-400 dark:text-slate-500"
-              aria-label="Close panel"
-            >
-              <X size={20} />
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            {/* Draft CV name — moved here from the toolbar so editing it on mobile
-                doesn't shift/overlap the toolbar row. Reuses the same handlers. */}
-            {isDraftMode && (
-              <div className="px-5 pt-3.5 pb-3 border-b border-slate-100 dark:border-slate-800">
-                <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 block mb-1.5">
-                  CV name
-                </label>
-                <input
-                  type="text"
-                  value={titleValue}
-                  onChange={(e) => setTitleValue(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') e.currentTarget.blur();
-                  }}
-                  onBlur={commitDraftTitle}
-                  placeholder="Untitled draft"
-                  className="w-full text-sm font-semibold text-slate-900 dark:text-slate-100 bg-transparent rounded-lg px-3 py-2 border border-slate-200 dark:border-slate-700 outline-none focus:border-slate-900 dark:focus:border-white focus:ring-1 focus:ring-slate-900/20 dark:focus:ring-white/20 transition-colors"
-                />
-              </div>
-            )}
-            {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes). */}
-            <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
-              {!isDraftMode ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setInsightsOpen((v) => !v)}
-                    className="w-full flex items-center gap-2.5 text-left"
-                    aria-expanded={insightsOpen}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${bandDot(application?.fitScore ?? 0)}`}
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 flex-1">
-                      Fit score
-                    </span>
-                    <span
-                      className={`font-heading text-lg font-bold tabular-nums ${bandText(application?.fitScore ?? 0)}`}
-                    >
-                      {application?.fitScore ?? 0}%
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      className={`text-slate-400 dark:text-slate-500 transition-transform ${insightsOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  {insightsOpen && (
-                    <div className="mt-3 space-y-3">
-                      <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                        Optimized for{' '}
-                        {application?.jobId?.title || application?.jobTitle || 'the role'}.
-                      </p>
-                      {/* Free users get the standard analysis (GPT-4o-mini); nudge them
-                          toward the premium ApplyRight ATS analysis (GPT-4o). */}
-                      {userProfile?.plan !== 'paid' && (
-                        <button
-                          type="button"
-                          onClick={() => navigate('/upgrade')}
-                          className="inline-flex items-start gap-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline text-left"
-                        >
-                          <Crown className="w-3.5 h-3.5 shrink-0 mt-0.5" />
-                          Upgrade to ApplyRight ATS for our sharpest, recruiter-grade analysis
-                        </button>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : atsReadiness ? (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => setInsightsOpen((v) => !v)}
-                    className="w-full flex items-center gap-2.5 text-left"
-                    aria-expanded={insightsOpen}
-                  >
-                    <span
-                      className={`w-1.5 h-1.5 rounded-full shrink-0 ${bandDot(atsReadiness.score)}`}
-                    />
-                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 flex-1">
-                      ATS readiness
-                    </span>
-                    <span
-                      className={`font-heading text-lg font-bold tabular-nums ${bandText(atsReadiness.score)}`}
-                    >
-                      {atsReadiness.score}
-                    </span>
-                    <ChevronDown
-                      size={16}
-                      className={`text-slate-400 dark:text-slate-500 transition-transform ${insightsOpen ? 'rotate-180' : ''}`}
-                    />
-                  </button>
-                  {insightsOpen && (
-                    <div className="mt-3 space-y-3">
-                      <div className="space-y-1.5">
-                        {atsReadiness.checks?.map((check, i) => (
-                          <div key={i} className="flex items-center gap-2 text-xs">
-                            {check.passed ? (
-                              <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400 shrink-0" />
-                            ) : (
-                              <X className="w-3.5 h-3.5 text-rose-500 dark:text-rose-400 shrink-0" />
-                            )}
-                            <span
-                              className={
-                                check.passed
-                                  ? 'text-slate-600 dark:text-slate-300'
-                                  : 'text-slate-500 dark:text-slate-400'
-                              }
-                            >
-                              {check.label}
-                              {check.detail && (
-                                <span className="text-slate-400 dark:text-slate-500 ml-1">
-                                  ({check.detail})
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                      {atsReadiness.tips?.length > 0 && (
-                        <div className="pt-3 border-t border-slate-100 dark:border-slate-800">
-                          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-1.5">
-                            Tips
-                          </p>
-                          <ul className="space-y-1">
-                            {atsReadiness.tips.slice(0, 3).map((tip, i) => (
-                              <li
-                                key={i}
-                                className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed flex gap-1.5"
-                              >
-                                <span className="text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
-                                  –
-                                </span>
-                                {tip}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  Live draft preview
-                </p>
-              )}
-            </div>
-
-            {/* b) Rail tabs — Templates / Design (ink underline like the masthead). */}
-            <div className="px-5 flex gap-5 border-b border-slate-100 dark:border-slate-800">
-              {['templates', 'design'].map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setRailTab(tab)}
-                  className={`relative py-3 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] transition-colors ${
-                    railTab === tab
-                      ? 'text-slate-900 dark:text-slate-100'
-                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-                  }`}
-                >
-                  {tab}
-                  {railTab === tab && (
-                    <span className="absolute inset-x-0 -bottom-px h-0.5 bg-slate-900 dark:bg-white rounded-full" />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            {/* c/d) Rail body — Templates (grouped) or the Design placeholder. */}
-            <div className="p-5">
-              {activeTab !== 'resume' ? (
-                <p className="text-center text-xs text-slate-500 dark:text-slate-400 py-14 px-4 leading-relaxed">
-                  Template styles apply to the CV. Switch to Resume to choose one.
-                </p>
-              ) : railTab === 'design' ? (
-                <div className="space-y-6">
-                  {/* Typeface — body-font override via --cv-font. Curated Google
-                      Fonts (loaded in index.html + injected into the PDF head); each
-                      template keeps its own font as the fallback when Default. */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                      Typeface
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      {[
-                        { label: 'Default', value: '' },
-                        { label: 'Inter', value: 'Inter, sans-serif' },
-                        { label: 'Source Sans', value: "'Source Sans 3', sans-serif" },
-                        { label: 'Georgia', value: "Georgia, 'Times New Roman', serif" },
-                        { label: 'Merriweather', value: 'Merriweather, serif' },
-                        { label: 'Lora', value: 'Lora, serif' },
-                      ].map((f) => (
-                        <button
-                          key={f.label}
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, font: f.value }))}
-                          className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2.5 transition-all ${
-                            design.font === f.value
-                              ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white dark:ring-white'
-                              : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                          }`}
-                        >
-                          <span
-                            className="text-lg leading-none text-slate-900 dark:text-slate-100"
-                            style={{ fontFamily: f.value || undefined }}
-                          >
-                            Aa
-                          </span>
-                          <span className="max-w-full truncate text-[10px] font-medium text-slate-500 dark:text-slate-400">
-                            {f.label}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Accent — sets --cv-accent; templates paint it in 2b. */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                      Accent
-                    </p>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* Default = clear accent → each template's own default. */}
-                      <button
-                        type="button"
-                        onClick={() => setDesign((d) => ({ ...d, accent: '' }))}
-                        className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
-                          design.accent === ''
-                            ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/30 dark:ring-white/30 text-slate-900 dark:text-slate-100'
-                            : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
-                        }`}
-                      >
-                        Default
-                      </button>
-                      {[
-                        { name: 'Navy', hex: '#1e3a5f' },
-                        { name: 'Slate', hex: '#334155' },
-                        { name: 'Indigo', hex: '#4f46e5' },
-                        { name: 'Emerald', hex: '#047857' },
-                        { name: 'Burgundy', hex: '#7c2d12' },
-                        { name: 'Charcoal', hex: '#111827' },
-                      ].map((sw) => (
-                        <button
-                          key={sw.hex}
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, accent: sw.hex }))}
-                          title={sw.name}
-                          aria-label={sw.name}
-                          className={`w-8 h-8 rounded-full transition-all ${
-                            design.accent === sw.hex
-                              ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
-                              : 'ring-1 ring-black/10 dark:ring-white/10 hover:scale-105'
-                          }`}
-                          style={{ backgroundColor: sw.hex }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Page colour — sets --cv-ground, and repaints the sheet behind the
-                      CV to match. Shown ONLY for the handful of templates where the
-                      ground is the single large colour on the page (supportsGround).
-                      Everywhere else the page carries a masthead band, a sidebar or
-                      colour blocks that were designed against their own ground, and
-                      letting someone recolour underneath them produces a document that
-                      fights itself — so the control is absent rather than disabled: a
-                      greyed-out row invites "why not?", a missing one reads as "not part
-                      of this template". */}
-                  {supportsGround(templateId) && (
-                    <div>
-                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                        Page colour
-                      </p>
-                      <div className="flex flex-wrap items-center gap-2">
-                        {/* Default = clear it → the template's own paper. */}
-                        <button
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, ground: '' }))}
-                          className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
-                            design.ground === ''
-                              ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/30 dark:ring-white/30 text-slate-900 dark:text-slate-100'
-                              : 'border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
-                          }`}
-                        >
-                          Default
-                        </button>
-                        {GROUND_CHOICES.map((sw) => (
-                          <button
-                            key={sw.value}
-                            type="button"
-                            onClick={() => setDesign((d) => ({ ...d, ground: sw.value }))}
-                            title={sw.name}
-                            aria-label={sw.name}
-                            className={`w-8 h-8 rounded-full transition-all ${
-                              design.ground === sw.value
-                                ? 'ring-2 ring-slate-900 dark:ring-white ring-offset-2 ring-offset-white dark:ring-offset-slate-900'
-                                : 'ring-1 ring-black/10 dark:ring-white/10 hover:scale-105'
-                            }`}
-                            style={{ backgroundColor: sw.value }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Margins — fully functional: preview padding + PDF margin. */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                      Margins
-                    </p>
-                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                      {['narrow', 'normal', 'wide'].map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, margins: m }))}
-                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
-                            design.margins === m
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                              : 'text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          {m}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Paper size — sets the preview dimensions + the PDF @page size. */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                      Paper size
-                    </p>
-                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                      {[
-                        { value: 'a4', label: 'A4' },
-                        { value: 'letter', label: 'Letter' },
-                      ].map((p) => (
-                        <button
-                          key={p.value}
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, paper: p.value }))}
-                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                            design.paper === p.value
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                              : 'text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          {p.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Density — sets --cv-leading; templates read it in 2b. */}
-                  <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                      Density
-                    </p>
-                    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                      {['compact', 'normal', 'relaxed'].map((den) => (
-                        <button
-                          key={den}
-                          type="button"
-                          onClick={() => setDesign((d) => ({ ...d, density: den }))}
-                          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
-                            design.density === den
-                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                              : 'text-slate-500 dark:text-slate-400'
-                          }`}
-                        >
-                          {den}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6 scrollbar-none">
-                  {showBestChoices ? (
-                    <StudioBestChoices
-                      selectedTemplate={templateId}
-                      isUnlocked={isUnlocked}
-                      onSelect={(nextTemplateId) => {
-                        setTemplateId(nextTemplateId);
-                        setMobileSidebarOpen(false);
-                      }}
-                      onKeepShowing={() => updateBestChoicesPreference(true)}
-                      onHide={() => updateBestChoicesPreference(false)}
-                    />
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => updateBestChoicesPreference(true)}
-                      className="flex w-full items-center justify-between border-b border-slate-200 pb-4 text-left text-xs font-semibold text-slate-600 transition-colors hover:text-slate-900 dark:border-slate-800 dark:text-slate-300 dark:hover:text-white"
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <Crown className="h-4 w-4" /> {t('cvStudio.bestChoices.showAgain')}
-                      </span>
-                      <span aria-hidden="true">+</span>
-                    </button>
-                  )}
-                  {['Simple', 'ApplyRight', 'Sidebar', 'Professional', 'Editorial', 'Industry'].map(
-                    (groupName) => {
-                      const groupTemplates = TEMPLATES.filter((t) => t.group === groupName);
-                      if (!groupTemplates.length) return null;
-                      return (
-                        <div key={groupName} className="space-y-2.5">
-                          <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                            {groupName}
-                          </h4>
-                          <div className="grid grid-cols-2 gap-3">
-                            {groupTemplates.map((t, i) => {
-                              const locked = !isUnlocked(t.id);
-                              const isDanglingLast =
-                                i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
-                              return (
-                                <div
-                                  key={t.id}
-                                  onClick={() => {
-                                    setTemplateId(t.id);
-                                    setMobileSidebarOpen(false);
-                                  }}
-                                  className={`${isDanglingLast ? 'col-span-2' : ''} cursor-pointer rounded-lg border overflow-hidden transition-all ${
-                                    templateId === t.id
-                                      ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
-                                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                                  }`}
-                                >
-                                  {/* Live mini-render of the actual CV in this style. */}
-                                  <div className="relative flex justify-center overflow-hidden bg-white border-b border-slate-200 dark:border-slate-800">
-                                    <TemplatePreviewThumb templateId={t.id} width={110} />
-                                    {/* Faint dim on locked styles. */}
-                                    {locked && (
-                                      <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
-                                    )}
-                                    {/* Lock icon on gated styles. */}
-                                    {locked && (
-                                      <div className="absolute top-1 right-1 p-0.5 bg-slate-800/90 rounded">
-                                        <Lock size={10} className="text-white" />
-                                      </div>
-                                    )}
-                                    {/* Tier badge — FREE / {cost} CR / PRO. */}
-                                    <div
-                                      className={`absolute bottom-1 right-1 px-1.5 py-0.5 text-[8px] font-bold rounded leading-none ${
-                                        t.cost === 0
-                                          ? 'bg-emerald-500 text-white'
-                                          : locked
-                                            ? 'bg-slate-800 text-white'
-                                            : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
-                                      }`}
-                                    >
-                                      {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
-                                    </div>
-                                  </div>
-                                  {/* Caption. */}
-                                  <div
-                                    className={`flex items-center gap-1.5 px-2 py-1.5 ${
-                                      templateId === t.id ? 'bg-slate-100 dark:bg-slate-800' : ''
-                                    }`}
-                                  >
-                                    <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
-                                      {t.name}
-                                    </span>
-                                    {templateId === t.id && (
-                                      <Check
-                                        size={13}
-                                        className="shrink-0 text-slate-900 dark:text-slate-100"
-                                      />
-                                    )}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      );
-                    }
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

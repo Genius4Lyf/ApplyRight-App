@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import useMedia from './useMedia';
 
 // Aria Studio's responsive contract, in one place so the shell and its panes can't
 // disagree about what "mobile" means.
@@ -10,28 +11,6 @@ import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from '
 //   ≥ 1100    the full three-pane desk.
 export const MOBILE_MAX = 820;
 export const PANEL_MIN = 1100;
-
-const query = (q) => (typeof window !== 'undefined' ? window.matchMedia(q) : null);
-
-// matchMedia IS an external store, so subscribe to it as one. useSyncExternalStore reads
-// the CURRENT value on every render rather than mirroring it into state via an effect —
-// no cascading render, and no window where React's copy disagrees with the viewport.
-function useMedia(q) {
-  const subscribe = useCallback(
-    (onChange) => {
-      const mq = query(q);
-      if (!mq) return () => {};
-      mq.addEventListener('change', onChange);
-      return () => mq.removeEventListener('change', onChange);
-    },
-    [q]
-  );
-  return useSyncExternalStore(
-    subscribe,
-    () => query(q)?.matches ?? false,
-    () => false // server/prerender: assume the widest layout
-  );
-}
 
 /**
  * Layout mode + persisted collapse preferences.
