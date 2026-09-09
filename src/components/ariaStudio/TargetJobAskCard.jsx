@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
+import CardEyebrow from './CardEyebrow';
 
 // Ask ONCE whether there's a specific job in mind, because the answer changes every
 // question that follows: with a JD, the Role Brief grounds what Aria probes for; without
@@ -15,9 +16,7 @@ const TargetJobAskCard = ({ onYes, onNo }) => {
   return (
     <AriaCard cardKey="jobask">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.targetJobAsk.oneThingFirst')}
-        </p>
+        <CardEyebrow>{t('ariaStudio.targetJobAsk.oneThingFirst')}</CardEyebrow>
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.targetJobAsk.areYouAiming')}
         </p>

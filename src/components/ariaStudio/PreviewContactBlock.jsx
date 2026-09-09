@@ -2,7 +2,8 @@ import React, { useRef, useState } from 'react';
 import { PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
-import { prepareCvPhoto } from '../../utils/cvPhoto';
+import { loadPhoto, PHOTO_ACCEPT_ATTR } from '../../utils/cvPhoto';
+import PhotoFramer from './PhotoFramer';
 
 // The Live Preview's CONTACT HEADER, editable in place.
 //
@@ -72,6 +73,9 @@ const PreviewContactBlock = ({ readOnly = false }) => {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({});
   const [saving, setSaving] = useState(false);
+  // The chosen image, held decoded while the user frames it. Null when the framer is shut.
+  const [framing, setFraming] = useState(null);
+  const [photoError, setPhotoError] = useState('');
   // What the form was SEEDED with — the baseline Save diffs against. A ref, not state:
   // it's never rendered, and it must not change identity mid-edit.
   const seedRef = useRef({});
@@ -113,14 +117,19 @@ const PreviewContactBlock = ({ readOnly = false }) => {
 
   const changePhoto = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const photoUrl = await prepareCvPhoto(file);
-      setForm((prev) => ({ ...prev, photoUrl }));
-    } catch {
-      // Keep the existing preview when a file cannot be decoded.
-    }
+    // Cleared first, so choosing the SAME file again still fires a change event — without
+    // it, cancelling the framer leaves no way to reopen it.
     event.target.value = '';
+    if (!file) return;
+    setPhotoError('');
+    try {
+      const { image, src } = await loadPhoto(file);
+      setFraming({ width: image.width, height: image.height, src });
+    } catch (error) {
+      // NAMED, where this used to swallow every failure and leave the old photo in place
+      // silently — so an iPhone HEIC, which Chrome cannot decode, read as a dead button.
+      setPhotoError(error?.message || '');
+    }
   };
 
   const save = async () => {
@@ -253,7 +262,7 @@ const PreviewContactBlock = ({ readOnly = false }) => {
               id="studio-preview-contact-photo"
               type="file"
               aria-label={t('ariaStudio.contactConfirm.fields.photo.label')}
-              accept="image/*"
+              accept={PHOTO_ACCEPT_ATTR}
               onChange={changePhoto}
               disabled={saving}
               className="sr-only"
@@ -270,6 +279,24 @@ const PreviewContactBlock = ({ readOnly = false }) => {
             )}
           </div>
         </div>
+
+        {/* Inline, under the control that opened it — see PhotoFramer on why this is not
+            a dialog. */}
+        {framing && (
+          <PhotoFramer
+            image={framing}
+            onCancel={() => setFraming(null)}
+            onApply={(photoUrl) => {
+              setForm((prev) => ({ ...prev, photoUrl }));
+              setFraming(null);
+            }}
+          />
+        )}
+
+        {photoError && (
+          <p className="text-[10.5px] font-medium text-rose-600 dark:text-rose-400">{photoError}</p>
+        )}
+
         <div className="flex items-center gap-2">
           <button
             type="button"

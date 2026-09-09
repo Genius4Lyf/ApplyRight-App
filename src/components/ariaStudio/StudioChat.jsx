@@ -55,6 +55,7 @@ import AriaThinking from '../cv/AriaThinking';
 import RewriteRoleCard from './RewriteRoleCard';
 import ProjectIdeasCard from './ProjectIdeasCard';
 import ModeChooser from './ModeChooser';
+import CardEyebrow from './CardEyebrow';
 import PrepAnalyzingCard from './PrepAnalyzingCard';
 import PrepCvCard from './PrepCvCard';
 import PrepResultsCard from './PrepResultsCard';
@@ -248,10 +249,23 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
     // is said until the answer arrives. An empty chat for the length of a fetch is
     // honest; a wrong one is not. The effect below covers the draft that never comes.
     if (loading && !draftId) return [];
-    return [
-      { who: 'aria', text: kindOpener, _opening: true },
-      ...(ownsLocalTranscript ? loadSession() : []),
-    ];
+
+    const restored = ownsLocalTranscript ? loadSession() : [];
+
+    // THE MODE CHOOSER SPEAKS FOR ITSELF.
+    //
+    // A cold start with no declared kind opens on the chooser — a card that already
+    // carries an eyebrow, a title, the "I'll build it with you section by section" line
+    // and the three steps. The welcome message sat directly above it saying the same
+    // thing in prose, so the first thing a new user met was one idea told twice before
+    // they could do anything about it.
+    //
+    // Kept for every session that DOES declare a kind (`kindOpenerBuild` and friends):
+    // those open on a working step, not on an introduction, so the greeting is the only
+    // thing framing what is about to happen.
+    if (!pendingKind && !restored.length) return [];
+
+    return [{ who: 'aria', text: kindOpener, _opening: true }, ...restored];
   });
   // Decided at MOUNT, not in an effect. A session opened from the rail already has its
   // draft — loadSession sets cvData before bumping sessionNonce — so waiting for an effect
@@ -273,10 +287,14 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
   // speak over a session that has one.
   useEffect(() => {
     if (loading || draftId) return;
+    // `pendingKind` for the same reason as above: with no kind declared this lands on the
+    // mode chooser, which needs no introduction. Without this guard the effect would put
+    // back the very message the initialiser just withheld.
+    if (!pendingKind) return;
     setMessages((prev) =>
       prev.length ? prev : [{ who: 'aria', text: kindOpener, _opening: true }]
     );
-  }, [loading, draftId, kindOpener]);
+  }, [loading, draftId, kindOpener, pendingKind]);
 
   // Publish the already-derived chat phase for sibling UI. The transcript remains the
   // source of truth; this merely prevents contextual chrome from guessing where Aria is.
@@ -3420,8 +3438,21 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
       : null;
     if (!focusNoticePrimedRef.current) {
       if (loading) return;
-      const hasSavedThread = !!draftId && (cvData?.coachChats?.studio || []).length > 0;
-      if (hasSavedThread && messages.some((m) => m._opening)) return;
+      const savedThread = (draftId && cvData?.coachChats?.studio) || [];
+      const hasSavedThread = savedThread.length > 0;
+      // WAIT FOR THE REHYDRATE. Priming from the pre-rehydrate messages would read the
+      // focus as absent, and then the restored thread's pinned entry would arrive as a
+      // CHANGE — pushing a spurious `focus` turn into a transcript that already records
+      // where the interview began.
+      //
+      // This used to ask 'is the opening message still showing?', which was true only
+      // by coincidence: the opener happened to be the placeholder before the thread
+      // landed. The moment the mode chooser stopped being introduced by one (it says
+      // everything the opener said, so the greeting above it was the same idea twice)
+      // the guard silently stopped firing. Ask the real question instead — has what is
+      // on screen caught up with what is stored?
+      const rehydrated = messages.length >= savedThread.length && !messages.some((m) => m._opening);
+      if (hasSavedThread && !rehydrated) return;
       focusNoticeRef.current = focusNotice;
       focusNoticePrimedRef.current = true;
       return;
@@ -4406,10 +4437,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   key={`sections-${nextSection.key}`}
                 >
                   <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                      <span aria-hidden="true">{nextSection.icon}</span>{' '}
-                      <span>{nextSection.eyebrow}</span>
-                    </p>
+                    <CardEyebrow icon={nextSection.icon}>{nextSection.eyebrow}</CardEyebrow>
                     <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
                       {nextSection.blurb}
                     </p>
@@ -4947,15 +4975,27 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                       n: result.applied.length,
                       nonce: Date.now(),
                     });
-                    // "Edit with Aria" on an already-finished build is a bounded edit,
-                    // not the start of another role-building loop. The successful Apply
-                    // is the completion moment: clear focus and put the completion card
-                    // back immediately. In-progress builds retain the existing multi-round
-                    // interview so a new role can collect more than one achievement.
-                    if (completedBuildSession) {
-                      returnToCompletedBuild({ unpin: true });
-                      return;
-                    }
+                    // APPLY IS NOT THE END OF THE EDIT, on a finished build or an
+                    // unfinished one.
+                    //
+                    // This used to treat a successful Apply on an already-complete CV as
+                    // the completion moment: unpin, and put the finish card straight back.
+                    // It read as the edit being cancelled. Someone who opened "Edit with
+                    // Aria" to strengthen a role, applied the first two bullets and wanted
+                    // to keep going was dropped out of focus mode with no way back except
+                    // returning to the preview and starting a whole new interview on the
+                    // same role — paying for another round to continue the one they were
+                    // already in.
+                    //
+                    // Applying is a checkpoint, not a verdict. The user says when a
+                    // section is done, using the pinned card's own control — which routes
+                    // through finishSection(), and finishSection ALREADY knows this is an
+                    // edit rather than a build step: on a completed build it records no
+                    // duplicate receipt, stamps no DONE marker, walks no section chain,
+                    // and calls returnToCompletedBuild({ unpin: true }) itself. So the
+                    // finish card still comes back at the end — one click later, when it
+                    // was asked for.
+                    //
                     // Keep the interview going on the SAME role. Re-pin it so the coach's
                     // turn window (and prior-answer context, which primes the next paid
                     // generation) resets to a clean round — a transcript marker, so it

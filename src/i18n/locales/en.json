@@ -4389,6 +4389,14 @@
       "done": "Done",
       "haveNone": "I have none"
     },
+    "photoFramer": {
+      "title": "Position your photo",
+      "hint": "Drag to move it, and zoom until your face fills the circle. What you see here is exactly what goes on your CV.",
+      "frameAria": "Photo position — drag, or use the arrow keys",
+      "zoom": "Zoom",
+      "use": "Use this photo",
+      "reset": "Recentre"
+    },
     "contactConfirm": {
       "fields": {
         "fullName": {
@@ -4434,6 +4442,7 @@
       "replacePhoto": "Replace",
       "removePhoto": "Remove",
       "photoPreviewAlt": "Profile photo preview",
+      "photoFailed": "That image could not be opened. Use a JPG, PNG or WEBP file.",
       "photoGuidance": "Use a professional headshot only where photos are customary. Some ATS-focused applications are better without one.",
       "importance": {
         "essential": "Essential",

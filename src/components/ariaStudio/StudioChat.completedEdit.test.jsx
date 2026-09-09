@@ -132,7 +132,15 @@ beforeEach(() => {
 afterEach(() => cleanup());
 
 describe('StudioChat — applying edits to a completed build', () => {
-  it('returns to the completion card after applying an entry edit with Aria', async () => {
+  it('KEEPS the entry open after applying, so the edit can continue', async () => {
+    // Reported by a user: opening "Edit with Aria" on a role, applying the bullets and
+    // then wanting to add one more. Applying used to be treated as the completion
+    // moment — it unpinned the entry and put the finish card straight back — so the
+    // only way to continue was to leave, reopen the preview, and start a whole new
+    // interview on the same role, paying for another round to carry on the one they
+    // were already in. It read as the edit being cancelled by its own Apply button.
+    //
+    // Applying is a checkpoint. The user decides when the section is finished.
     await mountStudio();
 
     await act(async () => {
@@ -142,11 +150,39 @@ describe('StudioChat — applying edits to a completed build', () => {
 
     fireEvent.click(apply);
 
+    // Aria invites the next achievement rather than signing off...
+    expect(await screen.findByText(/those are on your CV now/i)).toBeTruthy();
+
+    // ...and the entry is STILL in focus. No unpin means no finish card yet, and the
+    // pinned card — which owns "Done with work history" — is still on screen to close it.
+    expect(ctx.cvData.coachChats.studio.filter((m) => m.who === 'unpinrole')).toHaveLength(0);
+  });
+
+  it('returns to the completion card when the user says the section is done', async () => {
+    // The other half of the contract above: the finish card still comes back — one
+    // click later, when it was actually asked for. finishSection() already knew this
+    // was an edit rather than a build step (no duplicate receipt, no DONE marker, no
+    // walk down the section chain), so nothing about the destination changed.
+    await mountStudio();
+
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'experience', 'r1');
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Apply entry edit' }));
+
+    // The pinned card opens collapsed by design, so the section controls are behind its
+    // own toggle — the same two clicks a user makes.
+    await screen.findByText(/those are on your CV now/i);
+    const expand = screen
+      .getAllByRole('button')
+      .find((node) => node.getAttribute('aria-expanded') === 'false');
+    fireEvent.click(expand);
+
+    fireEvent.click(await screen.findByRole('button', { name: /done with work history/i }));
+
     await screen.findByText('Ready to send');
     await waitFor(() =>
-      expect(
-        ctx.cvData.coachChats.studio.filter((message) => message.who === 'unpinrole')
-      ).toHaveLength(1)
+      expect(ctx.cvData.coachChats.studio.filter((m) => m.who === 'unpinrole')).toHaveLength(1)
     );
   });
 

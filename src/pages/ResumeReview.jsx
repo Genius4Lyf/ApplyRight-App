@@ -953,6 +953,17 @@ const ResumeReview = () => {
         portfolioUrl: draftInfo.website || userProfile.portfolioUrl,
         photoUrl: draftInfo.photoUrl || userProfile.photoUrl,
 
+        // THE TITLE PRINTED UNDER THE NAME BY EVERY TEMPLATE.
+        //
+        // Missing from this merge until now, which is why a job title set on the CV
+        // itself — in Aria Studio's preview editor, which writes personalInfo
+        // .currentJobTitle — saved correctly and then never appeared on the document.
+        // The templates read `userProfile.currentJobTitle`, and without this line that
+        // only ever resolved to the ACCOUNT-wide title from Profile settings. A CV aimed
+        // at Plumber and one aimed at Maintenance Technician need different titles (see
+        // the field's own note in DraftCV.js); the draft's value has to win.
+        currentJobTitle: draftInfo.currentJobTitle || userProfile.currentJobTitle,
+
         // Name splitting if needed (Profile uses first/last, Draft uses fullName)
         firstName: draftInfo.fullName ? draftInfo.fullName.split(' ')[0] : userProfile.firstName,
         lastName: draftInfo.fullName

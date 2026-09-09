@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
-import { prepareCvPhoto } from '../../utils/cvPhoto';
+import { loadPhoto, PHOTO_ACCEPT_ATTR } from '../../utils/cvPhoto';
+import PhotoFramer from './PhotoFramer';
+import CardEyebrow from './CardEyebrow';
 import { sectionIcon } from '../../lib/studioFlow';
 
 const FIELDS = [
@@ -46,6 +48,14 @@ const FIELDS = [
   },
 ];
 
+// The title printed under the name by every template. NOT in FIELDS, for the same reason
+// PreviewContactBlock keeps it out of its own list: it is not a contact detail. It is
+// here because it was previously offered ONLY at the very end, in the preview editor —
+// so anyone who never opened that editor had a CV whose most prominent line was blank
+// and nothing ever mentioned it. Optional throughout: left empty it simply does not
+// render, here or on the document.
+const TITLE_FIELD = 'currentJobTitle';
+
 // Confirm the complete CV contact block. Missing fields remain visible so users
 // understand what the CV still needs instead of mistaking an omitted row for a
 // finished section. Essential details block confirmation; optional ones do not.
@@ -68,15 +78,29 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
     requestAnimationFrame(() => document.getElementById(`studio-contact-${key}`)?.focus());
   };
 
+  // The chosen image, held decoded so it can be FRAMED before anything is written. Null
+  // whenever the framer is closed.
+  const [framing, setFraming] = useState(null);
+  const [photoError, setPhotoError] = useState('');
+
   const handlePhotoChange = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      set('photoUrl', await prepareCvPhoto(file));
-    } catch {
-      // Invalid/unreadable images leave the current photo untouched.
-    }
+    // The picker is reset immediately so choosing the SAME file again still fires a
+    // change event — otherwise a user who cancels the framer cannot reopen it.
     event.target.value = '';
+    if (!file) return;
+    setPhotoError('');
+    try {
+      const { image, src } = await loadPhoto(file);
+      // Carry the data URL on the element: `image.src` is already it, but reading it back
+      // off a decoded HTMLImageElement is not guaranteed to round-trip identically.
+      setFraming({ width: image.width, height: image.height, src, el: image });
+    } catch (error) {
+      // A NAMED failure. This used to swallow everything and leave the old photo in
+      // place with nothing said, so an iPhone HEIC — which Chrome cannot decode at all —
+      // read as the button simply not working.
+      setPhotoError(error?.message || t('ariaStudio.contactConfirm.photoFailed'));
+    }
   };
 
   const save = () => {
@@ -88,14 +112,11 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
     return (
       <AriaCard cardKey="contactedit">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            <span aria-hidden="true">{sectionIcon('contact')}</span>{' '}
-            <span>
-              {isEmpty
-                ? t('ariaStudio.contactConfirm.howReachYou')
-                : t('ariaStudio.contactConfirm.yourDetails')}
-            </span>
-          </p>
+          <CardEyebrow icon={sectionIcon('contact')}>
+            {isEmpty
+              ? t('ariaStudio.contactConfirm.howReachYou')
+              : t('ariaStudio.contactConfirm.yourDetails')}
+          </CardEyebrow>
 
           <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {FIELDS.map((field) => (
@@ -124,6 +145,26 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                 />
               </div>
             ))}
+          </div>
+
+          <div className="mt-3 min-w-0">
+            <label
+              htmlFor={`studio-contact-${TITLE_FIELD}`}
+              className="mb-1 block text-[12px] font-semibold text-slate-600 dark:text-slate-300"
+            >
+              {t('ariaStudio.livePreview.jobTitleLabel')}
+              <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.contactConfirm.importance.optional')}
+              </span>
+            </label>
+            <input
+              id={`studio-contact-${TITLE_FIELD}`}
+              type="text"
+              value={form[TITLE_FIELD] || ''}
+              onChange={(event) => set(TITLE_FIELD, event.target.value)}
+              placeholder={t('ariaStudio.livePreview.jobTitlePlaceholder')}
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-[14px] text-slate-900 outline-none transition-colors focus:border-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:focus:border-white"
+            />
           </div>
 
           <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -155,11 +196,14 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                     ? t('ariaStudio.contactConfirm.replacePhoto')
                     : t('ariaStudio.contactConfirm.addPhoto')}
                 </label>
+                {/* Named formats, not `image/*`. See cvPhoto.js: that wildcard offered
+                    SVG, HEIC and TIFF, none of which this pipeline can decode — so the
+                    picker cheerfully accepted files that were always going to fail. */}
                 <input
                   id="studio-contact-photoUrl"
                   type="file"
                   aria-label={t('ariaStudio.contactConfirm.fields.photo.label')}
-                  accept="image/*"
+                  accept={PHOTO_ACCEPT_ATTR}
                   onChange={handlePhotoChange}
                   className="sr-only"
                 />
@@ -174,6 +218,27 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                 )}
               </div>
             </div>
+
+            {/* Framing happens HERE, under the control that opened it, rather than in a
+                dialog — this card already lives inside a chat that is itself inside a
+                drawer on a phone, and a third stacked layer is how a sheet becomes
+                impossible to dismiss. */}
+            {framing && (
+              <PhotoFramer
+                image={framing}
+                onCancel={() => setFraming(null)}
+                onApply={(dataUrl) => {
+                  set('photoUrl', dataUrl);
+                  setFraming(null);
+                }}
+              />
+            )}
+
+            {photoError && (
+              <p className="mt-2 text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                {photoError}
+              </p>
+            )}
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-2">
@@ -208,12 +273,41 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   return (
     <AriaCard cardKey="contactconfirm">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white shadow-md dark:shadow-black/20 p-5 dark:border-slate-800 dark:bg-slate-900">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          <span aria-hidden="true">{sectionIcon('contact')}</span>{' '}
-          <span>{t('ariaStudio.contactConfirm.reviewDetails')}</span>
-        </p>
+        <CardEyebrow icon={sectionIcon('contact')}>
+          {t('ariaStudio.contactConfirm.reviewDetails')}
+        </CardEyebrow>
 
         <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
+          {/* First, because it is the first line on the finished document — the one
+              printed directly under the name. */}
+          <div className="grid min-w-0 grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-2 py-2">
+            <dt className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.livePreview.jobTitleLabel')}
+            </dt>
+            <dd
+              className={`min-w-0 truncate text-[13.5px] ${
+                (personalInfo[TITLE_FIELD] || '').trim()
+                  ? 'text-slate-800 dark:text-slate-100'
+                  : 'italic text-slate-400 dark:text-slate-500'
+              }`}
+            >
+              {(personalInfo[TITLE_FIELD] || '').trim() || t('ariaStudio.contactConfirm.missing')}
+            </dd>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
+                {t('ariaStudio.contactConfirm.importance.optional')}
+              </span>
+              {!(personalInfo[TITLE_FIELD] || '').trim() && (
+                <button
+                  type="button"
+                  onClick={() => editField(TITLE_FIELD)}
+                  className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+                >
+                  {t('ariaStudio.contactConfirm.addField')}
+                </button>
+              )}
+            </div>
+          </div>
           <div className="grid min-w-0 grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-2 py-2">
             <dt className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
               {t('ariaStudio.contactConfirm.fields.photo.label')}

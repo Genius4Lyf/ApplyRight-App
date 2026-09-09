@@ -4385,6 +4385,14 @@
       "done": "Terminé",
       "haveNone": "Je n'en ai aucune"
     },
+    "photoFramer": {
+      "title": "Positionnez votre photo",
+      "hint": "Faites glisser pour la déplacer et zoomez jusqu’à ce que votre visage remplisse le cercle. Ce que vous voyez ici est exactement ce qui apparaîtra sur votre CV.",
+      "frameAria": "Position de la photo — faites glisser ou utilisez les flèches",
+      "zoom": "Zoom",
+      "use": "Utiliser cette photo",
+      "reset": "Recentrer"
+    },
     "contactConfirm": {
       "fields": {
         "fullName": {
@@ -4430,6 +4438,7 @@
       "replacePhoto": "Remplacer",
       "removePhoto": "Supprimer",
       "photoPreviewAlt": "Aperçu de la photo de profil",
+      "photoFailed": "Cette image n’a pas pu être ouverte. Utilisez un fichier JPG, PNG ou WEBP.",
       "photoGuidance": "Utilisez une photo professionnelle uniquement lorsque cela est habituel. Certaines candidatures optimisées pour les ATS sont préférables sans photo.",
       "importance": {
         "essential": "Essentiel",

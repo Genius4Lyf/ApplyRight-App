@@ -123,6 +123,7 @@ describe('locale files', () => {
       'dashboard.studio.kicker', // "Aria Studio" — product name
       'workspace.cvStudio.title', // "CV Studio" — product name (see dashboard.studio.kicker)
       'ariaStudio.sessionRail.cvTag', // "CV" — the same two letters in French
+      'ariaStudio.photoFramer.zoom', // "Zoom" — the same word in French
       'dashboard.interviewCard.chip', // "Pro" — tier name, kept in English
       'landing.vignettes.compareLabel', // "CV A vs CV B" — labels + a Latin abbreviation
       'landing.vignettes.askTabAria', // "Aria" — product name (see dashboard.studio.kicker)

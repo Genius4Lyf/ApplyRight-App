@@ -4,6 +4,7 @@ import { FileUp } from 'lucide-react';
 import { BUILD_SECTIONS } from '../../lib/studioFlow';
 import { CREDIT_COSTS } from '../../lib/credits';
 import AriaCard from './AriaCard';
+import CardEyebrow from './CardEyebrow';
 
 // What building a CV with Aria actually involves, shown up front.
 //
@@ -22,9 +23,7 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting, onUploadInstead }) =
   return (
     <AriaCard cardKey="roadmap">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.buildRoadmap.heresThePlan')}
-        </p>
+        <CardEyebrow>{t('ariaStudio.buildRoadmap.heresThePlan')}</CardEyebrow>
         <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
           {t('ariaStudio.buildRoadmap.sixSections')}
         </p>

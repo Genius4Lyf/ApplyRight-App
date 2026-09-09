@@ -16,7 +16,7 @@ describe('StudioWelcomeGuide', () => {
     const onComplete = vi.fn();
     render(<StudioWelcomeGuide open onComplete={onComplete} />);
 
-    expect(screen.getByRole('heading', { name: 'Welcome to your CV workspace.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Welcome to your career workspace.' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() =>
       expect(
