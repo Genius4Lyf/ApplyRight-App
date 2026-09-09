@@ -234,6 +234,13 @@ describe('locale files', () => {
       'seo.pages.app.title', // 'ApplyRight' — the wordmark, nothing to translate
       'seo.pages.contact.title', // 'Contact' is the same word in French
       'seo.pages.cvStudio.title', // 'CV Studio' — the surface's name, not prose
+      // Design panel: three option words that are genuinely the same in both languages.
+      // "un interligne compact" and "un interligne normal" are what a French speaker
+      // would write; translating them into something different would be worse French,
+      // not better. (The other nine values in this block ARE translated.)
+      'cvStudio.designPanel.lineHeightOpt.compact',
+      'cvStudio.designPanel.lineHeightOpt.normal',
+      'cvStudio.designPanel.sectionGapOpt.normal',
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

@@ -4033,7 +4033,34 @@
       "showSingleColumn": "Voir les modèles à une colonne"
     },
     "designPanel": {
-      "label": "Design et modèles"
+      "label": "Design et modèles",
+      "typeface": "Police",
+      "textSize": "Taille du texte",
+      "textSizeOpt": {
+        "small": "Petite",
+        "normal": "Normale",
+        "large": "Grande"
+      },
+      "lineHeight": "Interligne",
+      "lineHeightOpt": {
+        "compact": "Compact",
+        "normal": "Normal",
+        "relaxed": "Aéré"
+      },
+      "sectionGap": "Espacement des sections",
+      "sectionGapOpt": {
+        "tight": "Serré",
+        "normal": "Normal",
+        "airy": "Ample"
+      },
+      "margins": "Marges",
+      "marginsOpt": {
+        "narrow": "Étroites",
+        "normal": "Normales",
+        "wide": "Larges"
+      },
+      "paperSize": "Format du papier",
+      "pageColour": "Couleur de la page"
     },
     "renameCv": "Nom du CV",
     "templateFilter": {

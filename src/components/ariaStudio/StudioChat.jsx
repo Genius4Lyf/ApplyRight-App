@@ -2923,6 +2923,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
         _id: cvData._id,
         optimizedCV: generateMarkdownFromDraft(cvData).optimizedCV,
         templateId: cvData.templateId || DEFAULT_TEMPLATE_ID,
+        // The document's own presentation. Without this the Studio's PDF came out in
+        // default type and spacing while the editor's honoured the user's choices — the
+        // same CV, two different files, depending only on where you pressed download.
+        design: cvData.design,
         personalInfo: cvData.personalInfo,
         isDraft: true,
         // Drives the section labels in the rendered CV (and therefore the PDF).

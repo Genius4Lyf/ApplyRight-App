@@ -9,6 +9,7 @@ import {
 } from '../../data/templates';
 import TemplatePreviewThumb from '../TemplatePreviewThumb';
 import { designAtsVerdict } from '../../lib/cvDesignAts';
+import { supportsTypeScale } from '../../lib/cvDesignVars';
 
 // THE CV STUDIO'S TEMPLATES + DESIGN PANEL.
 //
@@ -34,6 +35,38 @@ const bandText = (s) =>
       ? 'text-amber-600 dark:text-amber-400'
       : 'text-rose-600 dark:text-rose-400';
 const bandDot = (s) => (s >= 75 ? 'bg-emerald-500' : s >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+
+// The panel's one repeated shape: a labelled row of mutually exclusive choices. It was
+// copied out three times with the classes retyped each time; adding text size and section
+// spacing would have made five. Extracted rather than duplicated, so the controls cannot
+// drift apart visually one edit at a time.
+const Segmented = ({ label, hint, value, options, onChange }) => (
+  <div>
+    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
+      {label}
+    </p>
+    <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.value}
+          type="button"
+          onClick={() => onChange(o.value)}
+          aria-pressed={value === o.value}
+          className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
+            value === o.value
+              ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
+              : 'text-slate-500 dark:text-slate-400'
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+    {hint && (
+      <p className="mt-1.5 text-[11px] leading-snug text-slate-400 dark:text-slate-500">{hint}</p>
+    )}
+  </div>
+);
 
 const StudioDesignRail = ({
   // What is being designed
@@ -302,7 +335,7 @@ const StudioDesignRail = ({
                 template keeps its own font as the fallback when Default. */}
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                Typeface
+                {t('cvStudio.designPanel.typeface')}
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -349,7 +382,7 @@ const StudioDesignRail = ({
             {supportsGround(templateId) && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                  Page colour
+                  {t('cvStudio.designPanel.pageColour')}
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   {/* Default = clear it → the template's own paper. */}
@@ -382,77 +415,74 @@ const StudioDesignRail = ({
                 </div>
               </div>
             )}
-            {/* Margins — fully functional: preview padding + PDF margin. */}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                Margins
-              </p>
-              <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                {['narrow', 'normal', 'wide'].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setDesign((d) => ({ ...d, margins: m }))}
-                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
-                      design.margins === m
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    {m}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* TEXT SIZE — scales the whole document via `zoom`, so it moves the page
+                count with it. Hidden on sidebar templates, which cannot take it: their
+                sidebar is pinned with `position: fixed` in the print clone so Chrome
+                repeats it per page, and a zoomed ancestor of a fixed element is an unknown
+                that would only misbehave inside the PDF. Showing a dead control would be
+                worse than showing none. */}
+            {supportsTypeScale(templateId) && (
+              <Segmented
+                label={t('cvStudio.designPanel.textSize')}
+                value={design.textSize || 'normal'}
+                onChange={(v) => setDesign((d) => ({ ...d, textSize: v }))}
+                options={[
+                  { value: 'small', label: t('cvStudio.designPanel.textSizeOpt.small') },
+                  { value: 'normal', label: t('cvStudio.designPanel.textSizeOpt.normal') },
+                  { value: 'large', label: t('cvStudio.designPanel.textSizeOpt.large') },
+                ]}
+              />
+            )}
 
-            {/* Paper size — sets the preview dimensions + the PDF @page size. */}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                Paper size
-              </p>
-              <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                {[
-                  { value: 'a4', label: 'A4' },
-                  { value: 'letter', label: 'Letter' },
-                ].map((p) => (
-                  <button
-                    key={p.value}
-                    type="button"
-                    onClick={() => setDesign((d) => ({ ...d, paper: p.value }))}
-                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-all ${
-                      design.paper === p.value
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* SECTION SPACING — the air between one section and the next. */}
+            <Segmented
+              label={t('cvStudio.designPanel.sectionGap')}
+              value={design.sectionGap || 'normal'}
+              onChange={(v) => setDesign((d) => ({ ...d, sectionGap: v }))}
+              options={[
+                { value: 'tight', label: t('cvStudio.designPanel.sectionGapOpt.tight') },
+                { value: 'normal', label: t('cvStudio.designPanel.sectionGapOpt.normal') },
+                { value: 'airy', label: t('cvStudio.designPanel.sectionGapOpt.airy') },
+              ]}
+            />
 
-            {/* Density — sets --cv-leading; templates read it in 2b. */}
-            <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500 mb-2.5">
-                Density
-              </p>
-              <div className="flex border border-slate-200 dark:border-slate-700 rounded-lg p-0.5">
-                {['compact', 'normal', 'relaxed'].map((den) => (
-                  <button
-                    key={den}
-                    type="button"
-                    onClick={() => setDesign((d) => ({ ...d, density: den }))}
-                    className={`flex-1 px-3 py-1.5 text-xs font-semibold rounded-md capitalize transition-all ${
-                      design.density === den
-                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100'
-                        : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                  >
-                    {den}
-                  </button>
-                ))}
-              </div>
-            </div>
+            {/* Margins — preview padding + the PDF's, from the same variable. */}
+            <Segmented
+              label={t('cvStudio.designPanel.margins')}
+              value={design.margins}
+              onChange={(v) => setDesign((d) => ({ ...d, margins: v }))}
+              options={[
+                { value: 'narrow', label: t('cvStudio.designPanel.marginsOpt.narrow') },
+                { value: 'normal', label: t('cvStudio.designPanel.marginsOpt.normal') },
+                { value: 'wide', label: t('cvStudio.designPanel.marginsOpt.wide') },
+              ]}
+            />
+
+            {/* Paper size — sets the preview dimensions + the PDF @page size. Not
+                translated: A4 and Letter are the names of the paper everywhere. */}
+            <Segmented
+              label={t('cvStudio.designPanel.paperSize')}
+              value={design.paper}
+              onChange={(v) => setDesign((d) => ({ ...d, paper: v }))}
+              options={[
+                { value: 'a4', label: 'A4' },
+                { value: 'letter', label: 'Letter' },
+              ]}
+            />
+
+            {/* LINE HEIGHT. Labelled "Density" until now, which described neither what
+                it set (--cv-leading) nor what it did — and sat next to a margins control
+                that also changes how dense the page looks. */}
+            <Segmented
+              label={t('cvStudio.designPanel.lineHeight')}
+              value={design.density}
+              onChange={(v) => setDesign((d) => ({ ...d, density: v }))}
+              options={[
+                { value: 'compact', label: t('cvStudio.designPanel.lineHeightOpt.compact') },
+                { value: 'normal', label: t('cvStudio.designPanel.lineHeightOpt.normal') },
+                { value: 'relaxed', label: t('cvStudio.designPanel.lineHeightOpt.relaxed') },
+              ]}
+            />
           </div>
         ) : (
           <div className="space-y-6 scrollbar-none">

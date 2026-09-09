@@ -76,11 +76,13 @@ import {
   templateGroupOf,
   sidebarFill,
   groundColor,
-  supportsGround,
   GROUND_CHOICES,
 } from '../data/templates';
 import { paperGeometry, pageCountFor, RAW_PAGE_HEIGHT_PX } from '../lib/cvPageGeometry';
-import { resolveDesign } from '../lib/cvDesign';
+import { designVars, designClassName, typeScaleStyle, flowElementFor } from '../lib/cvDesignVars';
+import { fitToOnePage } from '../lib/cvFit';
+import { CV_DESIGN_CSS } from '../lib/cvDesignCss';
+import { resolveDesign, DEFAULT_DESIGN } from '../lib/cvDesign';
 import StudioDesignRail from '../components/cv/StudioDesignRail';
 import StudioOverlay from '../components/ariaStudio/StudioOverlay';
 import useCvRailInline from '../hooks/useCvRailLayout';
@@ -201,20 +203,14 @@ const ResumeReview = () => {
     groupFollowedRef.current = true;
     setTemplateGroup(templateGroupOf(templateId));
   }, [templateId]);
-  // Design tab controls — drive CSS vars on #resume-content. accent '' = each
-  // template's own default. Margins are fully live (preview + PDF) this chunk;
-  // accent + density set their vars now and go live when templates read them (2b).
-  const [design, setDesign] = useState({
-    margins: 'normal',
-    density: 'normal',
-    font: '',
-    paper: 'a4', // 'a4' | 'letter'
-    // The colour of the page itself. NOT `paper` — that one is the SHEET SIZE, and
-    // the two are a standing invitation to confuse each other. Empty means "whatever
-    // this template ships with", and it is ignored outright on the templates that
-    // do not allow a choice (see supportsGround).
-    ground: '',
-  });
+  // Design tab controls — every one of them a CSS variable or a class on
+  // #resume-content, mapped in lib/cvDesignVars and therefore inherited by the PDF, which
+  // is a clone of that node.
+  //
+  // Seeded from DEFAULT_DESIGN rather than an object literal: this was a hand-copied twin
+  // of it, and a twin is a thing that falls behind. Note `paper` is the SHEET SIZE and
+  // `ground` is the colour OF the page — two fields a standing invitation to confuse.
+  const [design, setDesign] = useState(DEFAULT_DESIGN);
 
   // Where the design comes from when a CV opens: defaults, then this device's copy,
   // then the server's — which wins, because it is the one that crosses devices.
@@ -412,7 +408,13 @@ const ResumeReview = () => {
     if (!el || typeof ResizeObserver === 'undefined') return;
     let cancelled = false;
     const update = () => {
-      if (!cancelled) setContentHeight(el.offsetHeight);
+      if (cancelled) return;
+      // Not `el` itself on a sidebar template: on screen the sidebar is in normal flow so
+      // the node measures max(sidebar, main column), but the print clone pins the sidebar
+      // with `position: fixed` and Chrome repeats it on every page — the only thing that
+      // pushes content onto page 2 is the main column. A long skills sidebar over a short
+      // history was reporting pages that never printed.
+      setContentHeight((flowElementFor(el, templateId) || el).offsetHeight);
     };
     update();
     const observer = new ResizeObserver(update);
@@ -427,7 +429,7 @@ const ResumeReview = () => {
     // Deps re-attach the observer once the preview mounts (after the loading screen
     // clears) and when the document switches (resume/cover) — an empty [] would run
     // only on the first commit, while previewContentRef is still null.
-  }, [showLoader, application, activeTab]);
+  }, [showLoader, application, activeTab, templateId]);
 
   // Paper geometry (A4 vs US Letter) + a live one-page-fit indicator derived from
   // the ResizeObserver-measured content height. Approximate — an indicator, not an
@@ -443,6 +445,24 @@ const ResumeReview = () => {
   // shorter than a physical page, even for a half-empty CV.
   const rawPageHeightPx = RAW_PAGE_HEIGHT_PX[design.paper] || RAW_PAGE_HEIGHT_PX.a4;
   const pageCount = pageCountFor(contentHeight, design.paper);
+
+  // FIT TO ONE PAGE. Measures the live DOM rather than going through React: the ladder
+  // tries up to eight designs, and a render-plus-ResizeObserver round trip per rung is
+  // both slow and a race with itself. Only the winner is committed to state.
+  const handleFitOnePage = () => {
+    const node = previewContentRef.current;
+    const root = templateContentRef.current;
+    const result = fitToOnePage({
+      node,
+      flowEl: flowElementFor(root, templateId) || root,
+      design,
+      templateId,
+      paperWidth,
+      paper: design.paper,
+    });
+    if (result.changed) setDesign(result.design);
+    return result;
+  };
 
   const [error, setError] = useState(null);
   // The design panel's presentation, derived rather than synced: widening past the
@@ -1559,6 +1579,7 @@ const ResumeReview = () => {
             {/* Live page-length coach — tappable badge with layout trims (resume
                 only); a plain PDF·paper chip on the cover-letter tab. */}
             <LengthCoach
+              onFitOnePage={handleFitOnePage}
               pageCount={pageCount}
               paperLabel={paperLabel}
               design={design}
@@ -1838,6 +1859,11 @@ const ResumeReview = () => {
                 : `calc(${paperHeight} * ${scale})`,
             }}
           >
+            {/* Section spacing. Deliberately a <style> here and not a block in
+                index.css: the PDF's head loads the Tailwind v3 CDN and NOTHING else, so a
+                rule that lives only in the app stylesheet looks right on screen and does
+                nothing in the downloaded file. lib/cvDownload injects this exact string. */}
+            <style>{CV_DESIGN_CSS}</style>
             <div
               ref={previewContentRef}
               id="resume-content"
@@ -1846,6 +1872,12 @@ const ResumeReview = () => {
               // page were always white, which is the belief this whole fix removed.
               className={`cv-template-container shadow-2xl mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500 relative transition-transform select-none ${
                 activeTab === 'resume' && sidebarFill(templateId) ? 'cv-continuous-sidebar' : ''
+              } ${
+                // Section spacing is the one control that cannot be a variable — it lives
+                // as Tailwind classes inside all nineteen templates, so an id-scoped rule
+                // is what reaches it (lib/cvDesignCss). Resume only: the cover letter is
+                // not what the Design tab is describing.
+                activeTab === 'resume' ? designClassName(design) : ''
               }`}
               style={{
                 width: paperWidth,
@@ -1862,25 +1894,11 @@ const ResumeReview = () => {
                 transformOrigin: 'top left',
                 // Copy-protection: block long-press callout / drag-to-save on mobile.
                 WebkitTouchCallout: 'none',
-                // Design tab: accent + line-height vars (templates consume them in
-                // 2b) and fully-functional page margins.
-
-                // Read by the five ground-editable templates, each with its own colour as
-                // the fallback. Set here on #resume-content, which is the node the PDF
-                // clones — so the download inherits it without a second code path.
-                '--cv-ground': supportsGround(templateId) ? design.ground || undefined : undefined,
-                '--cv-font': design.font || undefined,
-                '--cv-leading':
-                  design.density === 'compact' ? 1.35 : design.density === 'relaxed' ? 1.7 : 1.5,
-                // The template renders its own padded white page — drive that
-                // padding via --cv-margin so there's no second frame around it.
-                // undefined at Normal → each template keeps its own designed padding.
-                '--cv-margin':
-                  design.margins === 'narrow'
-                    ? '1.5rem'
-                    : design.margins === 'wide'
-                      ? '3.5rem'
-                      : undefined,
+                // EVERY design-tab control, from the one mapping in lib/cvDesignVars.
+                // Set here on #resume-content — the node the PDF clones — so the download
+                // inherits all of it without a second code path, and shared with the
+                // Studio's print surface and the fit engine so those cannot drift from it.
+                ...designVars(design, { templateId, paperWidth }),
               }}
               onContextMenu={(e) => e.preventDefault()}
               onCopy={(e) => e.preventDefault()}
@@ -1910,274 +1928,289 @@ const ResumeReview = () => {
               {/* Tab Switcher inside the paper (optional) or floating above? Let's put it floating above in the layout or switch the content */}
 
               <div ref={templateContentRef} style={{ position: 'relative', zIndex: 1 }}>
-                {activeTab === 'resume' ? (
-                  /* RESUME TEMPLATE RENDER */
-                  templateId === 'modern' ? (
-                    <ModernCleanTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'modern-professional' ? (
-                    <ModernProfessionalTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'ats-clean' ? (
-                    <ATSCleanTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'student-ats' ? (
-                    <StudentATSTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'minimal' ? (
-                    <MinimalistTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'minimal-serif' ? (
-                    <MinimalistSerifTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'minimal-grid' ? (
-                    <MinimalistGridTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'minimal-mono' ? (
-                    <MinimalistMonoTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'creative' ? (
-                    <CreativePortfolioTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'executive' ? (
-                    <ExecutiveLeadTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'tech' ? (
-                    <TechStackTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'swiss' ? (
-                    <SwissModernTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'luxury' ? (
-                    <ElegantLuxuryTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'luxury-royal' ? (
-                    <LuxuryRoyalTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'luxury-chic' ? (
-                    <LuxuryChicTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'luxury-classic' ? (
-                    <LuxuryClassicTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'luxury-gold' ? (
-                    <LuxuryGoldTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'executive-board' ? (
-                    <ExecutiveBoardTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'executive-strategy' ? (
-                    <ExecutiveStrategyTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'executive-corporate' ? (
-                    <ExecutiveCorporateTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'tech-devops' ? (
-                    <TechDevOpsTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'tech-silicon' ? (
-                    <TechSiliconTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'tech-google' ? (
-                    <TechGoogleTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'executive-energy' ? (
-                    <ExecutiveEnergyTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'operations-blueprint' ? (
-                    <OperationsBlueprintTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'applyright-navy' ? (
-                    <ApplyRightNavyTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'applyright-mono' ? (
-                    <ApplyRightMonoTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'applyright-band' ? (
-                    <ApplyRightBandTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'applyright-band-twin' ? (
-                    <ApplyRightBandTwinTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'energy-slb' ? (
-                    <EnergySLBTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'energy-total' ? (
-                    <EnergyTotalTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'energy-seplat' ? (
-                    <EnergySeplatTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'energy-halliburton' ? (
-                    <EnergyHalliburtonTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'energy-nlng' ? (
-                    <EnergyNLNGTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'the-profile' ? (
-                    <TheProfileTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'the-ascent' ? (
-                    <TheAscentTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'slate-timeline' ? (
-                    <SlateTimelineTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'navy-portrait' ? (
-                    <NavyPortraitTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'angular-corporate' ? (
-                    <AngularCorporateTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  ) : templateId === 'sales-sidebar' ? (
-                    <SalesSidebarTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
+                {/* TEXT SIZE — `zoom`, never `transform: scale()`. Zoom changes the LAYOUT
+                    box, so the parent above (the node measured for the page count) sees the
+                    scaled height. A transform would look identical on screen and silently
+                    make every page count wrong, which is worse than having no control.
+              
+                    The wrapper is INSIDE the measured node on purpose: an element reports
+                    its own offsetHeight in its own zoomed coordinate space, and the two
+                    Chrome implementations of zoom disagree about that. A zoom:1 parent
+                    holding a zoomed child has no such ambiguity.
+              
+                    Undefined on sidebar templates — the print clone pins their sidebar with
+                    `position: fixed`, and a zoomed ancestor of a fixed element would fail
+                    only in the PDF. */}
+                <div style={typeScaleStyle(templateId)}>
+                  {activeTab === 'resume' ? (
+                    /* RESUME TEMPLATE RENDER */
+                    templateId === 'modern' ? (
+                      <ModernCleanTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'modern-professional' ? (
+                      <ModernProfessionalTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'ats-clean' ? (
+                      <ATSCleanTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'student-ats' ? (
+                      <StudentATSTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'minimal' ? (
+                      <MinimalistTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'minimal-serif' ? (
+                      <MinimalistSerifTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'minimal-grid' ? (
+                      <MinimalistGridTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'minimal-mono' ? (
+                      <MinimalistMonoTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'creative' ? (
+                      <CreativePortfolioTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'executive' ? (
+                      <ExecutiveLeadTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'tech' ? (
+                      <TechStackTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'swiss' ? (
+                      <SwissModernTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'luxury' ? (
+                      <ElegantLuxuryTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'luxury-royal' ? (
+                      <LuxuryRoyalTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'luxury-chic' ? (
+                      <LuxuryChicTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'luxury-classic' ? (
+                      <LuxuryClassicTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'luxury-gold' ? (
+                      <LuxuryGoldTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'executive-board' ? (
+                      <ExecutiveBoardTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'executive-strategy' ? (
+                      <ExecutiveStrategyTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'executive-corporate' ? (
+                      <ExecutiveCorporateTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'tech-devops' ? (
+                      <TechDevOpsTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'tech-silicon' ? (
+                      <TechSiliconTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'tech-google' ? (
+                      <TechGoogleTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'executive-energy' ? (
+                      <ExecutiveEnergyTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'operations-blueprint' ? (
+                      <OperationsBlueprintTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'applyright-navy' ? (
+                      <ApplyRightNavyTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'applyright-mono' ? (
+                      <ApplyRightMonoTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'applyright-band' ? (
+                      <ApplyRightBandTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'applyright-band-twin' ? (
+                      <ApplyRightBandTwinTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'energy-slb' ? (
+                      <EnergySLBTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'energy-total' ? (
+                      <EnergyTotalTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'energy-seplat' ? (
+                      <EnergySeplatTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'energy-halliburton' ? (
+                      <EnergyHalliburtonTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'energy-nlng' ? (
+                      <EnergyNLNGTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'the-profile' ? (
+                      <TheProfileTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'the-ascent' ? (
+                      <TheAscentTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'slate-timeline' ? (
+                      <SlateTimelineTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'navy-portrait' ? (
+                      <NavyPortraitTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'angular-corporate' ? (
+                      <AngularCorporateTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : templateId === 'sales-sidebar' ? (
+                      <SalesSidebarTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    ) : (
+                      /* Unknown/legacy templateId → safe ATS-clean default so saved
+                       CVs referencing a no-longer-offered template still render. */
+                      <ATSCleanTemplate
+                        markdown={localizedCV}
+                        userProfile={mergedUserProfile || userProfile}
+                      />
+                    )
                   ) : (
-                    /* Unknown/legacy templateId → safe ATS-clean default so saved
-                     CVs referencing a no-longer-offered template still render. */
-                    <ATSCleanTemplate
-                      markdown={localizedCV}
-                      userProfile={mergedUserProfile || userProfile}
-                    />
-                  )
-                ) : (
-                  /* COVER LETTER RENDER */
-                  <div id="cover-letter-content" className="bg-white min-h-screen">
-                    <div className="p-12">
-                      <div className="mb-8 border-b border-slate-200 pb-6">
-                        {/* Simple Header for Cover Letter */}
-                        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-                          {mergedUserProfile?.firstName
-                            ? [
-                                mergedUserProfile.firstName,
-                                mergedUserProfile.otherName,
-                                mergedUserProfile.lastName,
-                              ]
-                                .filter(Boolean)
-                                .join(' ')
-                            : 'Your Name'}
-                        </h1>
-                        <div className="text-sm text-slate-500 flex flex-wrap gap-4">
-                          {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
-                          {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
+                    /* COVER LETTER RENDER */
+                    <div id="cover-letter-content" className="bg-white min-h-screen">
+                      <div className="p-12">
+                        <div className="mb-8 border-b border-slate-200 pb-6">
+                          {/* Simple Header for Cover Letter */}
+                          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+                            {mergedUserProfile?.firstName
+                              ? [
+                                  mergedUserProfile.firstName,
+                                  mergedUserProfile.otherName,
+                                  mergedUserProfile.lastName,
+                                ]
+                                  .filter(Boolean)
+                                  .join(' ')
+                              : 'Your Name'}
+                          </h1>
+                          <div className="text-sm text-slate-500 flex flex-wrap gap-4">
+                            {mergedUserProfile?.email && <span>{mergedUserProfile.email}</span>}
+                            {mergedUserProfile?.phone && <span>{mergedUserProfile.phone}</span>}
+                          </div>
                         </div>
+                        {application.coverLetter ? (
+                          <ReactMarkdown
+                            components={{
+                              h1: ({ node, ...props }) => (
+                                <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
+                              ),
+                              h2: ({ node, ...props }) => (
+                                <h2
+                                  className="text-lg font-semibold mb-3 mt-4 text-slate-800"
+                                  {...props}
+                                />
+                              ),
+                              p: ({ node, ...props }) => (
+                                <p
+                                  className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif"
+                                  {...props}
+                                />
+                              ),
+                            }}
+                          >
+                            {application.coverLetter}
+                          </ReactMarkdown>
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+                            <Mail className="w-10 h-10 mb-3 text-slate-300" />
+                            <p className="font-medium text-slate-500">
+                              Cover letter not yet generated.
+                            </p>
+                            <p className="text-sm mt-1">
+                              Generate one from the Dashboard to see it here.
+                            </p>
+                          </div>
+                        )}
                       </div>
-                      {application.coverLetter ? (
-                        <ReactMarkdown
-                          components={{
-                            h1: ({ node, ...props }) => (
-                              <h1 className="text-xl font-bold mb-4 text-slate-900" {...props} />
-                            ),
-                            h2: ({ node, ...props }) => (
-                              <h2
-                                className="text-lg font-semibold mb-3 mt-4 text-slate-800"
-                                {...props}
-                              />
-                            ),
-                            p: ({ node, ...props }) => (
-                              <p
-                                className="mb-4 text-slate-700 leading-relaxed whitespace-pre-line text-base font-serif"
-                                {...props}
-                              />
-                            ),
-                          }}
-                        >
-                          {application.coverLetter}
-                        </ReactMarkdown>
-                      ) : (
-                        <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-                          <Mail className="w-10 h-10 mb-3 text-slate-300" />
-                          <p className="font-medium text-slate-500">
-                            Cover letter not yet generated.
-                          </p>
-                          <p className="text-sm mt-1">
-                            Generate one from the Dashboard to see it here.
-                          </p>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>

@@ -4037,7 +4037,34 @@
       "showSingleColumn": "Show single-column templates"
     },
     "designPanel": {
-      "label": "Design and templates"
+      "label": "Design and templates",
+      "typeface": "Typeface",
+      "textSize": "Text size",
+      "textSizeOpt": {
+        "small": "Small",
+        "normal": "Normal",
+        "large": "Large"
+      },
+      "lineHeight": "Line height",
+      "lineHeightOpt": {
+        "compact": "Compact",
+        "normal": "Normal",
+        "relaxed": "Relaxed"
+      },
+      "sectionGap": "Section spacing",
+      "sectionGapOpt": {
+        "tight": "Tight",
+        "normal": "Normal",
+        "airy": "Airy"
+      },
+      "margins": "Margins",
+      "marginsOpt": {
+        "narrow": "Narrow",
+        "normal": "Normal",
+        "wide": "Wide"
+      },
+      "paperSize": "Paper size",
+      "pageColour": "Page colour"
     },
     "renameCv": "CV name",
     "templateFilter": {

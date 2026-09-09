@@ -2,6 +2,7 @@ import CVService from '../services/cv.service';
 import { downloadBlob } from '../utils/download';
 import { TEMPLATES, groundColor } from '../data/templates';
 import { PDF_PAGE_MARGIN } from './cvPageGeometry';
+import { CV_DESIGN_CSS } from './cvDesignCss';
 
 // The template a download falls back to when nothing has been chosen. 'ats-clean' is the
 // free, single-column, ATS-parseable one — the safe default to hand someone who never
@@ -164,6 +165,14 @@ export function buildPrintHtml(
                         .margin-spacer { height: 5mm; background: transparent; }
 
                         #resume-content, #cover-letter-content { padding: 0 !important; margin: 0 !important; box-shadow: none !important; }
+
+                        /* SECTION SPACING — the same string the app renders into a <style>
+                           tag, injected here because this head loads the Tailwind v3 CDN
+                           and nothing else. The design VARIABLES need no help: they are
+                           inline on #resume-content and ride in on the clone. These are
+                           rules, so without this the control works on screen and does
+                           nothing in the file the user paid for. */
+                        ${CV_DESIGN_CSS}
                     </style>
                 </head>
                 <body>

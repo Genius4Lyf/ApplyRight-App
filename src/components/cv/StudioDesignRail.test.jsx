@@ -49,11 +49,35 @@ afterEach(() => {
 });
 
 describe('StudioDesignRail — the Design tab', () => {
+  // The labels are locale keys now, and `t` is mocked to return its key — so these read
+  // as key paths rather than English. That is the point: it asserts the control is wired
+  // to a translated string, which a hardcoded label would not be.
   it('offers the controls that actually change the document', () => {
     mount();
-    ['Typeface', 'Margins', 'Paper size', 'Density'].forEach((label) => {
+    [
+      'cvStudio.designPanel.typeface',
+      'cvStudio.designPanel.textSize',
+      'cvStudio.designPanel.sectionGap',
+      'cvStudio.designPanel.margins',
+      'cvStudio.designPanel.paperSize',
+      'cvStudio.designPanel.lineHeight',
+    ].forEach((label) => {
       expect(screen.getByText(label)).toBeTruthy();
     });
+  });
+
+  it('withholds text size on a sidebar template rather than showing a dead control', () => {
+    // The print clone pins a sidebar with `position: fixed` so Chrome repeats it per page,
+    // and the text scale is a `zoom` — an unknown combination that would misbehave in the
+    // PDF only. Absent, not disabled: a greyed control invites a question with no answer.
+    mount({ templateId: 'ats-clean' });
+    expect(screen.getByText('cvStudio.designPanel.textSize')).toBeTruthy();
+    cleanup();
+    const sidebarId = TEMPLATES.find((t) => t.sidebar).id;
+    mount({ templateId: sidebarId });
+    expect(screen.queryByText('cvStudio.designPanel.textSize')).toBeNull();
+    // Section spacing is not zoom-based, so it stays available on every template.
+    expect(screen.getByText('cvStudio.designPanel.sectionGap')).toBeTruthy();
   });
 
   it('has no accent control at all', () => {
@@ -78,10 +102,10 @@ describe('StudioDesignRail — the Design tab', () => {
     // supportsGround is an allowlist of five. The control is ABSENT rather than
     // disabled on the rest — a greyed-out swatch invites a question with no answer.
     mount({ templateId: 'ats-clean' });
-    expect(screen.getByText('Page colour')).toBeTruthy();
+    expect(screen.getByText('cvStudio.designPanel.pageColour')).toBeTruthy();
     cleanup();
     mount({ templateId: 'applyright-navy' });
-    expect(screen.queryByText('Page colour')).toBeNull();
+    expect(screen.queryByText('cvStudio.designPanel.pageColour')).toBeNull();
   });
 });
 

@@ -14,6 +14,8 @@ export const DESIGN_ENUMS = Object.freeze({
   margins: ['narrow', 'normal', 'wide'],
   density: ['compact', 'normal', 'relaxed'],
   paper: ['a4', 'letter'],
+  textSize: ['small', 'normal', 'large'],
+  sectionGap: ['tight', 'normal', 'airy'],
 });
 
 const DESIGN_STRINGS = Object.freeze({ font: 120, ground: 32 });
@@ -25,6 +27,8 @@ export const DEFAULT_DESIGN = Object.freeze({
   paper: 'a4',
   font: '',
   ground: '',
+  textSize: 'normal',
+  sectionGap: 'normal',
 });
 
 /**

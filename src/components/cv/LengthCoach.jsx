@@ -87,14 +87,27 @@ const LengthCoach = ({
   canTrimSummary = false,
   onTrimRoles,
   canTrimRoles = false,
+  onFitOnePage,
 }) => {
   const [open, setOpen] = useState(false);
+  // What the last fit attempt did, or null. Held here rather than derived from pageCount
+  // because the interesting outcome is the FAILURE — a success is self-evident (the badge
+  // turns green and says one page), whereas "it tried and could not" has to be said.
+  const [fitOutcome, setFitOutcome] = useState(null);
   const [pos, setPos] = useState({ top: 0, left: 0, width: POPOVER_WIDTH });
   const wrapRef = useRef(null);
   const btnRef = useRef(null);
   const popRef = useRef(null);
 
   const isResume = activeTab === 'resume';
+
+  // Opening or closing the popover clears the last fit result. Done here rather than in an
+  // effect on `open`: resetting state in an effect is a cascading render, and this is a
+  // plain consequence of the click, not a synchronisation with anything outside React.
+  const togglePopover = () => {
+    setOpen((v) => !v);
+    setFitOutcome(null);
+  };
 
   // Position + clamp the popover into the viewport so it never causes horizontal
   // page scroll. Portaled to <body> with fixed positioning, so coords are pure
@@ -166,6 +179,38 @@ const LengthCoach = ({
   const toggleMargins = () =>
     setDesign((d) => ({ ...d, margins: d.margins === 'narrow' ? 'normal' : 'narrow' }));
 
+  // ONE TAP FOR ALL OF IT. The two toggles below are the manual version of the same
+  // idea; this runs the whole ladder — section spacing, margins, line height, then text
+  // size — stopping at the first combination that actually fits, so the CV gives up the
+  // least it can rather than everything at once.
+  //
+  // It changes NOTHING when it cannot succeed. A CV compressed to its tightest setting
+  // that is still two pages is the worst outcome available: now it is cramped AND long.
+  const runFit = () => {
+    const result = onFitOnePage?.();
+    if (!result) return;
+    setFitOutcome(result.fits ? 'fitted' : 'impossible');
+    if (result.fits) setOpen(false);
+  };
+
+  const fitButton = onFitOnePage ? (
+    <div className="mt-3">
+      <button
+        type="button"
+        onClick={runFit}
+        className="w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+      >
+        Fit it onto one page
+      </button>
+      {fitOutcome === 'impossible' && (
+        <p className="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+          Layout alone cannot do it — even at the tightest readable settings this runs long. Nothing
+          was changed. The content is what needs to come down:
+        </p>
+      )}
+    </div>
+  ) : null;
+
   const fixes = (
     <div className="mt-3 flex flex-col gap-2">
       <FixButton active={densityCompact} onClick={toggleDensity} label="Compact density" />
@@ -212,7 +257,7 @@ const LengthCoach = ({
       <button
         ref={btnRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={togglePopover}
         aria-haspopup="dialog"
         aria-expanded={open}
         className={`inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] rounded-full border px-2.5 py-1 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 ${tone.text} ${tone.border}`}
@@ -260,8 +305,9 @@ const LengthCoach = ({
                   Two pages is fine.
                 </h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  Standard for roles with 5+ years&rsquo; experience. Want one page? Optional trims:
+                  Standard for roles with 5+ years&rsquo; experience. Want one page?
                 </p>
+                {fitButton}
                 {fixes}
                 {shortenLink}
                 {trimRolesLink}
@@ -281,6 +327,7 @@ const LengthCoach = ({
                 <div className="mt-3">
                   <Eyebrow>Trim a page</Eyebrow>
                 </div>
+                {fitButton}
                 {fixes}
                 {shortenLink}
                 {trimRolesLink}
