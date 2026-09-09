@@ -10,6 +10,17 @@ import {
   getModelConfigVersion,
 } from '../../lib/models';
 import { ACTION_KEY } from '../../lib/generationActions';
+import { useAccountWallet } from '../../hooks/useAccountWallet';
+
+// localStorage throws outright in some locked-down browsers, and a picker that fails to
+// render is far worse than one with no balance on it.
+const readToken = () => {
+  try {
+    return localStorage.getItem('token');
+  } catch {
+    return null;
+  }
+};
 
 // A per-MODEL picker for ONE generation action (bullets/summary/skills) — deliberately
 // separate from ModelPicker, which chooses the CHAT model. One tile per exposed model
@@ -18,11 +29,44 @@ import { ACTION_KEY } from '../../lib/generationActions';
 // Light rows are named by TIER ("Standard" — there's normally one, and the tier IS the
 // story); flagship rows are named by PROVIDER, with a separate "Pro" chip beside the
 // name — never fused into one label, since the engine can change under a slot.
+//
+// THE BALANCE SITS ON THE HEADING LINE. Every tile below carries a price, and until now
+// none of these cards said what the user actually had to spend. On a phone there is no
+// wallet anywhere else on screen at that moment either: in the Studio the sidebar that
+// holds it is a closed drawer below 820px, and in the CV Builder the Ask-Aria sheet
+// covers the header chip. So the one question a price makes you ask — can I afford
+// this? — could not be answered without leaving the card.
+//
+// Deliberately NOT an affordability verdict on the tiles. The price shown is PER ITEM
+// and this component is never told how many are being asked for — five bullets cost five
+// times the tag beside them — so greying out a tile would be a guess dressed as a fact.
+// It states the number it genuinely has and lets the arithmetic beside it do the rest.
+//
+// One number, app-wide: `displayCredits` is what the sidebar wallet renders, which on a
+// paid plan is allowance + wallet rather than the raw `user.credits` mirrored into
+// localStorage. Reading the same field is what stops two balances disagreeing on one
+// screen.
 const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }) => {
   const { t } = useTranslation();
   useSyncExternalStore(subscribeModelConfig, getModelConfigVersion, getModelConfigVersion);
+  const { displayCredits } = useAccountWallet(Boolean(readToken()));
   const actionKey = ACTION_KEY[action];
   const headingKey = action === 'project' ? 'experience' : action;
+
+  // Rendered only once it is a real number. A dash or a zero standing in for an unloaded
+  // balance is read as the balance, and the wallet resolves in well under a second.
+  const heading = (
+    <div className="flex items-baseline justify-between gap-2">
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
+        {t(`cvBuilder.genModel.heading.${headingKey}`)}
+      </p>
+      {typeof displayCredits === 'number' && (
+        <p className="shrink-0 font-mono text-[10px] tabular-nums text-slate-400 dark:text-slate-500">
+          {t('cvBuilder.genModel.balance', { n: displayCredits })}
+        </p>
+      )}
+    </div>
+  );
 
   const models = [...modelsByTier('light'), ...modelsByTier('flagship')];
 
@@ -34,9 +78,7 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
     };
     return (
       <div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-          {t(`cvBuilder.genModel.heading.${headingKey}`)}
-        </p>
+        {heading}
         <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
@@ -75,9 +117,7 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
 
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-        {t(`cvBuilder.genModel.heading.${headingKey}`)}
-      </p>
+      {heading}
       <div className="mt-2 flex flex-col gap-2">
         {models.map((model) => {
           const selected = value === model.id;

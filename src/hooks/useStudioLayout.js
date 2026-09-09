@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from '
 // disagree about what "mobile" means.
 //
 //   < 820px   phone/small tablet — ONE pane at a time. Rail is a left drawer, the
-//             artifact panel is a bottom sheet. Chat is full-bleed.
+//             working panel is a full-width right sheet. Chat is full-bleed.
 //   820–1100  the rail is inline (there's room for it), but the panel still uses the
 //             sheet — two side panes at 900px would squeeze the chat to nothing.
 //   ≥ 1100    the full three-pane desk.

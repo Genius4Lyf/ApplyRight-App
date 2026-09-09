@@ -1606,6 +1606,7 @@
       "eachCost": "{{n}} cr chacun",
       "flatCost": "{{n}} cr",
       "sameCost": "Même prix",
+      "balance": "Vous avez {{n}} cr",
       "chatNote": "Uniquement pour ce brouillon — vous discutez toujours avec {{tier}}.",
       "loadingOptions": "Chargement des options…",
       "blurb": {

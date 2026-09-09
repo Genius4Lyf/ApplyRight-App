@@ -19,7 +19,7 @@ import { useAriaStudio } from '../../context/AriaStudioContext';
 // user's own words we name the entry it happened in. Where it merely matched CV text we say
 // it is covered and nothing more — inventing a source would be the exact failure this
 // feature is supposed to prevent.
-const JobTargetPanel = ({ coverage, keywords = [], onClose }) => {
+const JobTargetPanel = ({ coverage, keywords = [], onClose, bare = false }) => {
   const { t } = useTranslation();
   const { cvData, requestStudioCommand } = useAriaStudio();
 
@@ -141,7 +141,12 @@ const JobTargetPanel = ({ coverage, keywords = [], onClose }) => {
   );
 
   return (
-    <div className="h-full flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <div
+      className={`h-full flex flex-col bg-white dark:bg-slate-900 ${
+        // See StudioArtifactPanel's `bare`: no card chrome when this IS the surface.
+        bare ? '' : 'rounded-xl border border-slate-200 dark:border-slate-800'
+      }`}
+    >
       <div className="shrink-0 flex items-start gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">

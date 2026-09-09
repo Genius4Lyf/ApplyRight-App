@@ -5066,7 +5066,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
       {/* Docked input — disabled while a card owns the stream, so the card is the focus,
           and hidden outright while the coach has its own (which docks below). */}
       {/* pb-[env(safe-area-inset-bottom)] keeps the input clear of the iOS home
-          indicator; the bottom sheet is capped at 80vh so it can never cover it. */}
+          indicator. */}
       {/* Not rendered at all in a prep session, rather than hidden like the two cases
         below it. Those keep the composer mounted because it is coming back — a coach
         hands it over and takes it away again, and a transition ends. A prep session is

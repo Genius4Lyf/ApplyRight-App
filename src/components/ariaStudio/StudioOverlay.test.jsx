@@ -22,7 +22,7 @@
 // guard sees the router's own state), and these tests pin the guard the fix relies on.
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 
 import StudioOverlay from './StudioOverlay';
 
@@ -48,6 +48,9 @@ const mount = (open) =>
       <p>rail</p>
     </StudioOverlay>
   );
+
+const panel = () => document.querySelector('[role="dialog"] > div:last-child');
+const classesOf = (el) => el.className.split(' ').filter(Boolean);
 
 describe('StudioOverlay — the pushed history entry', () => {
   it('consumes its own entry when it closes on its own terms', () => {
@@ -93,5 +96,58 @@ describe('StudioOverlay — the pushed history entry', () => {
     unmount();
 
     expect(back).not.toHaveBeenCalled();
+  });
+});
+
+describe('StudioOverlay — the working panel is a side sheet, not a bottom one', () => {
+  // It was a bottom sheet stopping 4.5rem short of the top. A bottom sheet reads as a
+  // peek — pull it up, glance, let it fall — and the live preview is not a peek: it is
+  // where a CV gets edited, for minutes at a time. These pin the two properties that
+  // change makes a promise of, so a later tidy of the className cannot quietly take them
+  // back.
+  it('reaches both edges of a phone, full height', () => {
+    historyStateIs(null);
+    render(
+      <StudioOverlay open onClose={() => {}} side="right" label="Preview">
+        <p>preview</p>
+      </StudioOverlay>
+    );
+
+    const cls = classesOf(panel());
+    // Full width up to a cap. The cap is not a phone concern — no phone is 720px wide —
+    // it stops a 900px tablet from having the chat wiped out entirely.
+    expect(cls).toContain('w-full');
+    expect(cls).toContain('max-w-[720px]');
+    expect(cls).toContain('inset-y-0');
+    expect(cls).toContain('right-0');
+    // The old geometry, gone: no 4.5rem dead band above it, and no rounded top, which on
+    // an edge-to-edge surface only shows the page through two small notches.
+    expect(panel().className).not.toContain('4.5rem');
+    expect(panel().className).not.toContain('rounded-t');
+  });
+
+  it('still leaves the rail a partial drawer', () => {
+    // Deliberately NOT full width. Picking a session is a glance at a list, and seeing
+    // the page you are leaving is part of knowing where you are.
+    historyStateIs(null);
+    mount(true);
+    expect(classesOf(panel())).toContain('max-w-[320px]');
+    expect(classesOf(panel())).not.toContain('w-full');
+  });
+
+  it('keeps the way out that full width removes', () => {
+    // Edge to edge means there is no scrim left to tap, so Escape and the pushed history
+    // entry stop being conveniences and become the exits. Escape is asserted here; the
+    // history entry has its own tests above.
+    historyStateIs(null);
+    const onClose = vi.fn();
+    render(
+      <StudioOverlay open onClose={onClose} side="right" label="Preview">
+        <p>preview</p>
+      </StudioOverlay>
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(onClose).toHaveBeenCalled();
   });
 });

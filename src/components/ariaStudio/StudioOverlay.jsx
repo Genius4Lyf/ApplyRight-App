@@ -6,12 +6,25 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 
-// The mobile presentation for the rail (left drawer) and the artifact panel (bottom
-// sheet). One component because the BEHAVIOUR is identical — scrim, focus trap, Escape,
-// Android back — and only the geometry differs. Two implementations would mean two
-// places to get the trap wrong.
+// The mobile presentation for the rail (left drawer) and for the working panels — the
+// live preview, the insights and the job target (right sheet). One component because the
+// BEHAVIOUR is identical — scrim, focus trap, Escape, Android back — and only the
+// geometry differs. Two implementations would mean two places to get the trap wrong.
 //
-// `side`: 'left' → drawer; 'bottom' → sheet with a grab handle.
+// `side`:
+//   'left'   — the sessions rail. A PARTIAL drawer, on purpose: the page behind stays
+//              visible because you are picking a destination, not working.
+//   'right'  — the working panels. FULL WIDTH on a phone. It used to be a bottom sheet
+//              stopping 4.5rem short of the top, and a bottom sheet reads as a peek —
+//              something you pull up, glance at, let fall — which was the wrong framing
+//              for a surface people spend minutes inside editing a CV. Capped at 720px
+//              so a wide tablet keeps a sliver of chat at the edge rather than having it
+//              wiped out; on anything narrower than the cap it is edge to edge.
+//
+// One consequence of full width has to be named: at that size there is no scrim left to
+// tap, so the panel's own close control (all three render one when handed `onClose`),
+// Escape, and the Android back button are the entire way out. That is why the history
+// entry below is not a nicety.
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -81,6 +94,20 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
 
   const isLeft = side === 'left';
 
+  // Geometry per side, kept as one lookup rather than nested ternaries in the className —
+  // adding a fourth side should mean adding a row, not unpicking an expression.
+  const geometry = {
+    left: 'absolute inset-y-0 left-0 w-[85%] max-w-[320px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col',
+    // No rounding and no max-height: this is a full-height working surface, and rounded
+    // corners on something edge-to-edge only reveal the page behind in two small notches.
+    right:
+      'absolute inset-y-0 right-0 w-full max-w-[720px] bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]',
+  }[side];
+
+  // Each side slides in from its own edge.
+  const hidden = { x: isLeft ? '-100%' : '100%' };
+  const shown = { x: 0 };
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -101,26 +128,14 @@ const StudioOverlay = ({ open, onClose, side = 'left', label, children }) => {
           <motion.div
             ref={panelRef}
             tabIndex={-1}
-            className={
-              isLeft
-                ? 'absolute inset-y-0 left-0 w-[85%] max-w-[320px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-xl outline-none flex flex-col'
-                : // Stops 4.5rem short of the top — clear of the Studio header (~3rem) with a
-                  // visible gap, rather than 80dvh's dead band. The sheet holds a whole CV
-                  // and the health breakdown, so the height IS the feature on a phone.
-                  'absolute inset-x-0 bottom-0 h-[calc(100dvh_-_4.5rem)] max-h-[calc(100dvh_-_4.5rem)] overflow-hidden rounded-t-2xl bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 shadow-xl outline-none flex flex-col pb-[env(safe-area-inset-bottom)]'
-            }
-            initial={reduce ? { opacity: 0 } : isLeft ? { x: '-100%' } : { y: '100%' }}
-            animate={reduce ? { opacity: 1 } : isLeft ? { x: 0 } : { y: 0 }}
-            exit={reduce ? { opacity: 0 } : isLeft ? { x: '-100%' } : { y: '100%' }}
+            className={geometry}
+            initial={reduce ? { opacity: 0 } : hidden}
+            animate={reduce ? { opacity: 1 } : shown}
+            exit={reduce ? { opacity: 0 } : hidden}
             transition={
               reduce ? { duration: 0.15 } : { type: 'spring', stiffness: 420, damping: 38 }
             }
           >
-            {!isLeft && (
-              <div className="shrink-0 pt-2 pb-1 flex justify-center">
-                <span className="w-9 h-1 rounded-full bg-slate-300 dark:bg-slate-600" />
-              </div>
-            )}
             {children}
           </motion.div>
         </div>

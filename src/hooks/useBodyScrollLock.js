@@ -2,7 +2,7 @@ import { useLayoutEffect } from 'react';
 
 // Track how many overlays currently want the page locked. Multiple drawers/sheets/
 // full-screen pages can want the lock at once (Aria Studio's own page-level lock PLUS
-// its mobile rail drawer / bottom sheet nested inside it), and they can close or unmount
+// its mobile rail drawer / side sheet nested inside it), and they can close or unmount
 // in any order — a route change can tear the whole tree down bottom-up in one commit,
 // or a sheet can close on its own while the page underneath is still locked. Each locker
 // independently snapshotting and restoring `style.overflow` is exactly how that leaves

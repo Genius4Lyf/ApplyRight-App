@@ -1610,6 +1610,7 @@
       "eachCost": "{{n}} cr each",
       "flatCost": "{{n}} cr",
       "sameCost": "Same price",
+      "balance": "You have {{n}} cr",
       "chatNote": "Just for this draft — you're still chatting with {{tier}}.",
       "loadingOptions": "Loading options…",
       "blurb": {

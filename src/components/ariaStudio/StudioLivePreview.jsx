@@ -273,8 +273,8 @@ const AddEntryFooter = ({ labelKey, onAddManually, onAddWithAria }) => {
   );
 };
 
-// `isSheet` says HOW this preview is mounted, not how wide the window is: on the bottom
-// sheet the chat is behind the preview, so handing an entry to Aria has to close it or
+// `isSheet` says HOW this preview is mounted, not how wide the window is: on the mobile
+// side sheet the chat is behind the preview, so handing an entry to Aria has to close it or
 // the user is staring at the document while she asks her first question. On the inline
 // desktop panel both stay open — that's the whole payoff.
 const StudioLivePreview = ({ onClose, isSheet = false }) => {
@@ -482,7 +482,13 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   const effectiveView = canEdit ? viewMode : 'edit';
 
   return (
-    <aside className="h-full min-h-0 flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 overflow-hidden">
+    <aside
+      className={`h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 ${
+        // Edge to edge in the sheet: card chrome at the screen edge reads as a rendering
+        // fault, and the rounded corners would show the scrim through four notches.
+        isSheet ? '' : 'rounded-xl border border-slate-200 dark:border-slate-800'
+      }`}
+    >
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">

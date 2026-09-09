@@ -38,7 +38,7 @@ const EDIT_UNLOCK_NUDGE_MS = 6000;
 
 // The Studio desk. Three panes at full width — sessions · conversation · artifact —
 // collapsing to ONE pane on a phone, where the rail becomes a drawer and the artifact
-// panel a bottom sheet. Mobile isn't a fallback here: the chat goes full-bleed and the
+// panel a right sheet. Mobile isn't a fallback here: the chat goes full-bleed and the
 // score stays in the top bar at every width, because on a phone the top bar is the only
 // thing always on screen.
 const StudioDesk = () => {
@@ -158,7 +158,7 @@ const StudioDesk = () => {
   // scroll chain drag the whole page along with it. Lock html+body while mounted.
   //
   // Goes through the SHARED counter-based lock (not an ad hoc save/restore of
-  // style.overflow) because this page's own mobile rail drawer and bottom sheet
+  // style.overflow) because this page's own mobile rail drawer and side sheet
   // (StudioOverlay) lock the same body independently — two uncoordinated lockers
   // racing on unmount is exactly what left the page frozen after "Home" while a
   // sheet was open: whichever one unwound LAST clobbered the other's restore.
@@ -417,7 +417,7 @@ const StudioDesk = () => {
     onBeforeCreditStore: flushChats,
   };
 
-  // Select a right-panel view. On a sheet width both open as the bottom sheet; inline,
+  // Select a right-panel view. On a sheet width both open as the side sheet; inline,
   // clicking the ACTIVE view toggles it closed (so the chat can own the room). Opening
   // the wide preview auto-collapses the rail — that rule lives in the hook's setPanelView.
   const selectView = (view) => {
@@ -778,7 +778,9 @@ const StudioDesk = () => {
       <StudioOverlay
         open={layout.panelOverlay}
         onClose={() => layout.setPanelOverlay(false)}
-        side="bottom"
+        // A side sheet, not a bottom sheet: the preview and the insights are worked IN, not
+        // glanced at, and a bottom sheet framed them as a peek. See StudioOverlay.
+        side="right"
         label={
           panelView === 'preview'
             ? t('ariaStudio.livePreview.heading')
@@ -794,6 +796,7 @@ const StudioDesk = () => {
           />
         ) : panelView === 'target' ? (
           <JobTargetPanel
+            bare
             coverage={jobCoverage}
             keywords={jobKeywords}
             onClose={() => layout.setPanelOverlay(false)}
