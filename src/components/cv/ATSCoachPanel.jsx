@@ -20,6 +20,7 @@ import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import AriaMessageText from './AriaMessageText';
 import CopyMessageButton from './CopyMessageButton';
+import AriaMessageActions from './AriaMessageActions';
 
 // ─── CV Health score ring (free, live) — also reused for the Job Match headline ───
 const ScoreRing = ({ score, size = 88 }) => {
@@ -210,10 +211,7 @@ const TargetChat = ({
                     onDone={() => revealedRef.current.add(i)}
                   />
                 </div>
-                <div className="flex items-center gap-1">
-                  <AriaOrbit size={16} className="aria-mark ml-1" />
-                  <CopyMessageButton text={m.text} />
-                </div>
+                <AriaMessageActions text={m.text} feedbackId={m.feedbackId} />
               </motion.div>
             );
           })}

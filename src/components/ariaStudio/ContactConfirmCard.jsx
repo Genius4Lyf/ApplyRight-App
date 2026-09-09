@@ -4,6 +4,7 @@ import AriaCard from './AriaCard';
 import { loadPhoto, PHOTO_ACCEPT_ATTR } from '../../utils/cvPhoto';
 import PhotoFramer from './PhotoFramer';
 import CardEyebrow from './CardEyebrow';
+import HintedLabel from '../HintedLabel';
 import { sectionIcon } from '../../lib/studioFlow';
 
 const FIELDS = [
@@ -148,15 +149,21 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
           </div>
 
           <div className="mt-3 min-w-0">
-            <label
+            {/* The one field on this card whose NAME was the problem. "Job title"
+                names three different things in this product — the job being applied
+                to, the title on each work-history entry, and this: the line under
+                your name. So it is named for what it is, and the hint says what it
+                is for, which no placeholder can. */}
+            <HintedLabel
               htmlFor={`studio-contact-${TITLE_FIELD}`}
-              className="mb-1 block text-[12px] font-semibold text-slate-600 dark:text-slate-300"
+              hint={t('ariaStudio.livePreview.jobTitleHint')}
+              className="block text-[12px] font-semibold text-slate-600 dark:text-slate-300"
             >
               {t('ariaStudio.livePreview.jobTitleLabel')}
               <span className="ml-1.5 font-mono text-[8px] uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500">
                 {t('ariaStudio.contactConfirm.importance.optional')}
               </span>
-            </label>
+            </HintedLabel>
             <input
               id={`studio-contact-${TITLE_FIELD}`}
               type="text"
@@ -277,12 +284,21 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
           {t('ariaStudio.contactConfirm.reviewDetails')}
         </CardEyebrow>
 
+        {/* Every control in this grid is font-mono, and that is structural. index.css
+            forces non-mono text inside an Aria card to 17px !important below 640px, and
+            these sit in the row's `auto` column beside an 8px mono OPTIONAL/REQUIRED
+            marker. At 17px the column blew out and squeezed the value beside it, so on a
+            phone the row read as broken rather than merely mismatched. */}
         <dl className="mt-3 divide-y divide-slate-100 dark:divide-slate-800">
           {/* First, because it is the first line on the finished document — the one
               printed directly under the name. */}
           <div className="grid min-w-0 grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-2 py-2">
+            {/* The SHORT name here. The full one ("Your professional title") is three
+                words wide and this column is 88px of 9px mono — it would wrap to three
+                lines beside a one-line value. The full name and the explanation both live
+                in the edit form, one tap away. */}
             <dt className="font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
-              {t('ariaStudio.livePreview.jobTitleLabel')}
+              {t('ariaStudio.livePreview.jobTitleShort')}
             </dt>
             <dd
               className={`min-w-0 truncate text-[13.5px] ${
@@ -301,7 +317,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                 <button
                   type="button"
                   onClick={() => editField(TITLE_FIELD)}
-                  className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+                  className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
                 >
                   {t('ariaStudio.contactConfirm.addField')}
                 </button>
@@ -332,7 +348,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
               <button
                 type="button"
                 onClick={() => editField('photoUrl')}
-                className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+                className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
               >
                 {personalInfo.photoUrl
                   ? t('ariaStudio.contactConfirm.replacePhoto')
@@ -377,7 +393,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                     <button
                       type="button"
                       onClick={() => editField(field.key)}
-                      className="text-[10px] font-bold text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
+                      className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.06em] text-slate-900 underline underline-offset-2 hover:text-slate-600 dark:text-white dark:hover:text-slate-300"
                     >
                       {t('ariaStudio.contactConfirm.addField')}
                     </button>

@@ -39,9 +39,13 @@ const BandRail = ({ score }) => {
         />
       </div>
       <div className="flex justify-between font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
-        <span>{t('ariaStudio.scoreCard.bandWeak')}</span>
-        <span>{t('ariaStudio.scoreCard.bandPossible')}</span>
-        <span>{t('ariaStudio.scoreCard.bandStrong')}</span>
+        {/* font-mono on EACH span, not just the row. The row is a <div>, which the
+            mobile rescale in index.css does not touch at all — but the spans inside it
+            are spans, and it does. These three 9px tick labels under the score rail were
+            rendering at 17px on a phone. */}
+        <span className="font-mono">{t('ariaStudio.scoreCard.bandWeak')}</span>
+        <span className="font-mono">{t('ariaStudio.scoreCard.bandPossible')}</span>
+        <span className="font-mono">{t('ariaStudio.scoreCard.bandStrong')}</span>
       </div>
     </div>
   );

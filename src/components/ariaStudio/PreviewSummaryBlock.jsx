@@ -3,6 +3,7 @@ import { PencilLine } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaOrbit from '../cv/AriaOrbit';
+import { PREVIEW_PILL, ROW_CONTROL } from '../../lib/previewControls';
 
 // The Live Preview's SUMMARY section, editable in place.
 //
@@ -28,13 +29,8 @@ import AriaOrbit from '../cv/AriaOrbit';
 // No recompute is fired from here. scoreSignature includes the summary text, so an edit
 // already moves the signature StudioChat's auto-rescore watches.
 
-// The same reveal PreviewEntryRow and the skills pills use: hidden until hover/focus on a
-// device that HAS hover, permanently visible on touch (where there is no hover to reveal
-// it with).
-const revealOnHover =
-  'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100';
-const quietButton =
-  'inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2 py-0.5 text-[11.5px] font-medium text-slate-500 transition-[opacity,color,border-color] hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100';
+const revealOnHover = ROW_CONTROL;
+const quietButton = PREVIEW_PILL;
 const field =
   'w-full rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-[12.5px] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
 

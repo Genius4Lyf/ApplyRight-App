@@ -18,6 +18,7 @@ import {
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaOrbit from '../cv/AriaOrbit';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
+import { PREVIEW_PILL, ROW_CONTROL } from '../../lib/previewControls';
 import {
   moveSkill,
   renameCategory,
@@ -68,10 +69,7 @@ const lower = (s) => (s || '').trim().toLowerCase();
 const pillShadow =
   'shadow-[0_1px_1px_rgba(15,23,42,0.10),0_2px_6px_-3px_rgba(15,23,42,0.16)] dark:shadow-[0_1px_2px_rgba(0,0,0,0.45)]';
 const pillBase = `group inline-flex items-center gap-1 bg-white dark:bg-slate-800 pl-2 pr-1 py-1 text-[11.5px] font-medium text-slate-700 dark:text-slate-200 ${pillShadow}`;
-// The same reveal PreviewEntryRow uses: hidden until hover/focus on a device that HAS
-// hover, permanently visible on touch (where there is no hover to reveal it with).
-const revealOnHover =
-  'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100';
+const revealOnHover = ROW_CONTROL;
 const field =
   'min-w-0 flex-1 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900/60 px-2 py-1 text-[12px] text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
 // The icon stays 10px; the TARGET grows to 24px on touch, where the grip's 14px was
@@ -629,11 +627,7 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            type="button"
-            onClick={openAdd}
-            className="inline-flex items-center gap-1 border border-dashed border-slate-300 px-2 py-1 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-400 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
-          >
+          <button type="button" onClick={openAdd} className={PREVIEW_PILL}>
             <Plus className="h-3 w-3" aria-hidden="true" />
             {t('ariaStudio.livePreview.addSkill')}
           </button>
@@ -643,11 +637,7 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
               and stories without the command channel, and an affordance that silently
               does nothing is worse than one that isn't there. */}
           {onSuggestWithAria && (
-            <button
-              type="button"
-              onClick={onSuggestWithAria}
-              className="inline-flex items-center gap-1.5 border border-slate-200 px-2 py-1 text-[11.5px] font-medium text-slate-500 transition-colors hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100"
-            >
+            <button type="button" onClick={onSuggestWithAria} className={PREVIEW_PILL}>
               <AriaOrbit size={11} tone="mono" className="shrink-0" />
               {t('ariaStudio.livePreview.suggestSkillsWithAria')}
             </button>

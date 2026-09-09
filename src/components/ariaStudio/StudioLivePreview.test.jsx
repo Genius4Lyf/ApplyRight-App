@@ -231,7 +231,7 @@ describe('StudioLivePreview — section bands from the scan', () => {
     expect(screen.getByText('Led the notes')).toBeTruthy();
     expect(screen.getByAltText('Profile photo preview')).toBeTruthy();
     expect(screen.getByText(/Cloud Fundamentals/)).toBeTruthy();
-    expect(screen.queryByText('Job title')).toBeNull();
+    expect(screen.queryByText(/your professional title/i)).toBeNull();
 
     // Verdict chips reflect each section's band.
     expect(screen.getByText('Strong')).toBeTruthy(); // summary ok
@@ -712,7 +712,20 @@ describe('StudioLivePreview — add-entry footer', () => {
     mockCvData = completeBuild;
     render(<StudioLivePreview />);
     expect(screen.getAllByText('Add manually')).toHaveLength(3); // experience, projects, education
-    expect(screen.getAllByText('Build with Aria')).toHaveLength(3);
+  });
+
+  it('offers Build with Aria on experience and projects, but NOT education', () => {
+    // There is nothing to interview about a degree. The school, the course and the year
+    // are facts you either know or you don't, and a conversation to collect three fields
+    // is slower than three fields. The button was there because the footer took two
+    // handlers, not because the flow behind it made sense for education.
+    mockCvData = completeBuild;
+    render(<StudioLivePreview />);
+    expect(screen.getAllByText('Build with Aria')).toHaveLength(2);
+
+    const educationFooter = screen.getByText('Add education').closest('div');
+    expect(within(educationFooter).getByText('Add manually')).toBeTruthy();
+    expect(within(educationFooter).queryByText('Build with Aria')).toBeNull();
   });
 
   it('renders the projects footer even with ZERO projects', () => {

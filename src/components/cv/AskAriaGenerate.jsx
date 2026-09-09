@@ -17,6 +17,7 @@ import AriaComposer from './AriaComposer';
 import AriaOrbit from './AriaOrbit';
 import AriaMessageText from './AriaMessageText';
 import CopyMessageButton from './CopyMessageButton';
+import AriaMessageActions from './AriaMessageActions';
 import AriaThinking from './AriaThinking';
 import ResearchCard from './ResearchCard';
 import GenerationModelRow from './GenerationModelRow';
@@ -788,10 +789,7 @@ const AskAriaGenerate = ({
                     onDone={() => revealedRef.current.add(i)}
                   />
                 </div>
-                <div className="flex items-center gap-1">
-                  <AriaOrbit size={16} className="aria-mark ml-1" />
-                  <CopyMessageButton text={m.text} />
-                </div>
+                <AriaMessageActions text={m.text} feedbackId={m.feedbackId} />
               </motion.div>
             );
           })}

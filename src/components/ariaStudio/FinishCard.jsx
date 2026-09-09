@@ -6,6 +6,7 @@ import { BAND_TEXT } from '../../lib/noteStyles';
 import { finishSummary } from '../../lib/studioFlow';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import AriaCard from './AriaCard';
+import CardEyebrow from './CardEyebrow';
 
 // The end of a tailoring: what changed, and how to get the file out.
 //
@@ -29,6 +30,9 @@ const FinishCard = ({
   onTailor, // start a NEW tailoring session from this CV
   onScan, // only when a job WAS supplied at build-start
   scanCost,
+  // Open the live preview panel IN PLACE. Distinct from onOpenEditor, which leaves for
+  // the CV Studio in a new tab — two different jobs that used to have only one door.
+  onOpenPanel,
 }) => {
   const { t } = useTranslation();
   const isBuild = mode === 'build';
@@ -41,9 +45,13 @@ const FinishCard = ({
   return (
     <AriaCard cardKey="finish">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 border-l-2 border-l-emerald-400 dark:border-l-emerald-500 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">
+        {/* Emerald rather than the usual slate — this is the one card in the run that
+            reports a finished thing, and the colour is carrying that, not decorating it.
+            Still CardEyebrow, so it shares the size and line-box of every other card
+            heading. */}
+        <CardEyebrow className="text-emerald-600 dark:text-emerald-400">
           {t('ariaStudio.finishCard.readyToSend')}
-        </p>
+        </CardEyebrow>
 
         {/* Build mode — CV HEALTH, not a match score. There is no job here, so there is
             nothing to match against, and a percentage that looked like a fit would be a
@@ -169,23 +177,42 @@ const FinishCard = ({
             The reason is named rather than implied, so this reads as advice, not an
             upsell. */}
         {draftId && (
-          <div className="mt-3.5">
-            <button
-              type="button"
-              onClick={onOpenEditor}
-              // Still the dominant action on the card — ink IS the system's dominant, so
-              // it loses no weight by dropping the accent fill.
-              className="btn-primary w-full gap-2 px-4 text-[16px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
-            >
-              {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
-            </button>
-            <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
+          <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
+            <p className="text-[13.5px] leading-relaxed text-slate-500 dark:text-slate-400">
               {isBuild
                 ? // They have literally never seen this document — it only ever existed as a
                   // conversation. Looking at it as pages matters more here than anywhere.
                   t('ariaStudio.finishCard.openInStudioBodyBuild')
                 : t('ariaStudio.finishCard.openInStudioBodyTailor')}
             </p>
+            <button
+              type="button"
+              onClick={onOpenEditor}
+              // Still the dominant action on the card — ink IS the system's dominant, so
+              // it loses no weight by dropping the accent fill.
+              className="btn-primary mt-3 w-full gap-2 px-4 text-[16px] focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900 dark:focus-visible:ring-white focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+            >
+              {t('ariaStudio.finishCard.openInStudio')} <ArrowRight className="w-4 h-4" />
+            </button>
+
+            {/* The quieter door, and the one most people actually want first: fix a word,
+                add a line, without leaving the conversation they are already in. It was
+                reachable only from the panel toggle in the top bar — which on a phone is
+                an icon with no label, on a card whose only visible exit was a new tab. */}
+            {onOpenPanel && (
+              <button
+                type="button"
+                onClick={onOpenPanel}
+                className="mt-2 flex w-full items-baseline justify-center gap-1.5 rounded-lg px-3 py-2 text-[14px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white"
+              >
+                {t('ariaStudio.finishCard.editHere')}
+                {/* Mono so the mobile rescale leaves it alone. Without it the note and the
+                    label it qualifies both land on 17px and it stops reading as an aside. */}
+                <span className="font-mono text-[10px] text-slate-400 dark:text-slate-500">
+                  {t('ariaStudio.finishCard.editHereNote')}
+                </span>
+              </button>
+            )}
           </div>
         )}
 

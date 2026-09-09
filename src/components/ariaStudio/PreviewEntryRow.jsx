@@ -4,6 +4,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronDown, ChevronUp, GripVertical, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaOrbit from '../cv/AriaOrbit';
+import { ROW_CONTROL } from '../../lib/previewControls';
 
 // A template-neutral entry wrapper. The CV body always occupies the full row width;
 // controls are anchored in the paper margin, so revealing them never indents a title
@@ -68,8 +69,7 @@ const PreviewEntryRow = ({
     'inline-flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 shadow-sm transition-colors hover:border-slate-300 hover:text-slate-800 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-600 dark:hover:text-slate-100';
   const menuItem =
     'flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] text-slate-600 transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-35 dark:text-slate-300 dark:hover:bg-slate-800';
-  const visibility =
-    'opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:group-focus-within:opacity-100';
+  const visibility = ROW_CONTROL;
 
   const choose = (action) => {
     setMenuOpen(false);

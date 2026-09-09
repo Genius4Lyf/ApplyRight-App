@@ -408,7 +408,7 @@ describe('StudioLivePreview — the job title', () => {
     render(<StudioLivePreview />);
     openEdit();
 
-    fireEvent.change(screen.getByLabelText('Job title'), { target: { value: 'Plumber' } });
+    fireEvent.change(screen.getByLabelText(/your professional title/i), { target: { value: 'Plumber' } });
     fireEvent.click(saveBtn());
 
     await waitFor(() => expect(mockUpdatePersonalInfo).toHaveBeenCalledTimes(1));
@@ -426,6 +426,6 @@ describe('StudioLivePreview — the job title', () => {
 
     // The title still READS — only the ✎ that opens the form goes.
     expect(screen.getByText('Plumber')).toBeTruthy();
-    expect(screen.queryByLabelText('Job title')).toBeNull();
+    expect(screen.queryByLabelText(/your professional title/i)).toBeNull();
   });
 });

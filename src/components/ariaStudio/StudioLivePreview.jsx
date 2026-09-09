@@ -39,6 +39,7 @@ import PreviewSummaryBlock from './PreviewSummaryBlock';
 import StudioTemplatePreview from './StudioTemplatePreview';
 import { cvLabel } from '../../lib/cvLabels';
 import { withoutBlankEntries, hasSubstance, editorUnlocked } from '../../lib/studioFlow';
+import { PREVIEW_PILL } from '../../lib/previewControls';
 
 // The Live Preview — a structured, legible render of the CV built straight from cvData
 // (NOT the template markdown), so it updates the instant an edit lands. Each section
@@ -243,31 +244,31 @@ const Bullets = ({ description }) => {
   );
 };
 
-// The quiet "add another" footer under an entry-section's list: a label plus two ghost
-// buttons, Add manually / Build with Aria. Same shape in all three entry sections, so it
-// lives once here rather than three times inline.
+// The "add another" footer under an entry-section's list: a label plus its actions.
+// Same shape in all three entry sections, so it lives once here rather than three times
+// inline.
+//
+// `onAddWithAria` is OPTIONAL, and Education passes none. There is nothing for Aria to
+// interview about a degree — the school, the course and the year are facts you either
+// know or do not, and a conversation to collect three fields is slower than three fields.
+// The button was there because this footer took two handlers, not because the flow behind
+// it made sense for education.
 const AddEntryFooter = ({ labelKey, onAddManually, onAddWithAria }) => {
   const { t } = useTranslation();
   return (
-    <div className="mt-3 flex items-center justify-between gap-2">
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
       <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
         {t(labelKey)}
       </span>
       <div className="flex items-center gap-1.5">
-        <button
-          type="button"
-          onClick={onAddManually}
-          className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
+        <button type="button" onClick={onAddManually} className={PREVIEW_PILL}>
           {t('ariaStudio.livePreview.addManually')}
         </button>
-        <button
-          type="button"
-          onClick={onAddWithAria}
-          className="rounded-md px-2 py-1 text-[11px] font-medium text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          {t('ariaStudio.livePreview.buildWithAria')}
-        </button>
+        {onAddWithAria && (
+          <button type="button" onClick={onAddWithAria} className={PREVIEW_PILL}>
+            {t('ariaStudio.livePreview.buildWithAria')}
+          </button>
+        )}
       </div>
     </div>
   );
@@ -799,7 +800,6 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                             <AddEntryFooter
                               labelKey="ariaStudio.livePreview.addEducation"
                               onAddManually={() => addManually('education')}
-                              onAddWithAria={() => addWithAria('education')}
                             />
                           )}
                           {/* Certifications are NOT reorderable — they carry no _sortId,

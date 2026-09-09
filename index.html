@@ -63,14 +63,16 @@
         0% { transform: translateX(-100%); }
         100% { transform: translateX(330%); }
       }
-      /* The theme class is set by JS, which has not run yet — so the only thing that can
-         match the user here is the system preference. Without this, someone on a dark
-         phone gets a full-screen white flash before the app paints. */
-      @media (prefers-color-scheme: dark) {
-        .boot { background: #070c16; color: #f1f5f9; }
-        .boot-bar { background: rgba(241, 245, 249, 0.16); }
-        .boot-bar span { background: #f1f5f9; }
-      }
+      /* Keyed on `html.dark`, which the guard below sets before the body is parsed —
+         NOT on prefers-color-scheme. The device's setting is not this app's setting: the
+         theme here is a stored choice that defaults to LIGHT and applies only on the
+         signed-in routes in that guard's list. Asking the OS meant a dark-phone user with
+         a light app got a dark boot screen and then a white page on every launch, and a
+         user who chose dark on a light phone got the white flash this was meant to
+         prevent. */
+      html.dark .boot { background: #070c16; color: #f1f5f9; }
+      html.dark .boot-bar { background: rgba(241, 245, 249, 0.16); }
+      html.dark .boot-bar span { background: #f1f5f9; }
       @media (prefers-reduced-motion: reduce) {
         .boot-bar span { animation: none; width: 100%; opacity: 0.5; }
       }
@@ -112,7 +114,13 @@
          authenticated page hard-refreshed in dark mode never flashes light.
          Mirrors src/utils/theme.js (allow-list) and ThemeContext resolution.
          App default is LIGHT — this only ever adds `.dark` for an explicit
-         stored 'dark' choice, never as a fallback. -->
+         stored 'dark' choice, never as a fallback.
+
+         The BOOT SCREEN above now keys off the class this sets, so this list decides the
+         colour of the first thing anyone sees. Keep it in step with
+         DARK_ELIGIBLE_PREFIXES in src/utils/theme.js — it had already drifted: '/my-cvs'
+         was still here after that page was deleted, and '/cv-studio' was missing, so the
+         studio's own list frame flashed white for dark-mode users. -->
     <script>
       (function () {
         try {
@@ -126,8 +134,8 @@
             '/credits',
             '/interview-prep',
             '/resume',
-            '/my-cvs',
             '/cv-builder',
+            '/cv-studio',
             '/aria-studio',
             '/feedback/dashboard',
             '/jobs',

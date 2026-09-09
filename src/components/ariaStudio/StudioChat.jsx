@@ -8,6 +8,7 @@ import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import AriaMessageText from '../cv/AriaMessageText';
 import CopyMessageButton from '../cv/CopyMessageButton';
+import AriaMessageActions from '../cv/AriaMessageActions';
 import AriaAnswerCard from '../cv/AriaAnswerCard';
 import { costForActionTier, tierOf } from '../../lib/models';
 import { isUnnamedCv, firstNameFrom } from '../../lib/cvTitle';
@@ -147,7 +148,7 @@ const loadSession = () => {
 // been generated, but it does not know how this app moves between pages — and reaching
 // for a router hook in here would put a Router requirement on a component that is
 // otherwise pure conversation.
-const StudioChat = ({ onPaywall, onNavigate }) => {
+const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const {
@@ -3134,7 +3135,16 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
         stage: careerStage,
         model: modelId,
       });
-      push({ who: 'aria', text: r.reply, suggestions: r.suggestions, huntTurn: true });
+      push({
+        who: 'aria',
+        text: r.reply,
+        suggestions: r.suggestions,
+        huntTurn: true,
+        // Rides on the MESSAGE so the thumbs still know what they rate after a refresh,
+        // exactly like layout/blocks below. It never goes back to the model: the payload
+        // builder maps each turn down to { who, text }.
+        feedbackId: r.feedbackId,
+      });
       if (r.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
       }
@@ -3295,7 +3305,13 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
         // layout/blocks ride along on the MESSAGE, so the card survives a refresh with
         // the rest of the transcript. They never reach the model: the payload builder maps
         // each turn down to { who, text }, so the window stays exactly as cheap as before.
-        push({ who: 'aria', text: r.reply, layout: r.layout, blocks: r.blocks });
+        push({
+          who: 'aria',
+          text: r.reply,
+          layout: r.layout,
+          blocks: r.blocks,
+          feedbackId: r.feedbackId,
+        });
         // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
         if (r.remainingCredits != null) {
           window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
@@ -4270,10 +4286,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                     row rather than a child of the text, so the orbit stays the last item
                     and the prose above still reads on its own if this renders nothing. */}
                 <AriaAnswerCard layout={m.layout} blocks={m.blocks} />
-                <div className="flex items-center gap-1">
-                  <AriaOrbit size={16} className="aria-mark ml-1" />
-                  <CopyMessageButton text={m.text} />
-                </div>
+                <AriaMessageActions text={m.text} feedbackId={m.feedbackId} />
               </motion.div>
             );
           })}
@@ -4572,6 +4585,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   }}
                   draftId={draftId}
                   onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+                  onOpenPanel={onOpenPanel}
                   onTailor={tailorThisCv}
                   // Only offered when a job was actually supplied at build-start —
                   // otherwise there is nothing to match against.
@@ -4780,6 +4794,7 @@ const StudioChat = ({ onPaywall, onNavigate }) => {
                   scan={{ ...scan, title: cvData?.title }}
                   draftId={draftId}
                   onOpenEditor={() => window.open(`/resume/${draftId}`, '_blank', 'noopener')}
+                  onOpenPanel={onOpenPanel}
                 />
               )}
 

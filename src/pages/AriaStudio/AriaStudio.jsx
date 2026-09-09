@@ -435,6 +435,14 @@ const StudioDesk = () => {
     }
     layout.setPanelView(view);
   };
+  // OPENS the preview, never toggles it. selectView is a toggle, which is right for a
+  // top-bar control and wrong for a card that says "Edit it here": pressing that while
+  // the panel happened to be open would close it, and the card would read as broken.
+  const openPreviewPanel = () => {
+    layout.setPanelView('preview');
+    if (layout.panelUsesSheet) layout.setPanelOverlay(true);
+  };
+
   // Tapping the score chip goes straight to the section verdicts (insights view).
   const openPanel = () => selectView('insights');
   // The job tracker opens its OWN view — what the job asks for, ticked off — rather than
@@ -720,7 +728,12 @@ const StudioDesk = () => {
 
           {/* Remounted per session — a stale phase or in-flight coach state from the
               previous session must never bleed into the next one. */}
-          <StudioChat key={sessionNonce} onPaywall={handlePaywall} onNavigate={navigate} />
+          <StudioChat
+            key={sessionNonce}
+            onPaywall={handlePaywall}
+            onNavigate={navigate}
+            onOpenPanel={openPreviewPanel}
+          />
         </div>
 
         {/* Right panel — inline only at the widest layout. The WIDE Live preview shares

@@ -5,6 +5,7 @@ import SkillsGenerationOptions from '../cv/SkillsGenerationOptions';
 import AriaCard from './AriaCard';
 import { UNCATEGORIZED, skillCategoryLabel } from '../../lib/skillCategories';
 import { sectionIcon } from '../../lib/studioFlow';
+import CardEyebrow from './CardEyebrow';
 
 // Skills for a build session — the SAME flow the CV builder's AriaChat runs: consent →
 // CVService.generateSkills → SkillsCard → applySkills. The picking UI IS SkillsCard,
@@ -103,10 +104,9 @@ const SkillsBuildCard = ({
     <AriaCard cardKey="skillsconsent">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-md dark:shadow-black/20 p-5">
         <div className="flex items-start justify-between gap-3">
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            <span aria-hidden="true">{sectionIcon('skills')}</span>{' '}
-            <span>{t('ariaStudio.studioFlow.sections.skills')}</span>
-          </p>
+          <CardEyebrow icon={sectionIcon('skills')}>
+            {t('ariaStudio.studioFlow.sections.skills')}
+          </CardEyebrow>
           <span className="shrink-0 rounded-md bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
             −{cost} cr
           </span>

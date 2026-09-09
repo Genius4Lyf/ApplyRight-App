@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAriaStudio } from '../../context/AriaStudioContext';
 import { loadPhoto, PHOTO_ACCEPT_ATTR } from '../../utils/cvPhoto';
 import PhotoFramer from './PhotoFramer';
+import HintedLabel from '../HintedLabel';
 
 // The Live Preview's CONTACT HEADER, editable in place.
 //
@@ -191,12 +192,13 @@ const PreviewContactBlock = ({ readOnly = false }) => {
         {/* First in the form because it is first on the page — the line under the name.
             Optional: cleared, it simply stops rendering, here and in every template. */}
         <div className="min-w-0">
-          <label
+          <HintedLabel
             htmlFor="studio-preview-contact-currentJobTitle"
+            hint={t('ariaStudio.livePreview.jobTitleHint')}
             className="block text-[10px] font-semibold text-slate-500 dark:text-slate-400"
           >
             {t('ariaStudio.livePreview.jobTitleLabel')}
-          </label>
+          </HintedLabel>
           <input
             id="studio-preview-contact-currentJobTitle"
             type="text"
