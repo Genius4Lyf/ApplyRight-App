@@ -160,6 +160,49 @@ describe('StudioDesignRail — it does not know which host it is in', () => {
     expect(sheet.innerHTML).toBe(withoutClose);
   });
 
+  it('dismisses the sheet after EVERY design change, not just a template pick', () => {
+    // On a phone the sheet covers the CV, so a change made behind it cannot be judged.
+    // Picking a template already closed it; the design controls used to leave the user
+    // tapping and then hunting for the close button.
+    const cases = [
+      ['cvStudio.designPanel.textSizeOpt.small', 'text size'],
+      ['cvStudio.designPanel.sectionGapOpt.tight', 'section spacing'],
+      ['cvStudio.designPanel.marginsOpt.narrow', 'margins'],
+      ['cvStudio.designPanel.lineHeightOpt.compact', 'line height'],
+      ['Letter', 'paper size'],
+    ];
+    cases.forEach(([label, what]) => {
+      const onClose = vi.fn();
+      const setDesign = vi.fn();
+      mount({ onClose, setDesign });
+      fireEvent.click(screen.getByText(label));
+      expect(setDesign, what).toHaveBeenCalled();
+      expect(onClose, what).toHaveBeenCalledTimes(1);
+      cleanup();
+    });
+  });
+
+  it('closes on a typeface pick too — the control the change is least visible on', () => {
+    const onClose = vi.fn();
+    const setDesign = vi.fn();
+    mount({ onClose, setDesign });
+    // The swatches render the face's name under a specimen "Aa".
+    fireEvent.click(screen.getByText('Georgia').closest('button'));
+    expect(setDesign).toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('still applies the design when there is no sheet to close', () => {
+    // The inline desktop column passes no onClose. The design must land anyway — an
+    // optional-call typo here would break every control on the widest screens only.
+    const setDesign = vi.fn();
+    mount({ setDesign });
+    expect(() =>
+      fireEvent.click(screen.getByText('cvStudio.designPanel.marginsOpt.narrow'))
+    ).not.toThrow();
+    expect(setDesign).toHaveBeenCalled();
+  });
+
   it('is a scroll container and nothing else — its host owns the frame', () => {
     // No width, no position, no background: those belong to the column and the sheet,
     // which are different in each. A width here would fight the full-bleed sheet.

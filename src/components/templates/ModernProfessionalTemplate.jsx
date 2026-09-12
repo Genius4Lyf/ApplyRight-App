@@ -58,7 +58,12 @@ const ModernProfessionalTemplate = ({ markdown, userProfile }) => {
     >
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');`}</style>
 
-      <header className="mb-7 border-b border-[#c9c6bd] pb-6">
+      {/* No rule under the header. Every section heading below already draws its own
+          hairline (the `after:` pseudo-element on h2), so a border here put a second
+          horizontal line directly above the first one — two rules a few millimetres apart,
+          reading as a mistake rather than as structure. The space is carried by the margin
+          instead, which separates the header just as clearly and only once. */}
+      <header className="mb-9">
         <div className="flex items-start justify-between gap-8">
           <div
             className="min-w-0 border-l-[5px] pl-5"

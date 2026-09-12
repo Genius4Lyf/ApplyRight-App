@@ -97,6 +97,20 @@ const StudioDesignRail = ({
   // outside it.
   const { t } = useTranslation();
 
+  // CHANGE A DESIGN, SEE THE DESIGN.
+  //
+  // On a phone this panel is a sheet that covers the whole screen, so the CV it is
+  // describing is not visible while it is open — a font you cannot see is a font you
+  // cannot judge, and the user was left tapping and then hunting for the close button.
+  // Picking a template already dismissed the sheet; every other control does now too.
+  //
+  // Desktop is untouched for free, with no breakpoint to keep in step: the inline column
+  // sits BESIDE the CV, so there is nothing to close and the host passes no `onClose`.
+  const applyDesign = (updater) => {
+    setDesign(updater);
+    onClose?.();
+  };
+
   // Deterministic, recomputed on every render — it is three comparisons over values that
   // are already here. Memoising it would cost more than it saves and would need a
   // dependency list to keep honest.
@@ -349,7 +363,7 @@ const StudioDesignRail = ({
                   <button
                     key={f.label}
                     type="button"
-                    onClick={() => setDesign((d) => ({ ...d, font: f.value }))}
+                    onClick={() => applyDesign((d) => ({ ...d, font: f.value }))}
                     className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2.5 transition-all ${
                       design.font === f.value
                         ? 'border-slate-900 ring-1 ring-slate-900 bg-slate-50 dark:bg-slate-800 dark:border-white dark:ring-white'
@@ -388,7 +402,7 @@ const StudioDesignRail = ({
                   {/* Default = clear it → the template's own paper. */}
                   <button
                     type="button"
-                    onClick={() => setDesign((d) => ({ ...d, ground: '' }))}
+                    onClick={() => applyDesign((d) => ({ ...d, ground: '' }))}
                     className={`h-8 px-3 rounded-full border text-[11px] font-semibold transition-all ${
                       design.ground === ''
                         ? 'border-slate-900 dark:border-white ring-2 ring-slate-900/30 dark:ring-white/30 text-slate-900 dark:text-slate-100'
@@ -401,7 +415,7 @@ const StudioDesignRail = ({
                     <button
                       key={sw.value}
                       type="button"
-                      onClick={() => setDesign((d) => ({ ...d, ground: sw.value }))}
+                      onClick={() => applyDesign((d) => ({ ...d, ground: sw.value }))}
                       title={sw.name}
                       aria-label={sw.name}
                       className={`w-8 h-8 rounded-full transition-all ${
@@ -425,7 +439,7 @@ const StudioDesignRail = ({
               <Segmented
                 label={t('cvStudio.designPanel.textSize')}
                 value={design.textSize || 'normal'}
-                onChange={(v) => setDesign((d) => ({ ...d, textSize: v }))}
+                onChange={(v) => applyDesign((d) => ({ ...d, textSize: v }))}
                 options={[
                   { value: 'small', label: t('cvStudio.designPanel.textSizeOpt.small') },
                   { value: 'normal', label: t('cvStudio.designPanel.textSizeOpt.normal') },
@@ -438,7 +452,7 @@ const StudioDesignRail = ({
             <Segmented
               label={t('cvStudio.designPanel.sectionGap')}
               value={design.sectionGap || 'normal'}
-              onChange={(v) => setDesign((d) => ({ ...d, sectionGap: v }))}
+              onChange={(v) => applyDesign((d) => ({ ...d, sectionGap: v }))}
               options={[
                 { value: 'tight', label: t('cvStudio.designPanel.sectionGapOpt.tight') },
                 { value: 'normal', label: t('cvStudio.designPanel.sectionGapOpt.normal') },
@@ -450,7 +464,7 @@ const StudioDesignRail = ({
             <Segmented
               label={t('cvStudio.designPanel.margins')}
               value={design.margins}
-              onChange={(v) => setDesign((d) => ({ ...d, margins: v }))}
+              onChange={(v) => applyDesign((d) => ({ ...d, margins: v }))}
               options={[
                 { value: 'narrow', label: t('cvStudio.designPanel.marginsOpt.narrow') },
                 { value: 'normal', label: t('cvStudio.designPanel.marginsOpt.normal') },
@@ -463,7 +477,7 @@ const StudioDesignRail = ({
             <Segmented
               label={t('cvStudio.designPanel.paperSize')}
               value={design.paper}
-              onChange={(v) => setDesign((d) => ({ ...d, paper: v }))}
+              onChange={(v) => applyDesign((d) => ({ ...d, paper: v }))}
               options={[
                 { value: 'a4', label: 'A4' },
                 { value: 'letter', label: 'Letter' },
@@ -476,7 +490,7 @@ const StudioDesignRail = ({
             <Segmented
               label={t('cvStudio.designPanel.lineHeight')}
               value={design.density}
-              onChange={(v) => setDesign((d) => ({ ...d, density: v }))}
+              onChange={(v) => applyDesign((d) => ({ ...d, density: v }))}
               options={[
                 { value: 'compact', label: t('cvStudio.designPanel.lineHeightOpt.compact') },
                 { value: 'normal', label: t('cvStudio.designPanel.lineHeightOpt.normal') },
