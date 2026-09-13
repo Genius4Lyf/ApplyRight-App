@@ -693,7 +693,14 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // entry has been deleted elsewhere — the effect below then clears the stale pin, so
   // the card can never sit there collecting input that lands nowhere.
   const pinnedEntry = resolvePinnedEntry(messages, cvData);
-  const pinnedSectionKey = pinnedSection(messages) || 'experience';
+  const pinnedSectionRaw = pinnedSection(messages);
+  const pinnedSectionKey = pinnedSectionRaw || 'experience';
+  // Aria's bullets become copyable ONE BY ONE while a role or a project is pinned —
+  // there, a list from her is a set of example answers the user is meant to reuse.
+  // Read from the un-defaulted value on purpose: `pinnedSectionKey` falls back to
+  // 'experience' when nothing is pinned at all, which would turn the control on across
+  // the whole app.
+  const bulletCopy = pinnedSectionRaw === 'experience' || pinnedSectionRaw === 'project';
   // The project type: the PERSISTED entry field first, then this thread's marker. The
   // entry is what a tailored project (cloned, so no marker) and an "Edit with Aria"
   // interview have, and it's what the backend now reads too — so resolving it this way
@@ -4284,6 +4291,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                     typed={revealedRef.current.has(i)}
                     reduce={reduce}
                     onDone={() => revealedRef.current.add(i)}
+                    bulletCopy={bulletCopy}
                   />
                 </div>
                 {/* The designed shape of the answer, when it earned one. A sibling in the

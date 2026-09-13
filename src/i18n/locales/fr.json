@@ -185,7 +185,8 @@
       "viewProfile": "Voir mon profil",
       "manageAccount": "Gérer mon compte",
       "creditsAndBilling": "Crédits et facturation",
-      "darkMode": "Mode sombre"
+      "darkMode": "Mode sombre",
+      "getMinutes": "Obtenir des minutes"
     },
     "agentPlanAria": "Formule rédacteur — appuyez pour voir les formules",
     "agentPlans": "Formules",
@@ -5268,6 +5269,15 @@
         "weighing": "Pesée de l’ensemble…",
         "note": "Cela prend quelques secondes. Restez sur cet écran."
       }
+    },
+    "resumeSession": {
+      "title": "Reprendre où vous en étiez ?",
+      "body": "Vous travailliez sur <b>{{name}}</b> avant le rechargement de la page.",
+      "safeEitherWay": "Rien n’est perdu dans les deux cas — il reste dans vos CV, avec toute la conversation.",
+      "continue": "Continuer ce CV",
+      "startFresh": "Commencer autre chose",
+      "opening": "Ouverture…",
+      "untitled": "un CV sans titre"
     }
   },
   "seo": {

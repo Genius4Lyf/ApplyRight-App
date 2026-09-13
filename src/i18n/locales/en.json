@@ -189,7 +189,8 @@
       "viewProfile": "View profile",
       "manageAccount": "Manage account",
       "creditsAndBilling": "Credits & billing",
-      "darkMode": "Dark mode"
+      "darkMode": "Dark mode",
+      "getMinutes": "Get minutes"
     },
     "agentPlanAria": "Agent plan — tap for plans",
     "agentPlans": "Plans",
@@ -5272,6 +5273,15 @@
         "weighing": "Weighing it all up…",
         "note": "This takes a few seconds. Stay on this screen."
       }
+    },
+    "resumeSession": {
+      "title": "Pick up where you left off?",
+      "body": "You were working on <b>{{name}}</b> before this page reloaded.",
+      "safeEitherWay": "Nothing is lost either way — it stays in your CVs, with the whole conversation on it.",
+      "continue": "Continue that CV",
+      "startFresh": "Start something new",
+      "opening": "Opening…",
+      "untitled": "an untitled CV"
     }
   },
   "seo": {

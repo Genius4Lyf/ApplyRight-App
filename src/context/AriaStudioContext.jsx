@@ -19,6 +19,50 @@ const AriaStudioContext = createContext(null);
 // lives on the draft as coachChats.studio.
 const ACTIVE_KEY = 'ariaStudio:draftId';
 const ACTIVE_OWNER_KEY = 'ariaStudio:draftOwnerId';
+// The bound draft's name, kept beside its id purely so the resume offer can say WHICH CV
+// it is without a network round-trip on every page load. Re-written on every bind, so a
+// rename cannot leave it stale for long.
+const ACTIVE_TITLE_KEY = 'ariaStudio:draftTitle';
+
+// HAS THIS PAGE LOAD ALREADY DECIDED WHAT TO DO WITH THE REMEMBERED SESSION?
+//
+// Module scope is the whole mechanism, and it does something neither localStorage nor
+// component state can: a page load re-evaluates the module and resets it, while navigating
+// away from /aria-studio and back does not. The provider is mounted BY THE ROUTE, so it
+// unmounts on the way out and remounts on the way in — and asking "do you want to
+// continue?" every time someone glanced at their profile would be far worse than the
+// silent resume this replaces.
+//
+// Set on the offering path too: the question is asked once per page load whether or not
+// the answer was yes.
+let sessionSettledThisPageLoad = false;
+
+/**
+ * Did this document arrive by the user RELOADING it?
+ *
+ * The distinction carries the whole feature. A reload is deliberate — it is what people do
+ * when they want out of something — so that is when it is right to stop and ask. Opening
+ * the app fresh, following a link or restoring a tab is the opposite: you came back to
+ * work, and being made to confirm your own CV before you can see it would be friction for
+ * nothing. Those keep the silent resume they have always had.
+ *
+ * Anything it cannot determine counts as NOT a reload, which is the old behaviour — the
+ * safe direction, since it never leaves someone unable to reach their work.
+ */
+const isPageReload = () => {
+  try {
+    const nav = performance?.getEntriesByType?.('navigation')?.[0];
+    if (nav?.type) return nav.type === 'reload';
+    // Deprecated, but this app also ships inside an Android WebView, where the Navigation
+    // Timing Level 2 entry is not always present. 1 is TYPE_RELOAD.
+    return performance?.navigation?.type === 1;
+  } catch {
+    return false;
+  }
+};
+
+/** Should THIS mount ask, rather than open? True at most once per page load. */
+const shouldOfferSession = () => !sessionSettledThisPageLoad && isPageReload();
 
 const currentUserId = () => {
   try {
@@ -28,6 +72,33 @@ const currentUserId = () => {
     return null;
   }
 };
+/**
+ * The session this browser last had open, if it still belongs to the person holding it.
+ *
+ * The owner check is not paranoia: these keys survive a sign-out, so without it the next
+ * account to use this browser would be offered — and on the old code, silently handed —
+ * someone else's CV.
+ *
+ * @returns {{ id: string, title: string }|null}
+ */
+const rememberedSession = () => {
+  try {
+    const id = localStorage.getItem(ACTIVE_KEY);
+    if (!id) return null;
+    const ownerId = localStorage.getItem(ACTIVE_OWNER_KEY);
+    const userId = currentUserId();
+    if (ownerId && userId && ownerId !== userId) {
+      localStorage.removeItem(ACTIVE_KEY);
+      localStorage.removeItem(ACTIVE_OWNER_KEY);
+      localStorage.removeItem(ACTIVE_TITLE_KEY);
+      return null;
+    }
+    return { id, title: localStorage.getItem(ACTIVE_TITLE_KEY) || '' };
+  } catch {
+    return null;
+  }
+};
+
 // The pre-clone transcript — the intake conversation that exists before a draft does.
 // Owned by StudioChat, but cleared here too: starting a new session must not inherit
 // the previous one's unsaved intake. Kept in sync with StudioChat's LS_KEY.
@@ -61,10 +132,20 @@ export const AriaStudioProvider = ({ children }) => {
   const cvDataRef = useRef(null);
   cvDataRef.current = cvData;
 
+  // The session a page load DECLINED to open on the user's behalf, waiting to be offered.
+  // Null at every other moment — including while one is open, so nothing can mistake it
+  // for "the current session".
+  const [resumable, setResumable] = useState(null);
   const [saving, setSaving] = useState(false);
-  // True while the remembered draft is being fetched on mount, so the chat waits for
-  // its saved thread instead of briefly rendering an empty conversation.
-  const [loading, setLoading] = useState(() => !!localStorage.getItem(ACTIVE_KEY));
+  // True while the remembered draft is being fetched on mount, so the chat waits for its
+  // saved thread instead of briefly rendering an empty conversation — and therefore true
+  // only when this mount is actually going to BIND something. On the first mount of a page
+  // load it is false even with a draft remembered, because that mount OFFERS the session
+  // rather than opening it, and starting at `true` there would flash a loading state in
+  // front of the Studio home for a fetch that is never made.
+  const [loading, setLoading] = useState(
+    () => !shouldOfferSession() && !!localStorage.getItem(ACTIVE_KEY)
+  );
 
   // Guards the coachChats autosave: the serialized value last known to be on the
   // server, so we skip redundant/echo writes and never loop.
@@ -185,11 +266,13 @@ export const AriaStudioProvider = ({ children }) => {
     try {
       if (draft?._id) {
         localStorage.setItem(ACTIVE_KEY, draft._id);
+        localStorage.setItem(ACTIVE_TITLE_KEY, draft.title || '');
         const ownerId = currentUserId();
         if (ownerId) localStorage.setItem(ACTIVE_OWNER_KEY, ownerId);
       } else {
         localStorage.removeItem(ACTIVE_KEY);
         localStorage.removeItem(ACTIVE_OWNER_KEY);
+        localStorage.removeItem(ACTIVE_TITLE_KEY);
       }
       localStorage.removeItem(ACTIVE_APP_KEY);
     } catch {
@@ -236,33 +319,42 @@ export const AriaStudioProvider = ({ children }) => {
     }
   }, []);
 
-  // Re-bind the remembered draft on mount. A stale/deleted id self-clears so the
-  // Studio falls back to a fresh intake rather than getting stuck.
+  // What a page load does with the remembered draft.
+  //
+  // It used to re-bind it immediately, so a refresh dropped you back into the middle of
+  // whatever conversation you were having. That is the right behaviour for an accidental
+  // refresh and the wrong one for a deliberate reload — and a reload is usually
+  // deliberate: it is what people do when they want OUT of something.
+  //
+  // So the first mount after a RELOAD offers it instead. The Studio comes up at its home,
+  // the draft is untouched and still in the CV list, and a modal asks whether to carry on.
+  // Opening the app fresh still resumes silently — that is someone coming back to work,
+  // not someone trying to get out — and so does every later mount in the same page load,
+  // which is an in-app navigation (see sessionSettledThisPageLoad).
+  //
+  // A stale/deleted id self-clears so the Studio falls back to a fresh intake rather than
+  // getting stuck.
   useEffect(() => {
-    const remembered = (() => {
-      try {
-        const draftId = localStorage.getItem(ACTIVE_KEY);
-        const ownerId = localStorage.getItem(ACTIVE_OWNER_KEY);
-        const userId = currentUserId();
-        if (draftId && ownerId && userId && ownerId !== userId) {
-          localStorage.removeItem(ACTIVE_KEY);
-          localStorage.removeItem(ACTIVE_OWNER_KEY);
-          return null;
-        }
-        return draftId;
-      } catch {
-        return null;
-      }
-    })();
+    const remembered = rememberedSession();
     if (!remembered) {
+      sessionSettledThisPageLoad = true;
       setLoading(false);
       return;
     }
+    if (shouldOfferSession()) {
+      sessionSettledThisPageLoad = true;
+      // Deliberately does NOT touch cvData: setCvData(null) would clear ACTIVE_KEY and
+      // throw away the very thing being offered.
+      setResumable(remembered);
+      setLoading(false);
+      return;
+    }
+    sessionSettledThisPageLoad = true;
     const myEpoch = sessionEpochRef.current;
     let alive = true;
     (async () => {
       try {
-        const draft = await CVService.getDraftById(remembered);
+        const draft = await CVService.getDraftById(remembered.id);
         if (!alive || sessionEpochRef.current !== myEpoch) return;
         if (draft?._id) setCvData(draft);
         else setCvData(null);
@@ -346,6 +438,33 @@ export const AriaStudioProvider = ({ children }) => {
     },
     [flushChats, setCvData]
   );
+
+  // ─── The resume offer ───
+  // Two answers to the question a page load now asks instead of deciding for itself.
+
+  // Yes. Ordinary loadSession — it already fetches the draft, restores its transcript and
+  // scan, and remounts the chat, which is the entire job.
+  const resumeSession = useCallback(async () => {
+    if (!resumable) return false;
+    const id = resumable.id;
+    setResumable(null);
+    return (await loadSession(id)) !== null;
+  }, [resumable, loadSession]);
+
+  // No. Forget the BINDING, never the draft: the CV and its conversation are safe on the
+  // server and listed in the CV rail, so this only stops the Studio pointing at it. Not
+  // clearing the key would re-ask on the next reload, which turns a helpful question into
+  // a thing to dismiss.
+  const dismissResumable = useCallback(() => {
+    setResumable(null);
+    try {
+      localStorage.removeItem(ACTIVE_KEY);
+      localStorage.removeItem(ACTIVE_OWNER_KEY);
+      localStorage.removeItem(ACTIVE_TITLE_KEY);
+    } catch {
+      /* storage unavailable — the offer is already gone from this page load */
+    }
+  }, []);
 
   // Reopen a past analysis as a prep session. Not a variant of loadSession: there is no
   // draft to fetch and bind — the chat rebuilds the conversation from the Application.
@@ -1079,6 +1198,9 @@ export const AriaStudioProvider = ({ children }) => {
     // Sessions
     loadSession,
     newSession,
+    resumable,
+    resumeSession,
+    dismissResumable,
     openApplication,
     startBuild,
     addRole,

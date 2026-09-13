@@ -17,6 +17,7 @@ import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import CVService from '../../services/cv.service';
 import AriaOrbit from '../../components/cv/AriaOrbit';
 import StudioChat from '../../components/ariaStudio/StudioChat';
+import ResumeSessionModal from '../../components/ariaStudio/ResumeSessionModal';
 import StudioArtifactPanel from '../../components/ariaStudio/StudioArtifactPanel';
 import JobTargetPanel from '../../components/ariaStudio/JobTargetPanel';
 import StudioLivePreview from '../../components/ariaStudio/StudioLivePreview';
@@ -57,7 +58,13 @@ const StudioDesk = () => {
     sessionNonce,
     renameCv,
     updateCvData,
+    resumable,
+    resumeSession,
+    dismissResumable,
   } = useAriaStudio();
+
+  // The resume offer is a fetch, so the modal's button has to be able to say so.
+  const [resuming, setResuming] = useState(false);
 
   // The session's Aria model — the same per-draft choice the chat composers write to.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
@@ -822,6 +829,23 @@ const StudioDesk = () => {
           />
         )}
       </StudioOverlay>
+
+      {/* A page load no longer reopens the last CV on its own — it asks. See the restore
+          effect in AriaStudioContext for why a reload is treated differently from an
+          in-app navigation back to this page. */}
+      <ResumeSessionModal
+        session={resumable}
+        busy={resuming}
+        onResume={async () => {
+          setResuming(true);
+          try {
+            await resumeSession();
+          } finally {
+            setResuming(false);
+          }
+        }}
+        onDismiss={dismissResumable}
+      />
 
       <DeleteSessionModal
         session={pendingDelete}

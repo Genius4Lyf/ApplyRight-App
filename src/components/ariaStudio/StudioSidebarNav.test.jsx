@@ -15,8 +15,12 @@ import StudioSidebarNav from './StudioSidebarNav';
 vi.mock('../../context/ThemeContext', () => ({
   useTheme: () => ({ theme: 'light', toggleTheme: vi.fn() }),
 }));
+// Settable rather than fixed: the wallet's EMPTY state is a different control from its
+// full one, so the tests below need to put it at zero.
+const FULL_WALLET = { displayCredits: 32, minutesLeft: 20, freeTasteMin: 5 };
+const walletState = vi.hoisted(() => ({ value: null }));
 vi.mock('../../hooks/useAccountWallet', () => ({
-  useAccountWallet: () => ({ displayCredits: 32, minutesLeft: 20, freeTasteMin: 5 }),
+  useAccountWallet: () => walletState.value,
 }));
 
 const mountAt = (pathname, user = {}) => {
@@ -31,7 +35,10 @@ const mountAt = (pathname, user = {}) => {
 
 const row = (name) => screen.queryByRole('button', { name: new RegExp(name, 'i') });
 
-beforeEach(() => localStorage.clear());
+beforeEach(() => {
+  localStorage.clear();
+  walletState.value = { ...FULL_WALLET };
+});
 afterEach(() => {
   cleanup();
   localStorage.clear();
@@ -126,5 +133,39 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     mountAt('/profile');
     expect(row('Home')).toBeNull();
     expect(row('Aria Studio')).toBeTruthy();
+  });
+});
+
+describe('StudioSidebarNav — the wallet at empty', () => {
+  // "0 min" is a number with no next step, shown in the one place a user looks precisely
+  // BECAUSE they have run out. The slot has to be the way out instead.
+  const getMinutes = () => screen.queryByRole('button', { name: /get minutes/i });
+
+  it('shows the balance while there is one', () => {
+    mountAt('/aria-studio');
+    expect(screen.getByText(/20 min/i)).toBeTruthy();
+    expect(getMinutes()).toBeNull();
+  });
+
+  it('offers a way to get more once it hits zero', () => {
+    walletState.value = { displayCredits: 0, minutesLeft: 0, freeTasteMin: 0 };
+    mountAt('/aria-studio');
+    expect(getMinutes()).toBeTruthy();
+    expect(screen.queryByText(/0 min/i)).toBeNull();
+  });
+
+  it('still counts the free taste as minutes worth showing', () => {
+    // A free user who has not used their 5-minute taste has minutes — telling them to go
+    // and buy some would be selling them what they already hold.
+    walletState.value = { displayCredits: 4, minutesLeft: null, freeTasteMin: 5 };
+    mountAt('/aria-studio');
+    expect(screen.getByText(/5 min/i)).toBeTruthy();
+    expect(getMinutes()).toBeNull();
+  });
+
+  it('offers it to a free user whose taste is spent', () => {
+    walletState.value = { displayCredits: 12, minutesLeft: null, freeTasteMin: 0 };
+    mountAt('/aria-studio');
+    expect(getMinutes()).toBeTruthy();
   });
 });

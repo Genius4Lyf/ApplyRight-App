@@ -38,6 +38,13 @@ import logoWhite from '../assets/logo/applyright-icon-white.png';
 // desktop and the mobile top bar without a shared-ref collision. Account (credits,
 // minutes, profile, billing, dark mode, sign out) is reachable from the top on
 // every platform.
+// Meter fill. The 8% floor keeps a small-but-real balance visible; EMPTY has to be
+// genuinely empty, or the bar says "you have some" under a label saying you have none.
+const meterWidth = (value) => {
+  const n = Number(value) || 0;
+  return n <= 0 ? '0%' : `${Math.max(8, Math.min(100, n))}%`;
+};
+
 const AccountMenu = ({
   user,
   isPaid,
@@ -195,7 +202,7 @@ const AccountMenu = ({
                   <div
                     className="h-full rounded-full bg-emerald-600 dark:bg-emerald-400"
                     style={{
-                      width: `${Math.max(8, Math.min(100, Number(displayCredits) || 0))}%`,
+                      width: meterWidth(displayCredits),
                     }}
                   />
                 </div>
@@ -206,15 +213,28 @@ const AccountMenu = ({
                   <span className="flex items-center gap-1.5 text-[12.5px] font-semibold text-slate-700 dark:text-slate-200">
                     <Clock className="w-3.5 h-3.5" /> {t('nav.account.interviewMinutes')}
                   </span>
-                  <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
-                    {t('nav.account.minutesShort', { n: minutesLeft ?? freeTasteMin ?? 0 })}
-                  </span>
+                  {(minutesLeft ?? freeTasteMin ?? 0) > 0 ? (
+                    <span className="text-xs font-bold text-amber-600 dark:text-amber-400">
+                      {t('nav.account.minutesShort', { n: minutesLeft ?? freeTasteMin ?? 0 })}
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOpen(false);
+                        navigate('/credits');
+                      }}
+                      className="text-xs font-bold text-amber-600 underline underline-offset-2 dark:text-amber-400"
+                    >
+                      {t('nav.account.getMinutes')}
+                    </button>
+                  )}
                 </div>
                 <div className="h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-amber-600 dark:bg-amber-400"
                     style={{
-                      width: `${Math.max(8, Math.min(100, Number(minutesLeft ?? freeTasteMin) || 0))}%`,
+                      width: meterWidth(minutesLeft ?? freeTasteMin),
                     }}
                   />
                 </div>

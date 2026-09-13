@@ -53,8 +53,15 @@ const writeToClipboard = async (text) => {
  * @param {object}  p
  * @param {string}  p.text       the message, as markdown
  * @param {string}  [p.className] extra positioning classes from the host row
+ * @param {boolean} [p.compact]  icon only — for copying ONE bullet from inside a list,
+ *                               where the word "Copy" beside every line would be wider
+ *                               than the line it belongs to. The label survives as the
+ *                               accessible name, so nothing is lost to a screen reader.
+ * @param {string}  [p.reveal]   the class that governs when it fades in. Defaults to the
+ *                               row-level `.msg-copy`; a bullet passes `.bullet-copy` so
+ *                               hovering one line does not light up all five.
  */
-const CopyMessageButton = ({ text, className = '' }) => {
+const CopyMessageButton = ({ text, className = '', compact = false, reveal = 'msg-copy' }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
   const timer = useRef(null);
@@ -80,14 +87,16 @@ const CopyMessageButton = ({ text, className = '' }) => {
       onClick={onCopy}
       title={label}
       aria-label={label}
-      className={`msg-copy inline-flex items-center gap-1 rounded-md px-1.5 py-1 font-mono text-[10px] uppercase tracking-wide text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200 ${className}`}
+      className={`${reveal} inline-flex items-center gap-1 rounded-md ${
+        compact ? 'px-1 py-0.5' : 'px-1.5 py-1'
+      } font-mono text-[10px] uppercase tracking-wide text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:text-slate-500 dark:hover:bg-slate-800 dark:hover:text-slate-200 ${className}`}
     >
       {copied ? (
         <Check className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
       ) : (
         <Copy className="h-3.5 w-3.5" aria-hidden="true" />
       )}
-      <span>{label}</span>
+      {!compact && <span>{label}</span>}
     </button>
   );
 };

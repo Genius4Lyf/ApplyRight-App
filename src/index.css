@@ -368,6 +368,24 @@
     }
   }
 
+  /* Per-bullet copy, on Aria's example answers while a role or project is being
+     interviewed. Same manners as .msg-copy but scoped to ONE line: it reveals on the
+     bullet's own hover, not the whole row's, or pointing anywhere in the message would
+     light up five buttons at once. */
+  .bullet-copy {
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  .aria-md li:hover .bullet-copy,
+  .bullet-copy:focus-visible {
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .bullet-copy {
+      opacity: 0.55;
+    }
+  }
+
   /* Aria one-shot apply-confirm ring (motion-spec 3.2) — a single emerald pulse
      when a suggestion/bullet card is applied. Disabled under reduced motion. */
   .aria-ring-pulse {

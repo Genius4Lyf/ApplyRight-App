@@ -54,6 +54,8 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const homePath = homePathFor(user);
 
   const { displayCredits, minutesLeft, freeTasteMin } = useAccountWallet(isAuthenticated);
+  // Paid minutes if there are any, otherwise whatever is left of the free 5-minute taste.
+  const interviewMinutes = minutesLeft ?? freeTasteMin ?? 0;
 
   const at = (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`);
   const inAriaStudio = at('/aria-studio');
@@ -147,9 +149,24 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
           <span className="text-slate-500 dark:text-slate-400">
             {t('nav.account.interviewMinutes')}
           </span>
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
-            {t('nav.account.minutesShort', { n: minutesLeft ?? freeTasteMin ?? 0 })}
-          </span>
+          {/* At zero this said "0 min" and stopped there — a number with no next step,
+              in the one place a user looks precisely BECAUSE they have run out. The slot
+              becomes the way out instead. /credits is the right door for both cases: it
+              sells minute top-ups to paid users and shows free users the plan that
+              includes them, so this needs no tier check of its own. */}
+          {interviewMinutes > 0 ? (
+            <span className="font-semibold text-amber-600 dark:text-amber-400">
+              {t('nav.account.minutesShort', { n: interviewMinutes })}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={openCredits}
+              className="font-semibold text-amber-600 underline underline-offset-2 transition-colors hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300"
+            >
+              {t('nav.account.getMinutes')}
+            </button>
+          )}
         </div>
         <button
           type="button"

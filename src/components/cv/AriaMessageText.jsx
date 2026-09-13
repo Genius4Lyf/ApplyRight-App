@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { healTail } from '../../lib/markdownTail';
+import CopyMessageButton from './CopyMessageButton';
 
 // Aria's words, as markdown.
 //
@@ -30,6 +31,48 @@ const TYPE_TICK_MS = 16;
 // puts a display serif on every h1–h6 outside the CV templates, so one stray "##" would
 // otherwise blow a bubble apart.
 const boldParagraph = (props) => <p className="mb-3 font-semibold last:mb-0">{props.children}</p>;
+
+/**
+ * The words of one rendered bullet, for the clipboard.
+ *
+ * Read off the RENDERED children rather than by slicing the markdown source on the node's
+ * position offsets. Two reasons: the source is a moving target while the reply types
+ * itself in, and the children are already the plain text the user is looking at — which
+ * is what they expect to land on the clipboard.
+ */
+const childText = (node) => {
+  if (node === null || node === undefined || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(childText).join('');
+  return childText(node?.props?.children);
+};
+
+// A bullet you can take with you.
+//
+// When Aria is interviewing someone about a role or a project she answers with example
+// lines they are MEANT to reuse — that is the whole point of them. Copying the message
+// gave you all five at once; getting one meant dragging a selection across a single line,
+// which on a phone is a fight with the text-selection handles.
+//
+// The control goes at the FRONT so every one of them starts at the same x-position and
+// the eye can run down them, and it is icon-only because the word "Copy" is wider than
+// some of the lines it would sit beside.
+const CopyableListItem = (props) => {
+  const text = childText(props.children).trim();
+  return (
+    <li className="pl-0.5">
+      {text && (
+        <CopyMessageButton
+          text={text}
+          compact
+          reveal="bullet-copy"
+          className="mr-1 translate-y-[-1px] align-middle"
+        />
+      )}
+      {props.children}
+    </li>
+  );
+};
 
 const COMPONENTS = {
   p: (props) => <p className="mb-3 last:mb-0">{props.children}</p>,
@@ -67,6 +110,10 @@ const COMPONENTS = {
   h6: boldParagraph,
 };
 
+// Same renderer, bullets you can lift. Built once at module scope rather than per render,
+// so ReactMarkdown is not handed a new components object on every typewriter tick.
+const COMPONENTS_COPYABLE_BULLETS = { ...COMPONENTS, li: CopyableListItem };
+
 /**
  * @param {object}   p
  * @param {string}   p.text   Aria's reply, as markdown
@@ -74,8 +121,13 @@ const COMPONENTS = {
  * @param {boolean}  [p.reduce] prefers-reduced-motion → no typing, same as the old bailout
  * @param {Function} [p.onDone] fired once the reveal finishes; keeps StudioChat's
  *                              revealedRef contract so reopening a session never re-types
+ * @param {boolean} [p.bulletCopy] give each bullet its own copy control. Off by default
+ *                              and switched on only while a ROLE or PROJECT is being
+ *                              interviewed — that is where her bullets are example
+ *                              answers to reuse. Everywhere else they are just prose in
+ *                              a list, and a control on every line would be clutter.
  */
-const AriaMessageText = ({ text, typed = false, reduce = false, onDone }) => {
+const AriaMessageText = ({ text, typed = false, reduce = false, onDone, bulletCopy = false }) => {
   const full = String(text || '');
   const [count, setCount] = useState(typed || reduce ? full.length : 0);
 
@@ -104,14 +156,17 @@ const AriaMessageText = ({ text, typed = false, reduce = false, onDone }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [full, typed, reduce]);
 
-  const source = useMemo(
-    () => (count >= full.length ? full : healTail(full.slice(0, count))),
-    [full, count]
-  );
+  const done = count >= full.length;
+  const source = useMemo(() => (done ? full : healTail(full.slice(0, count))), [full, count, done]);
+
+  // Only once the reveal has finished. Mid-type, a bullet is a fragment — a copy control
+  // beside it would hand over half a sentence, and the buttons would pop in one by one
+  // as the list grew.
+  const components = bulletCopy && done ? COMPONENTS_COPYABLE_BULLETS : COMPONENTS;
 
   return (
     <div className="aria-md">
-      <ReactMarkdown components={COMPONENTS}>{source}</ReactMarkdown>
+      <ReactMarkdown components={components}>{source}</ReactMarkdown>
     </div>
   );
 };
