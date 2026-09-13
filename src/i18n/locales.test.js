@@ -117,6 +117,12 @@ describe('locale files', () => {
       'auth.forgot.otpPlaceholder',
       'auth.register.referralPlaceholder',
       'nav.account.minutesShort',
+      // The page-length coach: "page"/"pages" and "PDF" are identical in French. Every
+      // other string in that block IS translated.
+      'cvStudio.lengthCoach.countLabel_one',
+      'cvStudio.lengthCoach.countLabel_other',
+      'cvStudio.lengthCoach.chipPages',
+      'cvStudio.lengthCoach.pdfChip',
       // Round 2 — genuinely identical in French, not missed translations:
       'footer.colGuides', // "Guides" is the same word in French
       'footer.contact', // "Contact" is the same word in French
@@ -140,7 +146,6 @@ describe('locale files', () => {
       'cvBuilder.askAria.companyType.startup', // "Startup" — the loanword is standard in French
       'cvBuilder.skills.proBadge', // "Pro" — tier name, kept in English (see dashboard.interviewCard.chip)
       'cvBuilder.heading.chipPhoto', // "Photo" — same word in French (its siblings ARE translated)
-      'cvBuilder.modelPicker.tierLight', // "Standard" — same word in French
       'cvBuilder.modelPicker.tierFlagship', // "Pro" — tier name, kept in English (see cvBuilder.skills.proBadge)
       'cvBuilder.cvHealth.sections.certifications.title', // "Certifications" — same word in French
       'cvBuilder.coach.stepNames.finalize', // "CV" — same abbreviation in French

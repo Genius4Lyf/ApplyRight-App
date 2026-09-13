@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import AnswerExamples from './AnswerExamples';
 import CVService from '../../services/cv.service';
 import { tierOf, costForActionTier } from '../../lib/models';
 import { CAREER_STAGES } from '../../lib/careerStages';
@@ -105,12 +106,16 @@ const SectionCoach = ({
   const [applying, setApplying] = useState(false);
   const [wasFree, setWasFree] = useState(!!restored?.wasFree);
   const [exampleAnswer, setExampleAnswer] = useState('');
-  const [exampleOpen, setExampleOpen] = useState(false);
+  // The server's answer STARTERS for the question just asked, plus its own lead-in. They
+  // have always come back on the turn and were thrown away here, on the theory that Aria
+  // repeats them as bullets in her reply — she often did not, and when she did there was
+  // no way to lift one out. They have a surface of their own now (AnswerExamples).
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLabel, setSuggestionsLabel] = useState('');
   // Set when the interview closes; handed to onDone so the parent can offer the
   // cross-history hunt AFTER the bullets land. See the readyToDraft branch below.
   const [huntOffers, setHuntOffers] = useState([]);
   const inputRef = useRef(null);
-  const exampleRef = useRef(null);
 
   // Re-sync when a pending generation lands AFTER this mounted.
   //
@@ -171,19 +176,6 @@ const SectionCoach = ({
   // only speaks near the limit, where it is genuinely news: Aria is about to close the role.
   const nearTurnLimit = turnsTaken >= TURN_CAP - 3;
 
-  useEffect(() => {
-    if (!exampleOpen) return undefined;
-    const frame = requestAnimationFrame(() => {
-      exampleRef.current?.scrollIntoView({
-        behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-          ? 'auto'
-          : 'smooth',
-        block: 'nearest',
-      });
-    });
-    return () => cancelAnimationFrame(frame);
-  }, [exampleOpen]);
-
   // One free re-roll is granted per charged generation — the SERVER owns that via
   // genState, so this only tracks whether the last result claimed it.
   const rerollNote = wasFree ? t('ariaStudio.sectionCoach.rerollWasFree') : '';
@@ -209,7 +201,8 @@ const SectionCoach = ({
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setExampleAnswer('');
-    setExampleOpen(false);
+    setSuggestions([]);
+    setSuggestionsLabel('');
     setThinking(true);
 
     try {
@@ -242,6 +235,16 @@ const SectionCoach = ({
         isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
       onPush({ who: 'aria', text: reply });
       setExampleAnswer(safeExample);
+      // The SAME metric guard the example gets. A student who has said they are a student
+      // must not be handed "increased revenue by ___" as a way to start a sentence — the
+      // reply and the sample are already filtered for it, and a starter is the most
+      // copyable of the three.
+      setSuggestions(
+        (Array.isArray(r.suggestions) ? r.suggestions : []).filter(
+          (item) => !(isGradCareer && metricPrompt.test(String(item || '')))
+        )
+      );
+      setSuggestionsLabel(r.suggestionsLabel || '');
       // A metered turn (flagship build-with, or general chat past the daily pool)
       // returns the post-charge balance — keep the wallet pill live without a refresh.
       if (r.remainingCredits != null) {
@@ -296,10 +299,6 @@ const SectionCoach = ({
     } finally {
       setThinking(false);
     }
-  };
-
-  const toggleExample = () => {
-    setExampleOpen((open) => !open);
   };
 
   const generate = async (reroll = false) => {
@@ -472,40 +471,22 @@ const SectionCoach = ({
         </div>
       )}
 
-      {/* A sample answer, offered under Aria's build-with follow-up.
+      {/* WAYS TO ANSWER — the starters and the sample, under Aria's build-with question.
 
-          The dashed STARTER chips that used to lead this block are gone. `reply` is
-          markdown now, and Aria already writes those same starters as bullets inside
-          her message — so the row underneath was a second copy of text the user had
-          just finished reading, in a style that no longer matched anything else.
-          `suggestions` still comes back from the server and still shapes what she
-          writes; it simply has one surface now instead of two.
-
-          The example is NOT a duplicate — it is a full sample answer she deliberately
-          keeps out of the reply, behind a toggle, so it never reads as the user's own
-          claim. That one stays. */}
-      {phase === 'chat' && !thinking && exampleAnswer && (
-        <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
-          <div className="flex flex-wrap gap-1.5">
-            <button
-              type="button"
-              onClick={toggleExample}
-              className="text-[13px] sm:text-[11.5px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-            >
-              {exampleOpen
-                ? t('cvBuilder.askAria.hideExample')
-                : t('cvBuilder.askAria.showExample')}
-            </button>
-          </div>
-          {exampleOpen && exampleAnswer && (
-            <div
-              ref={exampleRef}
-              className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] leading-relaxed text-slate-600 dark:text-slate-300 italic"
-            >
-              {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
-            </div>
-          )}
-        </div>
+          This was a lone "Show me an example" pill revealing one italic sentence, and the
+          server's `suggestions` — the short first-person openings written FOR this exact
+          question — never reached the screen at all. One example reads as a coincidence;
+          three or four visibly different openings read as angles, which is what they are.
+          See AnswerExamples for why the starters and the sample stay visually apart. */}
+      {phase === 'chat' && !thinking && (
+        <AnswerExamples
+          // Keyed on the answers themselves, so a new turn REMOUNTS it and the panel comes
+          // up collapsed for the new question instead of inheriting the last one's state.
+          key={`${suggestions.join('|')}::${exampleAnswer}`}
+          starters={suggestions}
+          example={exampleAnswer}
+          label={suggestionsLabel}
+        />
       )}
 
       <AnimatePresence>

@@ -26,7 +26,7 @@ import {
 import { SPRING } from '../lib/ariaMotion';
 
 // The Aria model picker — choose which model powers chat / tailoring. A flat list of the
-// EXPOSED models: each row shows the TIER ("Standard" / "Pro") as the primary label with the
+// EXPOSED models: each row shows the TIER ("Basic" / "Pro") as the primary label with the
 // model name + per-message cost as a subtitle. The SELECTED row is inked (slate-900 / white),
 // NOT indigo-filled — indigo stays the accent/focus colour. Reads the exposed list + tier
 // costs from lib/models (hydrated from /auth/config); calls onSelect(modelId) to persist.
@@ -41,7 +41,7 @@ import { SPRING } from '../lib/ariaMotion';
 //
 // `compact` is the in-composer chip: glyph + tier + caret in a borderless pill that only
 // paints on hover, sized to sit on one row with the input. Below `sm` it drops the text
-// label to a glyph + caret — spelling out "Standard" at 360px squeezes the text field
+// label to a glyph + caret — spelling out the tier at 360px squeezes the text field
 // under ~40% of the row. The trigger therefore carries an explicit aria-label, so the
 // collapsed form still announces the current model instead of being an unnamed button.
 const ModelPicker = ({
@@ -170,7 +170,7 @@ const ModelPicker = ({
 
   // Exposed models, Standard (light) first then Pro (flagship). Each is ONE option — the
   // TIER is the primary label, the model name a subtitle. With one exposed light model,
-  // "Standard" is naturally a single row (no intra-tier list).
+  // "Basic" is naturally a single row (no intra-tier list).
   const lightModels = modelsByTier('light');
   const proModels = modelsByTier('flagship');
   const rows = [...lightModels, ...proModels];

@@ -82,8 +82,12 @@ export const PROVIDER_NAME = {
   moonshot: 'Kimi',
 };
 
-// User-facing tier names: light = "Standard" (included on paid), flagship = "Pro" (metered).
-export const TIER_LABEL = { light: 'Standard', flagship: 'Pro' };
+// User-facing tier names: light = "Basic" (included on paid), flagship = "Pro" (metered).
+//
+// It was "Standard", which read as "the normal one" — so the metered Pro tiles looked
+// like an upsell on top of the norm rather than a different engine, and the word told a
+// user nothing about what they were picking.
+export const TIER_LABEL = { light: 'Basic', flagship: 'Pro' };
 
 export const modelLabel = (id) => MODEL_LABELS[id] || id;
 export const modelsByTier = (tier) => AI_MODELS.models.filter((m) => m.tier === tier);

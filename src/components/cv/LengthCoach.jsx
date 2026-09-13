@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { ChevronDown, Check, ArrowRight } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 // The live page-length badge, upgraded into a tappable coach. On the resume tab it
 // explains the current length and (for 2+ pages) offers one-tap LAYOUT trims that
@@ -33,14 +34,16 @@ const TONE = {
   },
 };
 
-const chipLabel = (pageCount, paperLabel) => {
-  if (pageCount === 1) return `${paperLabel} · Fits 1 page`;
-  if (pageCount === 2) return `${paperLabel} · 2 pages`;
-  return `${paperLabel} · ${pageCount} pages`;
-};
+// `t` is passed in rather than these becoming hooks of their own: each is a one-line
+// formatter called from the render, and a hook around a string lookup is ceremony.
+const chipLabel = (t, pageCount, paperLabel) =>
+  pageCount === 1
+    ? t('cvStudio.lengthCoach.chipFits', { paper: paperLabel })
+    : t('cvStudio.lengthCoach.chipPages', { paper: paperLabel, n: pageCount });
 
-// Compact label for small screens — drops the "{paperLabel} · " prefix.
-const countLabel = (pageCount) => `${pageCount} page${pageCount === 1 ? '' : 's'}`;
+// Compact label for small screens — drops the "{paperLabel} · " prefix. Pluralised
+// through i18next, not by appending an "s", which is only ever right in English.
+const countLabel = (t, pageCount) => t('cvStudio.lengthCoach.countLabel', { count: pageCount });
 
 // Muted eyebrow → editorial micro-label.
 const Eyebrow = ({ children }) => (
@@ -89,6 +92,7 @@ const LengthCoach = ({
   canTrimRoles = false,
   onFitOnePage,
 }) => {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   // What the last fit attempt did, or null. Held here rather than derived from pageCount
   // because the interesting outcome is the FAILURE — a success is self-evident (the badge
@@ -165,7 +169,7 @@ const LengthCoach = ({
   if (!isResume) {
     return (
       <span className="inline-flex items-center font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500 border border-slate-200 dark:border-slate-700 rounded-full px-2.5 py-1 shrink-0">
-        PDF · {paperLabel}
+        {t('cvStudio.lengthCoach.pdfChip', { paper: paperLabel })}
       </span>
     );
   }
@@ -200,12 +204,11 @@ const LengthCoach = ({
         onClick={runFit}
         className="w-full rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
       >
-        Fit it onto one page
+        {t('cvStudio.lengthCoach.fitAction')}
       </button>
       {fitOutcome === 'impossible' && (
         <p className="mt-2 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
-          Layout alone cannot do it — even at the tightest readable settings this runs long. Nothing
-          was changed. The content is what needs to come down:
+          {t('cvStudio.lengthCoach.fitImpossible')}
         </p>
       )}
     </div>
@@ -213,8 +216,16 @@ const LengthCoach = ({
 
   const fixes = (
     <div className="mt-3 flex flex-col gap-2">
-      <FixButton active={densityCompact} onClick={toggleDensity} label="Compact density" />
-      <FixButton active={marginsNarrow} onClick={toggleMargins} label="Narrow margins" />
+      <FixButton
+        active={densityCompact}
+        onClick={toggleDensity}
+        label={t('cvStudio.lengthCoach.fixCompact')}
+      />
+      <FixButton
+        active={marginsNarrow}
+        onClick={toggleMargins}
+        label={t('cvStudio.lengthCoach.fixNarrow')}
+      />
     </div>
   );
 
@@ -230,7 +241,7 @@ const LengthCoach = ({
         }}
         className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >
-        Shorten your summary <ArrowRight className="w-3 h-3" />
+        {t('cvStudio.lengthCoach.shortenSummary')} <ArrowRight className="w-3 h-3" />
       </button>
     </div>
   ) : null;
@@ -247,7 +258,7 @@ const LengthCoach = ({
         }}
         className="inline-flex items-center gap-1 text-xs font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >
-        Trim your oldest roles <ArrowRight className="w-3 h-3" />
+        {t('cvStudio.lengthCoach.trimRoles')} <ArrowRight className="w-3 h-3" />
       </button>
     </div>
   ) : null;
@@ -264,8 +275,8 @@ const LengthCoach = ({
       >
         <span className={`w-1.5 h-1.5 rounded-full ${tone.dot}`} />
         {/* Compact "N page(s)" on phones; full "{paper} · verdict" from sm up. */}
-        <span className="sm:hidden">{countLabel(pageCount)}</span>
-        <span className="hidden sm:inline">{chipLabel(pageCount, paperLabel)}</span>
+        <span className="sm:hidden">{countLabel(t, pageCount)}</span>
+        <span className="hidden sm:inline">{chipLabel(t, pageCount, paperLabel)}</span>
         {pageCount >= 2 && <ChevronDown className="w-3 h-3" />}
       </button>
 
@@ -274,7 +285,7 @@ const LengthCoach = ({
           <div
             ref={popRef}
             role="dialog"
-            aria-label="Page length coach"
+            aria-label={t('cvStudio.lengthCoach.ariaLabel')}
             style={{
               position: 'fixed',
               top: pos.top,
@@ -287,52 +298,58 @@ const LengthCoach = ({
           >
             {pageCount === 1 ? (
               <>
-                <Eyebrow>Page length</Eyebrow>
+                <Eyebrow>{t('cvStudio.lengthCoach.eyebrow')}</Eyebrow>
                 <h3 className="mt-1 font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                  Perfect length.
+                  {t('cvStudio.lengthCoach.oneTitle')}
                 </h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  Crisp and easy to scan — nothing to change.
+                  {t('cvStudio.lengthCoach.oneBody')}
                 </p>
                 <div className="mt-3">
-                  <GuideLink to={CV_HEALTH_ROUTE}>What makes a great CV?</GuideLink>
+                  <GuideLink to={CV_HEALTH_ROUTE}>
+                    {t('cvStudio.lengthCoach.guideGreatCv')}
+                  </GuideLink>
                 </div>
               </>
             ) : pageCount === 2 ? (
               <>
-                <Eyebrow>Page length</Eyebrow>
+                <Eyebrow>{t('cvStudio.lengthCoach.eyebrow')}</Eyebrow>
                 <h3 className="mt-1 font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                  Two pages is fine.
+                  {t('cvStudio.lengthCoach.twoTitle')}
                 </h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  Standard for roles with 5+ years&rsquo; experience. Want one page?
+                  {t('cvStudio.lengthCoach.twoBody')}
                 </p>
                 {fitButton}
                 {fixes}
                 {shortenLink}
                 {trimRolesLink}
                 <div className="mt-3">
-                  <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>Why 1&ndash;2 pages?</GuideLink>
+                  <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>
+                    {t('cvStudio.lengthCoach.guideWhyPages')}
+                  </GuideLink>
                 </div>
               </>
             ) : (
               <>
-                <Eyebrow>Page length</Eyebrow>
+                <Eyebrow>{t('cvStudio.lengthCoach.eyebrow')}</Eyebrow>
                 <h3 className="mt-1 font-heading text-base font-bold text-slate-900 dark:text-slate-100">
-                  Long for a CV.
+                  {t('cvStudio.lengthCoach.manyTitle')}
                 </h3>
                 <p className="mt-1.5 text-xs leading-relaxed text-slate-600 dark:text-slate-300">
-                  Most recruiters prefer 1&ndash;2 pages and skim in seconds.
+                  {t('cvStudio.lengthCoach.manyBody')}
                 </p>
                 <div className="mt-3">
-                  <Eyebrow>Trim a page</Eyebrow>
+                  <Eyebrow>{t('cvStudio.lengthCoach.trimAPage')}</Eyebrow>
                 </div>
                 {fitButton}
                 {fixes}
                 {shortenLink}
                 {trimRolesLink}
                 <div className="mt-3">
-                  <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>Why 1&ndash;2 pages?</GuideLink>
+                  <GuideLink to={CV_HEALTH_LENGTH_ROUTE}>
+                    {t('cvStudio.lengthCoach.guideWhyPages')}
+                  </GuideLink>
                 </div>
               </>
             )}

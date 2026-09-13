@@ -26,7 +26,7 @@ const readToken = () => {
 // separate from ModelPicker, which chooses the CHAT model. One tile per exposed model
 // (not one per tier): two flagship models can both be exposed (gpt-5, claude-sonnet-5),
 // and collapsing them into a single "Pro" tile hides the choice of engine entirely.
-// Light rows are named by TIER ("Standard" — there's normally one, and the tier IS the
+// Light rows are named by TIER ("Basic" — there's normally one, and the tier IS the
 // story); flagship rows are named by PROVIDER, with a separate "Pro" chip beside the
 // name — never fused into one label, since the engine can change under a slot.
 //

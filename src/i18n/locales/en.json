@@ -1588,7 +1588,7 @@
       "missing": "Missing — weave these in if they’re true"
     },
     "modelPicker": {
-      "tierLight": "Standard",
+      "tierLight": "Basic",
       "tierFlagship": "Pro",
       "triggerTitle": "Choose the model powering ARIA",
       "ariaLabelModel": "AI model: {{tier}}",
@@ -4070,6 +4070,30 @@
     "renameCv": "CV name",
     "templateFilter": {
       "ariaLabel": "Filter templates by style"
+    },
+    "lengthCoach": {
+      "chipFits": "{{paper}} · Fits 1 page",
+      "chipPages": "{{paper}} · {{n}} pages",
+      "countLabel_one": "{{count}} page",
+      "countLabel_other": "{{count}} pages",
+      "pdfChip": "PDF · {{paper}}",
+      "ariaLabel": "Page length coach",
+      "eyebrow": "Page length",
+      "oneTitle": "Perfect length.",
+      "oneBody": "Crisp and easy to scan — nothing to change.",
+      "twoTitle": "Two pages is fine.",
+      "twoBody": "Standard for roles with 5+ years’ experience. Want one page?",
+      "manyTitle": "Long for a CV.",
+      "manyBody": "Most recruiters prefer 1–2 pages and skim in seconds.",
+      "trimAPage": "Trim a page",
+      "fitAction": "Fit it onto one page",
+      "fitImpossible": "Layout alone cannot do it — even at the tightest readable settings this runs long. Nothing was changed. The content is what needs to come down:",
+      "fixCompact": "Compact density",
+      "fixNarrow": "Narrow margins",
+      "shortenSummary": "Shorten your summary",
+      "trimRoles": "Trim your oldest roles",
+      "guideGreatCv": "What makes a great CV?",
+      "guideWhyPages": "Why 1–2 pages?"
     }
   },
   "preLaunch": {
@@ -5282,6 +5306,11 @@
       "startFresh": "Start something new",
       "opening": "Opening…",
       "untitled": "an untitled CV"
+    },
+    "answerExamples": {
+      "title": "Ways to answer this",
+      "fullAnswer": "A full answer sounds like",
+      "sampleNote": "A sample, not your words — say what actually happened."
     }
   },
   "seo": {

@@ -728,6 +728,19 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     return t(`ariaStudio.chat.nextLine.projectOpener.${key}`, { title: name });
   };
 
+  // THE QUESTION ARIA IS WAITING ON, for an entry that has reached the achievements stage.
+  //
+  // Extracted because it is now asked from two places: once when the form is saved and the
+  // interview opens, and again whenever the role or company is corrected underneath it —
+  // where an acknowledgement on its own left the user looking at a reply with no question
+  // in it, and the only copy of the question scrolled off the top.
+  const achievementsAsk = (entry, sectionKey, type) =>
+    sectionKey === 'project'
+      ? projectAchievementsOpener(entry?.title, type)
+      : t('ariaStudio.chat.nextLine.achievementsRole', {
+          company: entry?.company || t('ariaStudio.chat.thisJobFallback'),
+        });
+
   // The pinned status card duplicates the combined capture card's own fields while an
   // experience/project entry is still on the type-chip or form stage — showing both at
   // once is redundant. It appears once the entry moves past the form (Save clicked),
@@ -2570,13 +2583,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       const updated = { ...pinnedEntry, ...patch };
       const stage = roleStage(updated, pinnedSectionKey, { typePicked: !!pinnedType });
       if (stage === 'achievements') {
-        ariaSays(
-          pinnedSectionKey === 'project'
-            ? projectAchievementsOpener(updated.title, pinnedType)
-            : t('ariaStudio.chat.nextLine.achievementsRole', {
-                company: updated.company || t('ariaStudio.chat.thisJobFallback'),
-              })
-        );
+        ariaSays(achievementsAsk(updated, pinnedSectionKey, pinnedType));
       } else if (stage === 'complete' && pinnedSectionKey === 'education') {
         // Aria confirms what landed and why it is finished; EducationSavedCard asks what
         // next. She used to say only what education does NOT need, which left a
@@ -3824,7 +3831,26 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                           : pinnedSectionKey === 'project'
                             ? 'projectTitle'
                             : 'roleTitle';
-                      ariaSays(t(`ariaStudio.chat.fieldCorrected.${key}`, { value }));
+                      // …AND RE-ASK. The acknowledgement on its own was a reply with no
+                      // question in it: the user was mid-interview, the only copy of what
+                      // Aria wanted had scrolled off the top, and the correction pushed it
+                      // further away. Asking again against the CORRECTED name also makes
+                      // the transcript's last question the true one, which is what the
+                      // next turn is answered against.
+                      //
+                      // Only at the achievements stage. Earlier than that the form is
+                      // still being filled and its own card is asking; re-asking there
+                      // would be Aria talking over a control the user is looking at.
+                      const corrected = { ...pinnedEntry, ...patch };
+                      const stage = roleStage(corrected, pinnedSectionKey, {
+                        typePicked: !!pinnedType,
+                      });
+                      const ack = t(`ariaStudio.chat.fieldCorrected.${key}`, { value });
+                      ariaSays(
+                        stage === 'achievements'
+                          ? `${ack}\n\n${achievementsAsk(corrected, pinnedSectionKey, pinnedType)}`
+                          : ack
+                      );
                     }
                   }
                   return r;

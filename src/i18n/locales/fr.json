@@ -1584,7 +1584,7 @@
       "missing": "Manquants — intégrez-les s’ils sont vrais"
     },
     "modelPicker": {
-      "tierLight": "Standard",
+      "tierLight": "Basique",
       "tierFlagship": "Pro",
       "triggerTitle": "Choisir le modèle qui anime Aria",
       "ariaLabelModel": "Modèle IA : {{tier}}",
@@ -4066,6 +4066,30 @@
     "renameCv": "Nom du CV",
     "templateFilter": {
       "ariaLabel": "Filtrer les modèles par style"
+    },
+    "lengthCoach": {
+      "chipFits": "{{paper}} · Tient sur 1 page",
+      "chipPages": "{{paper}} · {{n}} pages",
+      "countLabel_one": "{{count}} page",
+      "countLabel_other": "{{count}} pages",
+      "pdfChip": "PDF · {{paper}}",
+      "ariaLabel": "Conseils de longueur",
+      "eyebrow": "Longueur du CV",
+      "oneTitle": "Longueur idéale.",
+      "oneBody": "Net et facile à parcourir — rien à changer.",
+      "twoTitle": "Deux pages, c’est très bien.",
+      "twoBody": "Courant à partir de 5 ans d’expérience. Vous préférez une seule page ?",
+      "manyTitle": "Long pour un CV.",
+      "manyBody": "La plupart des recruteurs préfèrent 1–2 pages et parcourent en quelques secondes.",
+      "trimAPage": "Gagner une page",
+      "fitAction": "Tout faire tenir sur une page",
+      "fitImpossible": "La mise en page seule n’y suffit pas — même aux réglages les plus serrés encore lisibles, c’est trop long. Rien n’a été modifié. C’est le contenu qu’il faut réduire :",
+      "fixCompact": "Interligne compact",
+      "fixNarrow": "Marges étroites",
+      "shortenSummary": "Raccourcir votre résumé",
+      "trimRoles": "Élaguer vos postes les plus anciens",
+      "guideGreatCv": "Qu’est-ce qu’un bon CV ?",
+      "guideWhyPages": "Pourquoi 1–2 pages ?"
     }
   },
   "preLaunch": {
@@ -5278,6 +5302,11 @@
       "startFresh": "Commencer autre chose",
       "opening": "Ouverture…",
       "untitled": "un CV sans titre"
+    },
+    "answerExamples": {
+      "title": "Façons de répondre",
+      "fullAnswer": "Une réponse complète ressemble à",
+      "sampleNote": "Un exemple, pas vos mots — dites ce qui s’est réellement passé."
     }
   },
   "seo": {

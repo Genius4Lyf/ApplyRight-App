@@ -153,22 +153,27 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     expect(pushedTexts(onPush)).toContain(i18n.t('ariaStudio.sectionCoach.gradFollowUp'));
     expect(pushedTexts(onPush)).not.toContain(SLIP.reply);
 
-    // 2. No worked EXAMPLE: its toggle only renders when one survived the strip.
+    // 2. The STARTERS are filtered one by one — and this is assertable again.
     //
-    //    What used to sit here was an assertion about the dashed STARTER CHIPS — that
-    //    the metric one was filtered out and the safe one survived. Those chips were
-    //    deliberately removed: `reply` is markdown now and Aria writes the same
-    //    starters as bullets inside her own message, so the rail underneath was a
-    //    second copy of text the user had just read. `suggestions` still comes back
-    //    from the server and still shapes what she writes, but the client no longer
-    //    reads it at all — so there is nothing left on this surface to strip, and an
-    //    assertion about it could only ever fail.
-    //
-    //    The strip itself is untouched and still covered: it runs on `reply` (1) and
-    //    on `exampleAnswer` (below), which are the two surfaces that survived.
-    expect(
-      screen.queryByRole('button', { name: i18n.t('cvBuilder.askAria.showExample') })
-    ).toBeNull();
+    //    It was not, for a while: the dashed starter chips were removed on the theory
+    //    that Aria repeats the same openings as bullets inside her reply, so the client
+    //    stopped reading `suggestions` at all and the old assertion here was retired as
+    //    unfailable. She often did not repeat them, which is how the most useful thing
+    //    the turn produced became the one thing you could not reach. They have their own
+    //    panel now (AnswerExamples), so the filter has a surface again.
+    const panel = await screen.findByRole('button', {
+      name: i18n.t('ariaStudio.answerExamples.title'),
+    });
+    fireEvent.click(panel);
+
+    // The metric-shaped opening is gone; the safe one survives. Handing a student
+    // "I improved efficiency by ___%" as a way to START a sentence is worse than saying
+    // it in prose — a starter is the most copyable thing on the screen.
+    expect(screen.queryByText('I improved efficiency by ___%')).toBeNull();
+    expect(screen.getByText('I was trusted with ___')).toBeTruthy();
+
+    // 3. No worked EXAMPLE either — the metric one did not survive the strip.
+    expect(screen.queryByText(/Cut processing time by 30%/)).toBeNull();
   });
 
   it("REGRESSION: a real 'job' in the same session keeps the metric framing", async () => {
@@ -183,13 +188,15 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     await waitFor(() => expect(onPush.mock.calls.length).toBeGreaterThan(1));
 
     expect(pushedTexts(onPush)).toContain(SLIP.reply);
-    // The starter-chip half of this regression went with the chips themselves (see the
-    // test above). The example is the surface that remains, and it must survive.
-    await waitFor(() =>
-      expect(
-        screen.getByRole('button', { name: i18n.t('cvBuilder.askAria.showExample') })
-      ).toBeTruthy()
-    );
+    // Nothing is stripped here, so BOTH starters and the worked example survive — the
+    // metric framing is exactly right for a real job held by an experienced professional.
+    const panel = await screen.findByRole('button', {
+      name: i18n.t('ariaStudio.answerExamples.title'),
+    });
+    fireEvent.click(panel);
+    expect(screen.getByText('I improved efficiency by ___%')).toBeTruthy();
+    expect(screen.getByText('I was trusted with ___')).toBeTruthy();
+    expect(screen.getByText(/Cut processing time by 30%/)).toBeTruthy();
   });
 
   it('leaves an entry with no captured type to the session stage alone', async () => {
