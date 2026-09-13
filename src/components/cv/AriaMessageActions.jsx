@@ -24,15 +24,23 @@ import MessageFeedback from './MessageFeedback';
 //    where the words start. `-ml-0.5` cancels the first button's own 6px inset, which is
 //    what actually lands the glyph on 4px.
 //
-// 2. THE ORBIT STAYS EXACTLY WHAT IT WAS. Still `.aria-mark`, still one per conversation
-//    on the newest reply, still reserving its space rather than being display:none — so
-//    nothing shifts as new messages arrive. It reads as a signature at the end of her
-//    latest answer rather than a bullet in front of a toolbar.
+// 2. THE ORBIT SITS BELOW, ON ITS OWN LINE. It used to trail the controls on the same
+//    row, which read as a third button in a toolbar — a mark floating beside Copy rather
+//    than a signature under an answer. Dropping it to its own line puts it at the very
+//    bottom of the message, where a signature belongs.
+//
+//    It keeps `visibility: hidden` on every row but the latest (see .aria-mark in
+//    index.css) rather than display:none, so the line it occupies is reserved under every
+//    reply and NOTHING SHIFTS as new messages arrive. The cost is a consistent small gap
+//    under each message, which reads as rhythm; the alternative is the whole thread
+//    jumping by the mark's height each time Aria speaks, which reads as broken.
 const AriaMessageActions = ({ text, feedbackId }) => (
-  <div className="-ml-0.5 flex items-center gap-0.5">
-    <CopyMessageButton text={text} />
-    <MessageFeedback feedbackId={feedbackId} />
-    <AriaOrbit size={16} className="aria-mark ml-1" />
+  <div className="-ml-0.5 flex flex-col items-start gap-0.5">
+    <div className="flex items-center gap-0.5">
+      <CopyMessageButton text={text} />
+      <MessageFeedback feedbackId={feedbackId} />
+    </div>
+    <AriaOrbit size={16} className="aria-mark ml-1.5" />
   </div>
 );
 

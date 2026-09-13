@@ -105,13 +105,11 @@ const SectionCoach = ({
   );
   const [applying, setApplying] = useState(false);
   const [wasFree, setWasFree] = useState(!!restored?.wasFree);
-  const [exampleAnswer, setExampleAnswer] = useState('');
-  // The server's answer STARTERS for the question just asked, plus its own lead-in. They
-  // have always come back on the turn and were thrown away here, on the theory that Aria
-  // repeats them as bullets in her reply — she often did not, and when she did there was
-  // no way to lift one out. They have a surface of their own now (AnswerExamples).
-  const [suggestions, setSuggestions] = useState([]);
-  const [suggestionsLabel, setSuggestionsLabel] = useState('');
+  // The TWO sample answers for the question just asked. The server's `suggestions` — the
+  // short first-person openings — are deliberately not held here: Aria already writes
+  // those as bullets inside her reply, where each can be copied on its own, so a second
+  // copy underneath would be the same text twice in two different styles.
+  const [exampleAnswers, setExampleAnswers] = useState([]);
   // Set when the interview closes; handed to onDone so the parent can offer the
   // cross-history hunt AFTER the bullets land. See the readyToDraft branch below.
   const [huntOffers, setHuntOffers] = useState([]);
@@ -200,9 +198,7 @@ const SectionCoach = ({
     onPush({ who: 'user', text: val });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
-    setExampleAnswer('');
-    setSuggestions([]);
-    setSuggestionsLabel('');
+    setExampleAnswers([]);
     setThinking(true);
 
     try {
@@ -231,20 +227,21 @@ const SectionCoach = ({
         : isGradCareer && metricPrompt.test(r.reply || '')
           ? t('ariaStudio.sectionCoach.gradFollowUp')
           : r.reply;
-      const safeExample =
-        isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
+      // The server already scrubs these for a grad stage; this is the same guard applied
+      // at the last presentation boundary, for the case where the provider slips back into
+      // its experienced-role framing after the server has stopped looking.
+      //
+      // `exampleAnswer` is still read as a fallback so a response from a not-yet-deployed
+      // server still puts a real sample on screen instead of an empty panel.
+      const safeExamples = (
+        Array.isArray(r.exampleAnswers) && r.exampleAnswers.length
+          ? r.exampleAnswers
+          : [r.exampleAnswer]
+      )
+        .map((s) => String(s || '').trim())
+        .filter((s) => s && !(isGradCareer && metricPrompt.test(s)));
       onPush({ who: 'aria', text: reply });
-      setExampleAnswer(safeExample);
-      // The SAME metric guard the example gets. A student who has said they are a student
-      // must not be handed "increased revenue by ___" as a way to start a sentence — the
-      // reply and the sample are already filtered for it, and a starter is the most
-      // copyable of the three.
-      setSuggestions(
-        (Array.isArray(r.suggestions) ? r.suggestions : []).filter(
-          (item) => !(isGradCareer && metricPrompt.test(String(item || '')))
-        )
-      );
-      setSuggestionsLabel(r.suggestionsLabel || '');
+      setExampleAnswers(safeExamples);
       // A metered turn (flagship build-with, or general chat past the daily pool)
       // returns the post-charge balance — keep the wallet pill live without a refresh.
       if (r.remainingCredits != null) {
@@ -471,21 +468,22 @@ const SectionCoach = ({
         </div>
       )}
 
-      {/* WAYS TO ANSWER — the starters and the sample, under Aria's build-with question.
+      {/* A FULL ANSWER SOUNDS LIKE — two sample answers, under Aria's build-with question.
 
-          This was a lone "Show me an example" pill revealing one italic sentence, and the
-          server's `suggestions` — the short first-person openings written FOR this exact
-          question — never reached the screen at all. One example reads as a coincidence;
-          three or four visibly different openings read as angles, which is what they are.
-          See AnswerExamples for why the starters and the sample stay visually apart. */}
+          This was a lone "Show me an example" pill revealing one italic sentence. One
+          example reads as a coincidence: people either copy it wholesale or decide it does
+          not describe them. Two that differ in angle read as a range, which is what makes
+          them a model rather than a script.
+
+          The server's `suggestions` — the short first-person openings — are deliberately
+          NOT shown here: Aria already writes those as bullets in her reply, where each can
+          be copied on its own, so a second copy underneath would be the same text twice. */}
       {phase === 'chat' && !thinking && (
         <AnswerExamples
-          // Keyed on the answers themselves, so a new turn REMOUNTS it and the panel comes
+          // Keyed on the samples themselves, so a new turn REMOUNTS it and the panel comes
           // up collapsed for the new question instead of inheriting the last one's state.
-          key={`${suggestions.join('|')}::${exampleAnswer}`}
-          starters={suggestions}
-          example={exampleAnswer}
-          label={suggestionsLabel}
+          key={exampleAnswers.join('|')}
+          examples={exampleAnswers}
         />
       )}
 

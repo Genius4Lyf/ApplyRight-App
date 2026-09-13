@@ -125,11 +125,23 @@ describe('SectionCoach — entry deleted while a turn is in flight', () => {
  * The strip is only ever a backstop for that slip, so the mock returns exactly it.
  */
 describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the session stage', () => {
+  const METRIC_SAMPLE = 'Cut processing time by 30% by rebuilding the intake sheet';
+  const CLEAN_SAMPLE = 'Rebuilt the intake sheet the whole team used every morning';
   const SLIP = {
     reply: 'What percentage did you improve efficiency by?',
+    // Still returned by the server and still shaping what Aria writes — but never rendered
+    // here, which one of the tests below holds.
     suggestions: ['I improved efficiency by ___%', 'I was trusted with ___'],
-    exampleAnswer: 'Cut processing time by 30% by rebuilding the intake sheet',
+    exampleAnswers: [METRIC_SAMPLE, CLEAN_SAMPLE],
     readyToDraft: false,
+  };
+
+  // The samples panel comes up collapsed; open it before asserting on what is inside.
+  const openSamples = async () => {
+    const heading = await screen.findByRole('button', {
+      name: i18n.t('ariaStudio.answerExamples.fullAnswer'),
+    });
+    fireEvent.click(heading);
   };
 
   beforeEach(() => {
@@ -153,27 +165,17 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     expect(pushedTexts(onPush)).toContain(i18n.t('ariaStudio.sectionCoach.gradFollowUp'));
     expect(pushedTexts(onPush)).not.toContain(SLIP.reply);
 
-    // 2. The STARTERS are filtered one by one — and this is assertable again.
-    //
-    //    It was not, for a while: the dashed starter chips were removed on the theory
-    //    that Aria repeats the same openings as bullets inside her reply, so the client
-    //    stopped reading `suggestions` at all and the old assertion here was retired as
-    //    unfailable. She often did not repeat them, which is how the most useful thing
-    //    the turn produced became the one thing you could not reach. They have their own
-    //    panel now (AnswerExamples), so the filter has a surface again.
-    const panel = await screen.findByRole('button', {
-      name: i18n.t('ariaStudio.answerExamples.title'),
-    });
-    fireEvent.click(panel);
+    // 2. The SAMPLES are filtered one by one, and losing one does not cost the other.
+    //    That is the point of having two: a scrubbed sample leaves a working panel behind
+    //    rather than an empty one.
+    await openSamples();
+    expect(screen.queryByText(new RegExp(METRIC_SAMPLE.slice(0, 24)))).toBeNull();
+    expect(screen.getByText(new RegExp(CLEAN_SAMPLE.slice(0, 24)))).toBeTruthy();
 
-    // The metric-shaped opening is gone; the safe one survives. Handing a student
-    // "I improved efficiency by ___%" as a way to START a sentence is worse than saying
-    // it in prose — a starter is the most copyable thing on the screen.
+    // 3. The server's STARTERS are not on this surface at all — Aria writes those as
+    //    bullets in her own reply, and a second copy here would be the same text twice.
     expect(screen.queryByText('I improved efficiency by ___%')).toBeNull();
-    expect(screen.getByText('I was trusted with ___')).toBeTruthy();
-
-    // 3. No worked EXAMPLE either — the metric one did not survive the strip.
-    expect(screen.queryByText(/Cut processing time by 30%/)).toBeNull();
+    expect(screen.queryByText('I was trusted with ___')).toBeNull();
   });
 
   it("REGRESSION: a real 'job' in the same session keeps the metric framing", async () => {
@@ -188,15 +190,11 @@ describe('SectionCoach — gentle coaching follows the ENTRY TYPE, not just the 
     await waitFor(() => expect(onPush.mock.calls.length).toBeGreaterThan(1));
 
     expect(pushedTexts(onPush)).toContain(SLIP.reply);
-    // Nothing is stripped here, so BOTH starters and the worked example survive — the
-    // metric framing is exactly right for a real job held by an experienced professional.
-    const panel = await screen.findByRole('button', {
-      name: i18n.t('ariaStudio.answerExamples.title'),
-    });
-    fireEvent.click(panel);
-    expect(screen.getByText('I improved efficiency by ___%')).toBeTruthy();
-    expect(screen.getByText('I was trusted with ___')).toBeTruthy();
-    expect(screen.getByText(/Cut processing time by 30%/)).toBeTruthy();
+    // Nothing is stripped here: the metric framing is exactly right for a real job held by
+    // an experienced professional, so BOTH samples survive.
+    await openSamples();
+    expect(screen.getByText(new RegExp(METRIC_SAMPLE.slice(0, 24)))).toBeTruthy();
+    expect(screen.getByText(new RegExp(CLEAN_SAMPLE.slice(0, 24)))).toBeTruthy();
   });
 
   it('leaves an entry with no captured type to the session stage alone', async () => {

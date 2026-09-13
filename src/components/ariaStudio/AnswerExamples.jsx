@@ -3,36 +3,32 @@ import { ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import CopyMessageButton from '../cv/CopyMessageButton';
 
-// WAYS TO ANSWER — the panel under Aria's build-with question.
+// A FULL ANSWER SOUNDS LIKE — the panel under Aria's build-with question.
 //
-// It replaces a single "Show me an example" pill that revealed one italic sentence. Two
-// things were wrong with that:
+// It replaces a "Show me an example" pill that revealed one italic sentence. TWO samples,
+// not one: shown a single example people either copy it wholesale or decide it does not
+// describe them, whereas two that differ in ANGLE read as a range — which is what makes
+// them usable as a model rather than a script.
 //
-//   1. ONE example is a coincidence, not a pattern. Shown a single sample, people either
-//      copy it wholesale or decide it does not describe them and give up. Three or four
-//      openings, visibly different from each other, read as "here are some angles" —
-//      which is what they are.
-//   2. THE STARTERS WERE NOT ON SCREEN AT ALL. The server has always returned
-//      `suggestions` — short first-person openings with a literal "___" where the user's
-//      own detail goes — and the UI dropped them, on the theory that Aria repeats them as
-//      bullets inside her reply. She often did not, and when she did there was no way to
-//      lift one out. So the most useful thing the turn produced was the one thing you
-//      could not reach.
+// WHAT THIS DELIBERATELY DOES NOT SHOW: the server's `suggestions`, the short first-person
+// openings for the same question. They were in here briefly and came straight back out —
+// Aria already writes those openings as bullets inside her reply, where they can be copied
+// one at a time, so a second copy underneath was the same text twice in two styles.
 //
-// THE TWO KINDS ARE KEPT APART ON PURPOSE. A starter is a scaffold to finish in your own
-// words; the example is a whole sample answer that is emphatically NOT the user's claim.
-// Running them together would invite someone to paste a sentence about work they never
-// did, which is the one failure this product cannot afford.
+// The samples are whole sentences and are emphatically NOT the user's claim, which is why
+// the panel says so under them every time. A sample answer sitting beneath a question is
+// one careless paste away from a claim about work nobody did — the single failure this
+// product cannot afford.
 //
 // Collapsed by default: it is help, and help that opens itself is in the way.
-const AnswerExamples = ({ starters = [], example = '', label = '' }) => {
+const AnswerExamples = ({ examples = [] }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const bodyRef = useRef(null);
 
-  // NOTE ON RESETTING: every new question is a new set of answers, and this must come up
+  // NOTE ON RESETTING: every new question brings new samples, and this must come up
   // collapsed each time rather than inheriting the last question's open state. That is
-  // done by the CALLER, which keys this component on the answers themselves — so a new
+  // done by the CALLER, which keys this component on the samples themselves — so a new
   // turn remounts it and `open` starts false on its own. Resetting it here in an effect
   // would be a second render for something a key expresses exactly.
   useEffect(() => {
@@ -48,11 +44,8 @@ const AnswerExamples = ({ starters = [], example = '', label = '' }) => {
     return () => cancelAnimationFrame(frame);
   }, [open]);
 
-  const clean = starters.map((s) => String(s || '').trim()).filter(Boolean);
-  const sample = String(example || '').trim();
-  if (!clean.length && !sample) return null;
-
-  const heading = String(label || '').trim() || t('ariaStudio.answerExamples.title');
+  const clean = examples.map((s) => String(s || '').trim()).filter(Boolean);
+  if (!clean.length) return null;
 
   return (
     <div className="self-start mb-3 w-full max-w-[92%] pl-6">
@@ -64,7 +57,7 @@ const AnswerExamples = ({ starters = [], example = '', label = '' }) => {
           className="flex w-full items-center justify-between gap-3 bg-slate-50 px-3 py-2 text-left transition-colors hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/70"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
-            {heading}
+            {t('ariaStudio.answerExamples.fullAnswer')}
           </span>
           <ChevronDown
             className={`h-4 w-4 shrink-0 text-slate-400 transition-transform ${
@@ -76,44 +69,22 @@ const AnswerExamples = ({ starters = [], example = '', label = '' }) => {
 
         {open && (
           <div ref={bodyRef} className="border-t border-slate-200 dark:border-slate-800">
-            {clean.length > 0 && (
-              <ul className="divide-y divide-slate-100 dark:divide-slate-800/70">
-                {clean.map((s) => (
-                  <li
-                    key={s}
-                    className="flex items-start gap-2 px-3 py-2 text-[13px] leading-relaxed text-slate-700 dark:text-slate-200"
-                  >
-                    {/* Always visible here, not hover-revealed: this panel exists TO be
-                        copied from, so hiding its only action would be a puzzle. */}
-                    <CopyMessageButton text={s} compact reveal="" className="mt-0.5 shrink-0" />
-                    <span className="min-w-0">{s}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {sample && (
-              <div
-                className={`px-3 py-2 ${
-                  clean.length ? 'border-t border-slate-200 dark:border-slate-800' : ''
-                } bg-slate-50/60 dark:bg-slate-800/20`}
-              >
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-                  {t('ariaStudio.answerExamples.fullAnswer')}
-                </p>
-                <div className="mt-1 flex items-start gap-2">
-                  <CopyMessageButton text={sample} compact reveal="" className="mt-0.5 shrink-0" />
+            <ul className="divide-y divide-slate-100 dark:divide-slate-800/70">
+              {clean.map((s) => (
+                <li key={s} className="flex items-start gap-2 px-3 py-2">
+                  {/* Always visible, not hover-revealed: this panel exists TO be copied
+                      from, so hiding its only action would be a puzzle. */}
+                  <CopyMessageButton text={s} compact reveal="" className="mt-0.5 shrink-0" />
                   <p className="min-w-0 text-[13px] italic leading-relaxed text-slate-600 dark:text-slate-300">
-                    {t('cvBuilder.askAria.exampleFormat', { answer: sample })}
+                    {t('cvBuilder.askAria.exampleFormat', { answer: s })}
                   </p>
-                </div>
-                {/* Said out loud, every time. A sample answer sitting under a question is
-                    one careless paste away from becoming a claim about work nobody did. */}
-                <p className="mt-1.5 text-[11px] leading-snug text-slate-400 dark:text-slate-500">
-                  {t('ariaStudio.answerExamples.sampleNote')}
-                </p>
-              </div>
-            )}
+                </li>
+              ))}
+            </ul>
+            {/* Said out loud, every time — see the note at the top of this file. */}
+            <p className="border-t border-slate-100 px-3 py-2 text-[11px] leading-snug text-slate-400 dark:border-slate-800/70 dark:text-slate-500">
+              {t('ariaStudio.answerExamples.sampleNote')}
+            </p>
           </div>
         )}
       </div>
