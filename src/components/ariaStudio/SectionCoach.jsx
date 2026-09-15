@@ -106,9 +106,11 @@ const SectionCoach = ({
   const [applying, setApplying] = useState(false);
   const [wasFree, setWasFree] = useState(!!restored?.wasFree);
   // The TWO sample answers for the question just asked. The server's `suggestions` — the
-  // short first-person openings — are deliberately not held here: Aria already writes
-  // those as bullets inside her reply, where each can be copied on its own, so a second
-  // copy underneath would be the same text twice in two different styles.
+  // short first-person openings — are deliberately not held here, and that is now SAFE
+  // rather than merely hoped-for: the prompt requires them in the reply and the server
+  // appends them when the model forgets (utils/ariaStarters), so they arrive as bullets
+  // inside Aria's message with their own copy control. This comment used to assert the
+  // same thing with nothing enforcing it, which is why they vanished on half the turns.
   const [exampleAnswers, setExampleAnswers] = useState([]);
   // Set when the interview closes; handed to onDone so the parent can offer the
   // cross-history hunt AFTER the bullets land. See the readyToDraft branch below.
@@ -222,10 +224,24 @@ const SectionCoach = ({
       // metric-shaped prompts at this final presentation boundary.
       const metricPrompt =
         /\b(?:efficiency|downtime|revenue|percentage|metric)s?\b|\bby\s+_+|\d+(?:\.\d+)?\s?%|\$\s?\d/i;
+      // THE LAST-RESORT METRIC GUARD, for when the provider slips back into its
+      // experienced-role framing after the server has stopped looking.
+      //
+      // It used to swap the ENTIRE reply for a canned sentence, which threw away Aria's
+      // real question AND the answer starters underneath it — one stray word like
+      // "efficiency" anywhere in a good reply and an entry-level user got a generic line
+      // instead. Now only the offending PARAGRAPH is dropped; the canned line is the
+      // fallback for when that leaves nothing, not the first move.
+      const scrubMetricPressure = (markdown) => {
+        const kept = String(markdown || '')
+          .split(/\n{2,}/)
+          .filter((para) => !metricPrompt.test(para));
+        return kept.join('\n\n').trim();
+      };
       const reply = r.readyToDraft
         ? t('ariaStudio.sectionCoach.readyForBullets')
         : isGradCareer && metricPrompt.test(r.reply || '')
-          ? t('ariaStudio.sectionCoach.gradFollowUp')
+          ? scrubMetricPressure(r.reply) || t('ariaStudio.sectionCoach.gradFollowUp')
           : r.reply;
       // The server already scrubs these for a grad stage; this is the same guard applied
       // at the last presentation boundary, for the case where the provider slips back into
@@ -240,7 +256,10 @@ const SectionCoach = ({
       )
         .map((s) => String(s || '').trim())
         .filter((s) => s && !(isGradCareer && metricPrompt.test(s)));
-      onPush({ who: 'aria', text: reply });
+      // `feedbackId` rides on the message so the 👍/👎 controls know what they rate, and
+      // still know after a refresh. Dropping it made the build interview the only Aria
+      // surface with no way to say an answer was wrong — on the turns that matter most.
+      onPush({ who: 'aria', text: reply, feedbackId: r.feedbackId });
       setExampleAnswers(safeExamples);
       // A metered turn (flagship build-with, or general chat past the daily pool)
       // returns the post-charge balance — keep the wallet pill live without a refresh.

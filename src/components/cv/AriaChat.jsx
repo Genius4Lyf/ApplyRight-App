@@ -440,7 +440,7 @@ const AriaChat = ({
             return m.who === 'user' ? (
               <div key={i} className="msg-row self-end flex max-w-[92%] flex-col items-end gap-0.5">
                 <motion.div
-                  className="bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
+                  className="bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap break-words"
                   {...bubbleAnim('user', reduce)}
                 >
                   {m.text}

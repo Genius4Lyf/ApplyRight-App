@@ -3913,7 +3913,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                       ref={(el) => {
                         msgDomRef.current[i] = el;
                       }}
-                      className={`bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap ${
+                      className={`bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap break-words ${
                         m.failed ? 'opacity-60' : ''
                       }`}
                       {...bubbleAnim('user', reduce)}
@@ -4324,6 +4324,36 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                     row rather than a child of the text, so the orbit stays the last item
                     and the prose above still reads on its own if this renders nothing. */}
                 <AriaAnswerCard layout={m.layout} blocks={m.blocks} />
+
+                {/* THE HUNT'S ANSWER LADDER. When Aria asks whether the user has a skill,
+                    the server returns the five rungs to answer with — "I use it regularly"
+                    down to "no, never". They were stored on the message and read by
+                    NOTHING, so the ladder has been fetched, paid for and persisted on
+                    every hunt turn while never once reaching the screen.
+
+                    Only under the LAST message, and only while the hunt is still open: a
+                    rung is answerable exactly as the next thing you say, and an older
+                    question's rungs would silently answer the wrong one. */}
+                {m.huntTurn &&
+                  activeHunt &&
+                  !thinking &&
+                  i === messages.length - 1 &&
+                  Array.isArray(m.suggestions) &&
+                  m.suggestions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 px-1">
+                      {m.suggestions.map((rung) => (
+                        <button
+                          key={rung}
+                          type="button"
+                          onClick={() => send(rung)}
+                          className="rounded-full border border-slate-300 px-3 py-1.5 text-[13px] font-semibold text-slate-600 transition-colors hover:border-slate-400 hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
+                        >
+                          {rung}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                 <AriaMessageActions text={m.text} feedbackId={m.feedbackId} />
               </motion.div>
             );

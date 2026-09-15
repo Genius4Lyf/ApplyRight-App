@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from 'react-i18next';
 import { healTail } from '../../lib/markdownTail';
 import CopyMessageButton from './CopyMessageButton';
 
@@ -127,8 +128,22 @@ const COMPONENTS_COPYABLE_BULLETS = { ...COMPONENTS, li: CopyableListItem };
  *                              answers to reuse. Everywhere else they are just prose in
  *                              a list, and a control on every line would be clutter.
  */
+// NOTHING THAT LOOKS LIKE A SERIALIZED OBJECT MAY BE SHOWN AS A MESSAGE.
+//
+// A user was once handed `{"reply":"That's an excellent example! ...","intent":"ready",...`
+// as Aria's message, because the model ran out of budget mid-object and the server could
+// not tell a truncated object from prose. Both halves of that are fixed on the server now —
+// this is the last line of defence, in the single component every Aria message on every
+// surface renders through, so no future caller can reintroduce it.
+//
+// A brace alone is not enough: prose can open with one. It takes a quoted key immediately
+// after, which is what a serialized object always has and a sentence never does.
+const looksLikeJsonObject = (value) => /^\s*\{\s*"[A-Za-z_$][\w$]*"\s*:/.test(String(value || ''));
+
 const AriaMessageText = ({ text, typed = false, reduce = false, onDone, bulletCopy = false }) => {
-  const full = String(text || '');
+  const { t } = useTranslation();
+  const raw = String(text || '');
+  const full = looksLikeJsonObject(raw) ? t('ariaStudio.chat.replyUnreadable') : raw;
   const [count, setCount] = useState(typed || reduce ? full.length : 0);
 
   useEffect(() => {
@@ -165,7 +180,10 @@ const AriaMessageText = ({ text, typed = false, reduce = false, onDone, bulletCo
   const components = bulletCopy && done ? COMPONENTS_COPYABLE_BULLETS : COMPONENTS;
 
   return (
-    <div className="aria-md">
+    // `break-words` belongs HERE rather than on each host: it was on three of the four
+    // surfaces that render this and missing on the fourth, which is the kind of thing that
+    // is only ever noticed by the one user who pastes a URL.
+    <div className="aria-md break-words">
       <ReactMarkdown components={components}>{source}</ReactMarkdown>
     </div>
   );

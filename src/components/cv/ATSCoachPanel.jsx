@@ -65,13 +65,7 @@ const ScoreRing = ({ score, size = 88 }) => {
 
 // Target-step companion chat. The central workspace owns job capture and confirmation;
 // this rail stays focused on ApplyRight's welcome and optional job-guidance questions.
-const TargetChat = ({
-  cvData,
-  updateCvData,
-  draftId,
-  ensureDraft,
-  compactComposer = false,
-}) => {
+const TargetChat = ({ cvData, updateCvData, draftId, ensureDraft, compactComposer = false }) => {
   const { t } = useTranslation();
   // Q&A (+ the 'research' marker) persists ON the draft (cvData.coachChats.target_job),
   // so it survives leaving the step, refresh, and other devices — like the other chats.
@@ -192,7 +186,7 @@ const TargetChat = ({
             return m.who === 'user' ? (
               <motion.div
                 key={i}
-                className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
+                className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap break-words"
                 {...bubbleAnim('user', reduce)}
               >
                 {m.text}
@@ -225,26 +219,26 @@ const TargetChat = ({
           {/* Optional target-job questions stay in chat; capture and confirmation
               now live in the central workspace. */}
           <div className="self-end max-w-[92%] flex flex-wrap justify-end gap-1.5">
-              {showChips &&
-                suggestionsFor(t, 'target_job').map((chip) => (
-                  <button
-                    key={chip}
-                    type="button"
-                    onClick={() => askQuestion(chip)}
-                    className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
-                  >
-                    {chip}
-                  </button>
-                ))}
-              {showChips && (
+            {showChips &&
+              suggestionsFor(t, 'target_job').map((chip) => (
                 <button
+                  key={chip}
                   type="button"
-                  onClick={injectResearch}
+                  onClick={() => askQuestion(chip)}
                   className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
                 >
-                  📖 {t('cvBuilder.researchCard.whatResearchSays')}
+                  {chip}
                 </button>
-              )}
+              ))}
+            {showChips && (
+              <button
+                type="button"
+                onClick={injectResearch}
+                className="text-[11px] font-semibold px-3 py-1.5 rounded-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors"
+              >
+                📖 {t('cvBuilder.researchCard.whatResearchSays')}
+              </button>
+            )}
           </div>
         </div>
       </div>

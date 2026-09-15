@@ -134,7 +134,10 @@ const AskAriaGenerate = ({
   // toggle so it never reads as the user's own claim. Cleared on send, refreshed with
   // each new question. The tap-to-start STARTERS that used to sit beside it are gone —
   // Aria writes those into her reply as bullets now, so a chip row repeated them.
-  const [exampleAnswer, setExampleAnswer] = useState('');
+  // PLURAL. The server returns two samples now; this read `r.exampleAnswer` (singular),
+  // which stopped existing when the field was renamed — so this toggle has been silently
+  // absent on every turn since, on the one surface that never got the Studio's new panel.
+  const [exampleAnswers, setExampleAnswers] = useState([]);
   const [exampleOpen, setExampleOpen] = useState(false);
   // For a focused PROJECT, ask the project type upfront (chips) before interviewing.
   // Dismissed once the user picks a chip OR types any answer; reset on focus change.
@@ -349,7 +352,7 @@ const AskAriaGenerate = ({
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setShowChips(false);
     setProjectTypePicked(true); // any send (chip or typed) dismisses the project-type chips
-    setExampleAnswer('');
+    setExampleAnswers([]);
     setExampleOpen(false);
     setThinking(true);
     if (focused) buildTurnsRef.current += 1;
@@ -387,15 +390,23 @@ const AskAriaGenerate = ({
         isGradCareer && metricPrompt.test(r.reply || '')
           ? t('cvBuilder.askAria.gradFollowUp')
           : r.reply;
-      const safeExample =
-        isGradCareer && metricPrompt.test(r.exampleAnswer || '') ? '' : r.exampleAnswer || '';
+      // Filtered one by one, so an entry-level user losing one sample to the metric scrub
+      // still keeps the other. `exampleAnswer` stays as a fallback for a response from a
+      // server that predates the rename.
+      const safeExamples = (
+        Array.isArray(r.exampleAnswers) && r.exampleAnswers.length
+          ? r.exampleAnswers
+          : [r.exampleAnswer]
+      )
+        .map((x) => String(x || '').trim())
+        .filter((x) => x && !(isGradCareer && metricPrompt.test(x)));
       setMessages((m) => [...m, { who: 'aria', text: reply }]);
       setFreeLeft(r.freeRemaining);
       // Metered turn (flagship, or past the daily free pool) → refresh the wallet pill.
       if (r.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
       }
-      setExampleAnswer(safeExample);
+      setExampleAnswers(safeExamples);
       if (r.readyToDraft && focused) {
         const desc =
           (r.description || '').trim() ||
@@ -639,7 +650,7 @@ const AskAriaGenerate = ({
               return (
                 <motion.div
                   key={i}
-                  className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap"
+                  className="self-end max-w-[92%] bg-[rgb(242,240,240)] text-[rgb(31,31,31)] dark:bg-slate-800 dark:text-slate-50 rounded-[28px] px-7 py-5 text-[17px] leading-6 whitespace-pre-wrap break-words"
                   {...bubbleAnim('user', reduce)}
                 >
                   {m.text}
@@ -896,7 +907,7 @@ const AskAriaGenerate = ({
               The example is NOT a duplicate — it is a full sample answer she deliberately
               keeps out of the reply, behind a toggle, so it never reads as the user's own
               claim. That one stays. */}
-          {focused && phase === 'chat' && !thinking && exampleAnswer && (
+          {focused && phase === 'chat' && !thinking && exampleAnswers.length > 0 && (
             <div className="self-start pl-6 flex flex-col gap-1.5 mb-3">
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -909,9 +920,16 @@ const AskAriaGenerate = ({
                     : t('cvBuilder.askAria.showExample')}
                 </button>
               </div>
-              {exampleOpen && exampleAnswer && (
-                <div className="mt-0.5 max-w-[92%] rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] text-slate-600 dark:text-slate-300 italic">
-                  {t('cvBuilder.askAria.exampleFormat', { answer: exampleAnswer })}
+              {exampleOpen && (
+                <div className="mt-0.5 flex max-w-[92%] flex-col gap-1.5">
+                  {exampleAnswers.map((sample) => (
+                    <div
+                      key={sample}
+                      className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 px-3 py-2 text-[13px] sm:text-[12px] italic text-slate-600 dark:text-slate-300"
+                    >
+                      {t('cvBuilder.askAria.exampleFormat', { answer: sample })}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

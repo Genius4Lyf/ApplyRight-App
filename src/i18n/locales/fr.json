@@ -1094,12 +1094,12 @@
       "couldntSetup": "Hmm — je n’ai pas réussi à configurer votre CV. Actualisez et réessayez.",
       "couldntReach": "Je n’ai pas pu répondre à l’instant — réessayez.",
       "freeChatsUsed": "Vous avez épuisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
-      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Standard — il est gratuit — ou rechargez pour rester sur Pro.",
+      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Basique — il est gratuit — ou rechargez pour rester sur Pro.",
       "buildLimitUsed": "Ça fait beaucoup de construction pour aujourd'hui — tout est sauvegardé. On continue demain.",
       "settingUp": "Préparation de votre CV…",
       "freeChatsLeft": "{{n}} échanges gratuits restants aujourd’hui",
       "freeChatsDone": "Échanges gratuits épuisés aujourd’hui · 1 crédit chacun",
-      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
+      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Basique, c’est gratuit",
       "tailoredFor": "Adapté pour {{title}} chez {{company}}",
       "at": "chez",
       "focus": "Ciblage",
@@ -5012,7 +5012,7 @@
       "buildSummaryDone": "Votre CV est construit. Voici où il en est.",
       "certsDone": "Votre section formation est complète.",
       "chatLimitReached": "Vous avez utilisé vos échanges gratuits du jour — rechargez des crédits ou revenez demain.",
-      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Standard — il est gratuit — ou rechargez pour rester sur Pro.",
+      "proNeedsCredits": "Le modèle Pro coûte des crédits. Repassez au modèle Basique — il est gratuit — ou rechargez pour rester sur Pro.",
       "buildLimitReached": "Ça fait beaucoup de construction pour aujourd'hui — tout est sauvegardé. On continue demain.",
       "chatUnreachable": "Je n'ai pas pu vous joindre pour l'instant — réessayez.",
       "failed": {
@@ -5136,12 +5136,13 @@
         "reopenFailed": "Je n'ai pas pu ouvrir cette analyse.",
         "divider": "Analyse · {{jobTitle}}",
         "dividerWithCompany": "Analyse · {{jobTitle}} chez {{company}}"
-      }
+      },
+      "replyUnreadable": "Cette réponse est revenue illisible — reposez-moi la question et je réessaierai."
     },
     "sectionCoach": {
       "rerollWasFree": "Cette relance était gratuite.",
       "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
-      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Standard, c’est gratuit",
+      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Basique, c’est gratuit",
       "backToSections": "Retour aux sections",
       "aimingAt": "Objectif : {{keywords}}",
       "questionsLeft_one": "{{count}} question restante sur ce poste",

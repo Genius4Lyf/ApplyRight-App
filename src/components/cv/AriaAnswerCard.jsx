@@ -25,8 +25,12 @@ const EYEBROW = {
   compare: 'ariaStudio.answerCard.compareEyebrow',
 };
 
+// `min-w-0` + `break-words`: inside the compare GRID a long unbroken token (a URL, a
+// long product name) would otherwise force its column wider than the card and push the
+// whole page into horizontal scroll on a phone. A grid item will not shrink below its
+// content without min-w-0.
 const Row = ({ label, detail }) => (
-  <div className="flex flex-col gap-0.5">
+  <div className="flex min-w-0 flex-col gap-0.5 break-words">
     <span className="font-serif text-[15px] leading-snug font-semibold text-slate-900 dark:text-slate-100">
       {label}
     </span>

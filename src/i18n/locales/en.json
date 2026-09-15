@@ -909,7 +909,7 @@
         "1": "Unlimited watermark-free CV downloads",
         "2": "Full AI scorecard after every live interview",
         "3": "AI answer grading, story grading & adaptive follow-ups",
-        "4": "Standard-model ARIA chat free — credits only for the Pro models"
+        "4": "Basic-model ARIA chat free — credits only for the Pro models"
       },
       "weeklyPro": {
         "label": "Starter Pack",
@@ -1098,12 +1098,12 @@
       "couldntSetup": "Hmm — I couldn’t get your CV set up. Refresh and try again.",
       "couldntReach": "Couldn’t reach me just now — try again.",
       "freeChatsUsed": "You’ve used today’s free chats — top up credits or come back tomorrow.",
-      "proNeedsCredits": "The Pro model costs credits. Switch back to Standard — it’s free — or top up to stay on Pro.",
+      "proNeedsCredits": "The Pro model costs credits. Switch back to Basic — it's free — or top up to stay on Pro.",
       "buildLimitUsed": "That’s a lot of building for one day — everything’s saved. Let’s continue tomorrow.",
       "settingUp": "Setting up your CV draft…",
       "freeChatsLeft": "{{n}} free chats left today",
       "freeChatsDone": "Free chats done today · 1 credit each",
-      "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
+      "proTurnCost": "Pro model · {{n}} credits/message · switch to Basic for free",
       "tailoredFor": "Tailored for {{title}} at {{company}}",
       "at": "at",
       "focus": "Focus",
@@ -5016,7 +5016,7 @@
       "buildSummaryDone": "That's your CV built. Here's where it stands.",
       "certsDone": "That's your education section complete.",
       "chatLimitReached": "You've used today's free chats — top up credits or come back tomorrow.",
-      "proNeedsCredits": "The Pro model costs credits. Switch back to Standard — it's free — or top up to stay on Pro.",
+      "proNeedsCredits": "The Pro model costs credits. Switch back to Basic — it's free — or top up to stay on Pro.",
       "buildLimitReached": "That's a lot of building for one day — everything's saved. Let's continue tomorrow.",
       "chatUnreachable": "Couldn't reach me just now — try again.",
       "failed": {
@@ -5140,12 +5140,13 @@
         "reopenFailed": "I couldn't open that analysis.",
         "divider": "Analysis · {{jobTitle}}",
         "dividerWithCompany": "Analysis · {{jobTitle}} at {{company}}"
-      }
+      },
+      "replyUnreadable": "That answer came back garbled — ask me that again and I'll retry."
     },
     "sectionCoach": {
       "rerollWasFree": "That re-roll was free.",
       "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
-      "proTurnCost": "Pro model · {{n}} credits/message · switch to Standard for free",
+      "proTurnCost": "Pro model · {{n}} credits/message · switch to Basic for free",
       "backToSections": "Back to sections",
       "aimingAt": "Aiming at: {{keywords}}",
       "questionsLeft_one": "{{count}} question left on this role",
