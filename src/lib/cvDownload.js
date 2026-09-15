@@ -52,9 +52,9 @@ export function resolveDownloadTemplate(templateId) {
 // Checkout is a full page navigation to Flutterwave and back, so nothing in memory
 // survives it. The template id already rode across in localStorage; the format did not,
 // and the return path was hard-coded to the PDF. So clicking "Download Word", paying
-// ₦1,000 for the single-download pass and coming back delivered a PDF — and spent the
+// for the single-download pass and coming back delivered a PDF — and spent the
 // pass on it, because the backend consumes a download unit per request in either format.
-// Getting the Word file then cost a second ₦1,000.
+// Getting the Word file then cost a second pass.
 //
 // Read and write live together here so the writer (the paywall modal) and the reader (the
 // CV Studio page) cannot drift on the key or on what counts as a valid value. Both sides

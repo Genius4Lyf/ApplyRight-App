@@ -141,7 +141,7 @@ const NewCvMenu = ({ onBuildWithAria, onBuildWithBuilder, onInterview, newCvPrim
         className={`btn-secondary ${shape}`}
       >
         <ClipboardCheck className="h-4 w-4 shrink-0 sm:h-3.5 sm:w-3.5" />
-        {/* Always the short label. Sharing a 248px row with New CV, "Prepare for an
+        {/* Always the short label. Sharing a 248px row with New CV, "Prepare me for an
             interview" has nowhere to go but a truncation. The full phrase survives as the
             button's accessible name. */}
         <span className="whitespace-nowrap">{t('workspace.interview.short')}</span>

@@ -896,7 +896,7 @@
           "5": "CV Studio — design your CV: accent, spacing, fonts, length coach",
           "6": "Free AI credits to start (earn more via referrals & ads)",
           "7": "2 starter templates",
-          "8": "First CV download free, then ₦1,000 each"
+          "8": "First CV download free, then {{price}} each"
         },
         "excluded": {
           "0": "Live interview minutes & the AI scorecard",
@@ -4191,8 +4191,8 @@
       "empty": "No interview prep yet. Run a job analysis in Aria Studio and it'll appear here."
     },
     "interview": {
-      "label": "Prepare for an interview",
-      "short": "Interview"
+      "label": "Prepare me for an interview",
+      "short": "Prep me"
     }
   },
   "ariaStudio": {

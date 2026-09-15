@@ -330,10 +330,10 @@ describe('the format survives a payment', () => {
   // already rode across in localStorage; the format did not, and the ?paid=1 return path
   // was hard-coded to performDownload() — the PDF-only one.
   //
-  // So: click "Download Word" → hit the ₦1,000 paywall → pay → get sent back → receive a
+  // So: click "Download Word" → hit the download paywall → pay → get sent back → receive a
   // PDF. And the pass is spent on it, because the backend consumes a download unit per
   // request in either format (docx.controller.js consumeDownload), so the Word file the
-  // user actually wanted cost a second ₦1,000.
+  // user actually wanted cost a second pass.
   beforeEach(() => {
     localStorage.clear();
   });

@@ -892,7 +892,7 @@
           "5": "CV Studio — mettez en forme votre CV : couleur, espacement, polices, coach de longueur",
           "6": "Des crédits IA offerts pour démarrer (gagnez-en plus par parrainage et publicités)",
           "7": "2 modèles pour démarrer",
-          "8": "Premier téléchargement de CV offert, puis 1 000 ₦ l’unité"
+          "8": "Premier téléchargement de CV offert, puis {{price}} l’unité"
         },
         "excluded": {
           "0": "Les minutes d’entretien en direct et le bilan noté par l’IA",
@@ -4187,8 +4187,8 @@
       "empty": "Aucune préparation d'entretien. Lancez une analyse de poste dans Aria Studio et elle apparaîtra ici."
     },
     "interview": {
-      "label": "Préparer un entretien",
-      "short": "Entretien"
+      "label": "Préparez-moi à un entretien",
+      "short": "Préparez-moi"
     }
   },
   "ariaStudio": {

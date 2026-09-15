@@ -188,8 +188,10 @@ export const CREDIT_PACKS = [
 ];
 
 // One-off clean CV download (after the free first one). Must match the backend
-// catalog (download_single).
-export const DOWNLOAD_PASS = { id: 'download_single', priceNgn: 1000, priceUsd: 1.5 };
+// catalog (download_single). The ₦ and $ prices are NOT a conversion of each other:
+// ₦500 is the Nigerian price, $1.50 is the price everywhere else, and the server
+// decides which one a given buyer is allowed to pay.
+export const DOWNLOAD_PASS = { id: 'download_single', priceNgn: 500, priceUsd: 1.5 };
 
 export const formatNgn = (n) => `₦${Number(n || 0).toLocaleString('en-NG')}`;
 export const formatUsd = (n) =>

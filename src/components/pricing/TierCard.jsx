@@ -1,7 +1,7 @@
 import { Check, X, ArrowRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import AriaLoader from '../ui/AriaLoader';
-import { formatNgn, formatUsd } from '../../lib/plans';
+import { formatNgn, formatUsd, DOWNLOAD_PASS } from '../../lib/plans';
 
 /**
  * A single pricing-plan card, shared by the authenticated /upgrade page and the
@@ -44,6 +44,12 @@ const TierCard = ({
   // plan ("Best for Nigeria"), USD spotlights the better-value monthly plan
   // ("Best worldwide"). `featuredFor` makes a tier currency-conditional; tiers
   // with a plain `highlight`/`badge` (e.g. agent plans) stay the same either way.
+  // The free tier's feature list names the per-download price, and that price is
+  // region-split (₦500 in Nigeria, $1.50 everywhere else) — so it has to be
+  // interpolated in the viewer's currency, not written into the string. Every
+  // feature key gets the bag; i18next drops it on the ones with no {{price}}.
+  const downloadPrice =
+    currency === 'USD' ? formatUsd(DOWNLOAD_PASS.priceUsd) : formatNgn(DOWNLOAD_PASS.priceNgn);
   const highlight = tier.featuredFor ? tier.featuredFor === currency : !!tier.highlight;
   const badgeKey = tier.featuredFor ? (highlight ? tier.badgeKey : null) : tier.badgeKey;
   const badge = badgeKey ? t(badgeKey) : null;
@@ -137,7 +143,7 @@ const TierCard = ({
               strokeWidth={3}
             />
             <span className="text-[13px] sm:text-sm leading-snug text-slate-700 dark:text-slate-300">
-              {t(k)}
+              {t(k, { price: downloadPrice })}
             </span>
           </li>
         ))}

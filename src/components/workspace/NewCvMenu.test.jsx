@@ -76,7 +76,7 @@ describe('NewCvMenu', () => {
     const onBuildWithAria = vi.fn();
     mount({ onInterview, onBuildWithAria });
 
-    fireEvent.click(screen.getByRole('button', { name: /prepare for an interview/i }));
+    fireEvent.click(screen.getByRole('button', { name: /prepare me for an interview/i }));
     expect(onInterview).toHaveBeenCalled();
     expect(onBuildWithAria).not.toHaveBeenCalled();
   });

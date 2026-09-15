@@ -117,7 +117,7 @@ describe('SessionRail — the ways to start', () => {
     // desk width — and only one is displayed at a time. jsdom applies no CSS, so both sit
     // in the accessible name here; matched loosely rather than pinning a name that only
     // ever appears in a test.
-    fireEvent.click(screen.getByRole('button', { name: /prepare for an interview/i }));
+    fireEvent.click(screen.getByRole('button', { name: /prepare me for an interview/i }));
     expect(onNewPrep).toHaveBeenCalled();
   });
 });

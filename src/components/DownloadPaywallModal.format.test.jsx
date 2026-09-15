@@ -8,8 +8,8 @@ import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/re
 // This modal is the last thing that runs before the browser navigates to Flutterwave, so
 // it is the only place that still knows whether the user clicked "Download PDF" or
 // "Download Word". It stashed the template id and not the format, and the ?paid=1 return
-// was hard-coded to the PDF — so a ₦1,000 pass bought for a Word file was spent on a PDF,
-// and the Word file then cost another ₦1,000.
+// was hard-coded to the PDF — so a pass bought for a Word file was spent on a PDF,
+// and the Word file then cost another one.
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (k) => k }),
   Trans: ({ children }) => <>{children}</>,
