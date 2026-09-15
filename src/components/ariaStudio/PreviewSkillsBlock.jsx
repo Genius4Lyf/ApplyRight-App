@@ -99,7 +99,10 @@ const SkillGroupDrop = ({ id, disabled, children }) => {
   );
 };
 
-const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
+// `locked` is the INTERVIEW lock, not the completeness one: Aria is mid-interview on an
+// entry somewhere, and sending her to the skills step would strand her there with the role
+// still pinned. Disables, never hides — unlike readOnly, which removes the controls.
+const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false, locked = false }) => {
   const { t } = useTranslation();
   const { cvData, replaceSkills, applySkills } = useAriaStudio();
   const skills = useMemo(() => cvData?.skills || [], [cvData?.skills]);
@@ -637,7 +640,13 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false }) => {
               and stories without the command channel, and an affordance that silently
               does nothing is worse than one that isn't there. */}
           {onSuggestWithAria && (
-            <button type="button" onClick={onSuggestWithAria} className={PREVIEW_PILL}>
+            <button
+              type="button"
+              onClick={onSuggestWithAria}
+              disabled={locked}
+              title={locked ? t('ariaStudio.livePreview.lockedWhileAria') : undefined}
+              className={PREVIEW_PILL}
+            >
               <AriaOrbit size={11} tone="mono" className="shrink-0" />
               {t('ariaStudio.livePreview.suggestSkillsWithAria')}
             </button>

@@ -16,7 +16,11 @@ const DRAFT = {
       description: 'Déployé une architecture à microservices, réduisant la latence de 40 %.',
     },
   ],
-  education: [{ degree: '', school: '', graduationDate: '2020' }],
+  // A PARTIAL entry, not an empty one: a school but no degree yet. It has to carry
+  // something real, because generateMarkdownFromDraft now drops entries with no content
+  // at all rather than rendering them as "### Degree / #### School". A half-filled row
+  // is the case the placeholder translation actually exists for.
+  education: [{ degree: '', school: 'Université de Lagos', graduationDate: '2020' }],
   certifications: [{ name: 'AWS Solutions Architect', issuer: 'Amazon', date: '2023' }],
   skills: [
     { name: 'JavaScript', category: 'Technical Skills' },

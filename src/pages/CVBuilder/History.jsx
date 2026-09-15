@@ -24,6 +24,9 @@ import {
 } from '@dnd-kit/sortable';
 import SortableItem from '../../components/SortableItem';
 import { newSortId, ensureIds } from '../../lib/sortId';
+// The same "is this row real?" test the Studio uses. Two definitions of empty is how the
+// two surfaces came to disagree about whether the blank rows existed at all.
+import { hasSubstance } from '../../lib/studioFlow';
 
 // Free users are capped at this many bullet points per role; paid users get
 // unlimited. The "paid" flag is set manually from the admin panel for now
@@ -131,6 +134,29 @@ const History = () => {
     setHistory(newHistory);
   };
 
+  // WHAT ACTUALLY GETS SAVED.
+  //
+  // `addRole` creates a fully blank row so there is something to type into, and nothing
+  // used to remove it again — so "add a role, change your mind, press Next" committed an
+  // empty entry, and the rendered CV turned each one into a literal "Role / Company | -"
+  // block. Stripped at the two COMMIT points rather than in the live sync, so a row the
+  // user is still typing into keeps its place in the preview.
+  //
+  // Wider than the Studio's hasSubstance on purpose: a date alone is not a usable role,
+  // but it IS something the user typed, and dropping it without a word would be worse
+  // than the blank row. Only a row with nothing at all in it goes.
+  const committedHistory = React.useCallback(
+    () =>
+      history
+        .filter((r) => hasSubstance(r) || (r.startDate || '').trim() || (r.endDate || '').trim())
+        .map((role) => {
+          const rest = { ...role };
+          delete rest.isNew; // a transient UI flag, never part of the document
+          return rest;
+        }),
+    [history]
+  );
+
   const handleChange = (index, field, value) => {
     setStepDirty?.(true);
     const newHistory = [...history];
@@ -152,9 +178,9 @@ const History = () => {
   // Expose this step's current data so the wizard can flush it when the user
   // jumps to another section via the step navigator.
   useEffect(() => {
-    registerStepData?.(() => ({ experience: history.map(({ isNew, ...rest }) => rest) }));
+    registerStepData?.(() => ({ experience: committedHistory() }));
     return () => registerStepData?.(null);
-  }, [history, registerStepData]);
+  }, [history, registerStepData, committedHistory]);
 
   // Re-seed local state when the ATS Coach applies a bullet rewrite from the side
   // panel (externalEditNonce bumps). This step seeds its local state once and only
@@ -236,7 +262,7 @@ const History = () => {
   const onSubmit = (e) => {
     e.preventDefault();
     setStepDirty?.(false);
-    handleNext({ experience: history.map(({ isNew, ...rest }) => rest) });
+    handleNext({ experience: committedHistory() });
   };
 
   return (
@@ -298,9 +324,7 @@ const History = () => {
 
       {history.length === 0 && (
         <div className="text-center p-8 bg-slate-50 dark:bg-slate-900 rounded-xl border border-dashed border-slate-300 dark:border-slate-600">
-          <p className="text-slate-500 dark:text-slate-400 mb-4">
-            {t('cvBuilder.history.empty')}
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 mb-4">{t('cvBuilder.history.empty')}</p>
           <button
             type="button"
             onClick={addRole}
@@ -552,7 +576,8 @@ const History = () => {
                                     : 'border border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 cursor-not-allowed'
                                 }`}
                               >
-                                <MessageCircle className="w-4 h-4" /> {t('cvBuilder.common.askAria')}
+                                <MessageCircle className="w-4 h-4" />{' '}
+                                {t('cvBuilder.common.askAria')}
                               </button>
                               <p
                                 className={`flex-1 min-w-0 text-[12px] leading-snug ${
@@ -567,6 +592,20 @@ const History = () => {
                                     ? t('cvBuilder.history.hintNoCompany')
                                     : t('cvBuilder.history.hintReady')}
                               </p>
+                              {/* DELETE, WHERE SOMEONE LOOKING FOR IT WOULD LOOK.
+                                  The trash icon exists on every card, but it lives in a
+                                  drawer that opens when the card is added and slides shut
+                                  1.2s later; after that only the gear reopens it, and
+                                  nothing says so. A user who added roles by mistake
+                                  reported seeing the icons and then being unable to find
+                                  them again. This is the same removeRole, in the open. */}
+                              <button
+                                type="button"
+                                onClick={() => removeRole(index)}
+                                className="shrink-0 text-xs font-semibold px-3 py-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 transition-colors"
+                              >
+                                {t('cvBuilder.history.removeRole')}
+                              </button>
                               <button
                                 type="button"
                                 onClick={() => setExpandedId(null)}

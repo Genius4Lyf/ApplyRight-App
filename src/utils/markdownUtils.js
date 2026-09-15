@@ -1,14 +1,33 @@
+import { hasSubstance } from '../lib/studioFlow';
+
+// PLACEHOLDER ROWS NEVER BECOME DOCUMENT TEXT.
+//
+// "Add manually" creates a real, blank entry so there is something to write into. Aria
+// Studio's own preview filters those out at read time (withoutBlankEntries), so the user
+// never sees them there — but this function had no such filter, and its `|| 'Role'` /
+// `|| 'Company'` fallbacks turned each one into a literal heading. A user who tapped Add
+// four times got four "Role / Company | -" blocks in the rendered CV, the PDF and the
+// Word file, with no way to delete rows that were invisible everywhere they could be
+// deleted from.
+//
+// Deliberately the SAME hasSubstance the Studio uses rather than a second local test:
+// two definitions of "is this row empty" is how the two surfaces came to disagree.
+// Certifications and languages were already filtered this way just below.
 const generateMarkdownFromDraft = (draft) => {
   const {
     personalInfo,
     professionalSummary,
-    experience = [],
-    education = [],
+    experience: rawExperience = [],
+    education: rawEducation = [],
     certifications = [],
     skills = [],
-    projects = [], // Add projects support
+    projects: rawProjects = [], // Add projects support
     languages = [],
   } = draft;
+
+  const experience = (rawExperience || []).filter(hasSubstance);
+  const education = (rawEducation || []).filter(hasSubstance);
+  const projects = (rawProjects || []).filter(hasSubstance);
 
   let md = '';
 

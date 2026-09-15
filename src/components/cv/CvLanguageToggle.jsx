@@ -26,12 +26,15 @@ const LANGS = [
  * @param {'en'|'fr'|null} value      current DraftCV.outputLang (null = never set)
  * @param {(lang: string) => void} onChange  lift the new value into local CV state
  * @param {boolean} [compact]         chip-sized variant for a preview header
+ * @param {boolean} [disabled]        inert while something else owns the document (an
+ *                                    Aria interview in progress); dims, never hides
  */
 export default function CvLanguageToggle({
   draftId,
   value,
   onChange,
   compact = false,
+  disabled = false,
   className = '',
 }) {
   const { t } = useTranslation();
@@ -74,7 +77,7 @@ export default function CvLanguageToggle({
             key={l.code}
             type="button"
             onClick={() => choose(l.code)}
-            disabled={saving}
+            disabled={saving || disabled}
             aria-pressed={active}
             title={t('cvBuilder.cvLanguageToggle.writeInTitle', { name: l.name })}
             className={`px-2 py-0.5 rounded-md font-mono text-[11px] font-bold uppercase tracking-[0.12em] transition-colors disabled:opacity-50 ${

@@ -120,6 +120,8 @@ const ReorderableList = ({
   onCloseEdit,
   onEditWithAria,
   canEditWithAria = false,
+  // (section, sortId) => void — stop the interview running on the active row.
+  onCancelActive,
   readOnly = false,
   children,
 }) => {
@@ -207,6 +209,14 @@ const ReorderableList = ({
         removeReason={removeReason}
         // Aria is on THIS row: the row marks itself and drops every control.
         isActive={!!activeEntry && entry._sortId === activeEntry.sortId}
+        // Aria is on SOME row: every other row goes inert too, or the user can reorder,
+        // hand-edit or delete the document out from under a live interview.
+        locked={!!activeEntry}
+        onCancelActive={
+          !!activeEntry && entry._sortId === activeEntry.sortId
+            ? () => onCancelActive?.(activeEntry.section, activeEntry.sortId)
+            : undefined
+        }
         readOnly={readOnly}
       >
         {children(entry)}
@@ -253,19 +263,35 @@ const Bullets = ({ description }) => {
 // know or do not, and a conversation to collect three fields is slower than three fields.
 // The button was there because this footer took two handlers, not because the flow behind
 // it made sense for education.
-const AddEntryFooter = ({ labelKey, onAddManually, onAddWithAria }) => {
+const AddEntryFooter = ({ labelKey, onAddManually, onAddWithAria, locked = false }) => {
   const { t } = useTranslation();
+  // Disabled, with the reason on hover — never hidden. A control that vanishes reads as a
+  // bug; a greyed one with a tooltip reads as a rule, which is the position this panel
+  // already takes on the blocked delete. PREVIEW_PILL carries the disabled styling.
+  const reason = locked ? t('ariaStudio.livePreview.lockedWhileAria') : undefined;
   return (
     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
       <span className="font-mono text-[10px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
         {t(labelKey)}
       </span>
       <div className="flex items-center gap-1.5">
-        <button type="button" onClick={onAddManually} className={PREVIEW_PILL}>
+        <button
+          type="button"
+          onClick={onAddManually}
+          disabled={locked}
+          title={reason}
+          className={PREVIEW_PILL}
+        >
           {t('ariaStudio.livePreview.addManually')}
         </button>
         {onAddWithAria && (
-          <button type="button" onClick={onAddWithAria} className={PREVIEW_PILL}>
+          <button
+            type="button"
+            onClick={onAddWithAria}
+            disabled={locked}
+            title={reason}
+            className={PREVIEW_PILL}
+          >
             {t('ariaStudio.livePreview.buildWithAria')}
           </button>
         )}
@@ -333,17 +359,6 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // 'education'). Manual creates a real (blank) entry straight away and opens its inline
   // editor in the same slot the row would have used; Aria routes through the command
   // channel like every other hand-off here, so StudioChat owns the pin and the interview.
-  const addManually = async (section) => {
-    const create =
-      section === 'project' ? addProject : section === 'education' ? addEducation : addRole;
-    const sortId = await create();
-    if (sortId) setEditingSortId(sortId);
-  };
-  const addWithAria = (section) => {
-    requestStudioCommand?.('addEntry', section, null);
-    if (isSheet) onClose?.();
-  };
-
   // ── Which entry is being edited, ONE at a time. ──
   //
   // It lives up here rather than in each row because "one open editor" is a property of
@@ -351,27 +366,64 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // the row the editor replaces. A _sortId is unique across the whole document, so a
   // single value is enough to address any entry in any of the three lists.
   const [editingSortId, setEditingSortId] = useState(null);
-  // An entry that closes still blank was an abandoned "Add manually" — an EXISTING entry
-  // is never blank, so this only ever catches a just-created one — and a lingering blank
-  // row would sit there as a phantom "Add" the user never finished. Prune it on close.
-  const closeEdit = () => {
-    const sortId = editingSortId;
-    if (sortId) {
-      const lists = [
-        ['experience', cvData?.experience],
-        ['project', cvData?.projects],
-        ['education', cvData?.education],
-      ];
-      for (const [token, list] of lists) {
-        const entry = (list || []).find((e) => e._sortId === sortId);
-        if (entry) {
-          if (!hasSubstance(entry)) removeEntry?.(token, sortId);
-          break;
-        }
+
+  // An entry left still blank was an abandoned "Add manually" — an EXISTING entry is never
+  // blank, so this only ever catches a just-created one.
+  //
+  // It matters more than a stray row on screen. "Add manually" persists the entry to the
+  // draft IMMEDIATELY, so an orphaned blank survives a refresh, and the rendered CV turns
+  // it into a literal "Role / Company | -" block — in a preview that filters blanks out,
+  // which is to say invisible in the only place that could delete it.
+  const pruneIfBlank = (sortId) => {
+    if (!sortId) return;
+    const lists = [
+      ['experience', cvData?.experience],
+      ['project', cvData?.projects],
+      ['education', cvData?.education],
+    ];
+    for (const [token, list] of lists) {
+      const entry = (list || []).find((e) => e._sortId === sortId);
+      if (entry) {
+        if (!hasSubstance(entry)) removeEntry?.(token, sortId);
+        break;
       }
     }
+  };
+
+  // EVERY handover of the open editor goes through these, never through setEditingSortId
+  // directly. Three paths used to set it directly — a second "Add manually", another row's
+  // ✎, and Aria taking a row over — and each dropped the outgoing blank on the floor.
+  // Tapping "Add manually" four times persisted four of them.
+  const openEdit = (sortId) => {
+    if (sortId !== editingSortId) pruneIfBlank(editingSortId);
+    setEditingSortId(sortId);
+  };
+  const closeEdit = () => {
+    pruneIfBlank(editingSortId);
     setEditingSortId(null);
   };
+
+  // A blank still open when the panel goes away (the sheet closes, the route changes) is
+  // the same orphan by a fourth route, and the component is gone before closeEdit could
+  // run. The ref keeps the unmount cleanup reading live values rather than the ones
+  // captured when it mounted.
+  const pruneOnUnmountRef = useRef(() => {});
+  useEffect(() => {
+    pruneOnUnmountRef.current = () => pruneIfBlank(editingSortId);
+  });
+  useEffect(() => () => pruneOnUnmountRef.current(), []);
+
+  const addManually = async (section) => {
+    const create =
+      section === 'project' ? addProject : section === 'education' ? addEducation : addRole;
+    const sortId = await create();
+    if (sortId) openEdit(sortId);
+  };
+  const addWithAria = (section) => {
+    requestStudioCommand?.('addEntry', section, null);
+    if (isSheet) onClose?.();
+  };
+
   const [viewMode, setViewMode] = useState('edit');
 
   // The lock outranks the manual editor. If Aria takes over the entry that was mid-edit,
@@ -424,6 +476,22 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // up blinking at a panel that is still read-only.
   const isBuildSession = cvData?.studioKind === 'build';
   const canEdit = editorUnlocked(cvData);
+
+  // ── The INTERVIEW lock, a different thing from the completeness lock above. ──
+  //
+  // While Aria is interviewing an entry, nothing else here may start a competing flow or
+  // change the document's shape — a second "Build with Aria" would yank the pin off the
+  // role she is mid-question on, and "Suggest skills with Aria" would move the whole chat
+  // to another section and strand her there.
+  //
+  // Kept OUT of `readOnly` deliberately: that prop also hides things (the certifications
+  // and languages blocks return null under it when empty), so reusing it would make
+  // sections disappear for the length of an interview. This one only ever disables.
+  const ariaBusy = !!activeEntry;
+  // Asking, not doing: StudioChat owns the teardown ordering, because the pin has to close
+  // before the entry it points at can leave cvData.
+  const cancelActive = (section, sortId) =>
+    requestStudioCommand?.('cancelFocus', section || 'experience', sortId || null);
 
   const experience = capturedCv.experience || [];
   const projects = capturedCv.projects || [];
@@ -522,7 +590,10 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
             <button
               type="button"
               onClick={() => setViewMode('preview')}
-              disabled={!hasAnything || !!editingSortId}
+              // …and not while Aria is interviewing: the preview branch renders the
+              // finished template, where her marker and its Cancel do not exist, so the
+              // user would be looking at a locked panel with no visible way out.
+              disabled={!hasAnything || !!editingSortId || ariaBusy}
               aria-pressed={viewMode === 'preview'}
               className={`inline-flex h-7 items-center gap-1 rounded-md px-2 text-[10.5px] font-semibold transition-[background-color,color,box-shadow] disabled:cursor-not-allowed disabled:opacity-40 ${
                 viewMode === 'preview'
@@ -543,6 +614,9 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
             draftId={cvData._id}
             value={cvData.outputLang}
             onChange={(next) => updateCvData({ outputLang: next })}
+            // Switching the document's language mid-interview would change the language
+            // Aria is writing in halfway through the entry she is writing.
+            disabled={ariaBusy}
             className="shrink-0"
           />
         )}
@@ -624,7 +698,11 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         "Draft with Aria" is wired from HERE, not from inside the block:
                         the command channel and the sheet-close are the parent's job,
                         exactly as onSuggestWithAria and onEditWithAria are. */}
-                        <PreviewSummaryBlock onDraftWithAria={draftSummary} readOnly={!canEdit} />
+                        <PreviewSummaryBlock
+                          onDraftWithAria={draftSummary}
+                          readOnly={!canEdit}
+                          locked={ariaBusy}
+                        />
                       </SectionBlock>
                     );
                   }
@@ -642,11 +720,12 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           entries={withNewEntry(experience, 'experience')}
                           className="space-y-3"
                           editingSortId={editingSortId}
-                          onEdit={setEditingSortId}
+                          onEdit={openEdit}
                           onCloseEdit={closeEdit}
                           canEditWithAria
                           onEditWithAria={editWithAria}
                           readOnly={!canEdit}
+                          onCancelActive={cancelActive}
                         >
                           {(r) => (
                             <>
@@ -679,6 +758,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         </ReorderableList>
                         {canEdit && (
                           <AddEntryFooter
+                            locked={ariaBusy}
                             labelKey="ariaStudio.livePreview.addRole"
                             onAddManually={() => addManually('experience')}
                             onAddWithAria={() => addWithAria('experience')}
@@ -703,11 +783,12 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           entries={withNewEntry(projects, 'projects')}
                           className="space-y-3"
                           editingSortId={editingSortId}
-                          onEdit={setEditingSortId}
+                          onEdit={openEdit}
                           onCloseEdit={closeEdit}
                           canEditWithAria
                           onEditWithAria={editWithAria}
                           readOnly={!canEdit}
+                          onCancelActive={cancelActive}
                         >
                           {(p) => (
                             <>
@@ -720,6 +801,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         </ReorderableList>
                         {canEdit && (
                           <AddEntryFooter
+                            locked={ariaBusy}
                             labelKey="ariaStudio.livePreview.addProject"
                             onAddManually={() => addManually('project')}
                             onAddWithAria={() => addWithAria('project')}
@@ -748,7 +830,11 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                         block: the command channel and the sheet-close are the parent's
                         job, exactly as onEditWithAria is passed down to the rows rather
                         than requested by them. */}
-                        <PreviewSkillsBlock onSuggestWithAria={suggestSkills} readOnly={!canEdit} />
+                        <PreviewSkillsBlock
+                          onSuggestWithAria={suggestSkills}
+                          readOnly={!canEdit}
+                          locked={ariaBusy}
+                        />
                       </SectionBlock>
                     );
                   }
@@ -768,13 +854,14 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                             entries={withNewEntry(education, 'education')}
                             className="space-y-2"
                             editingSortId={editingSortId}
-                            onEdit={setEditingSortId}
+                            onEdit={openEdit}
                             onCloseEdit={closeEdit}
                             // Explicitly FALSE, not merely omitted: education has no entry
                             // interview to hand a degree to (ENTRY_SOURCE covers experience
                             // and projects only), so its ✎ is the manual editor, full stop.
                             canEditWithAria={false}
                             readOnly={!canEdit}
+                            onCancelActive={cancelActive}
                           >
                             {(e) => (
                               <>
@@ -798,6 +885,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
                           </ReorderableList>
                           {canEdit && (
                             <AddEntryFooter
+                              locked={ariaBusy}
                               labelKey="ariaStudio.livePreview.addEducation"
                               onAddManually={() => addManually('education')}
                             />

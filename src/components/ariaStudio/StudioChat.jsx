@@ -969,6 +969,15 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       return;
     }
 
+    if (studioCommand.type === 'cancelFocus') {
+      clearStudioCommand?.();
+      // The panel never tears this down itself — one owner of the ordering, or the entry
+      // can leave cvData before the pin that points at it is closed.
+      // eslint-disable-next-line no-use-before-define
+      cancelFocus();
+      return;
+    }
+
     if (studioCommand.type === 'addEntry') {
       const { section } = studioCommand;
       clearStudioCommand?.();
@@ -2957,6 +2966,56 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     setPhase('results');
   };
 
+  // ─── CANCEL: leave an interview without finishing it. ───
+  //
+  // The build track had no way out at all. "Next role" stays disabled until the entry is
+  // complete, and "Done" stamps the section finished — so someone who opened Build with
+  // Aria by mistake, or changed their mind halfway, was stuck inside it.
+  //
+  // Cancelling is NOT finishing: no rolerecord, no DONE marker, no section advanced.
+  //
+  // What it must do is close the transcript MARKER. activeEntry is republished from that
+  // marker on every render, so clearing state alone achieves nothing, and derivePhase
+  // rebuilds the whole interview from a pin left open — cancel, refresh, and it would be
+  // sitting there again.
+  //
+  // Everything Aria already applied stays: applying is a checkpoint, not a verdict. A
+  // studioPending stays too — those are bullets the user spent credits on, and this file
+  // deliberately never discards them. The one thing removed is an entry Aria created that
+  // nobody ever typed into, which would otherwise sit in the CV as a blank "Role /
+  // Company" row forever, which is a bug we have already had once.
+  const cancelFocus = () => {
+    if (roleBusy) return;
+
+    if (phase === 'fix:rewrite') {
+      clearRewrite();
+      setPhase('results');
+      return;
+    }
+    if (phase === 'fix:coach') {
+      cancelFix();
+      return;
+    }
+    if (!String(phase).startsWith('build:')) return;
+
+    const section = pinnedSectionKey;
+    const list = SECTION_LIST[section] || 'experience';
+    const blank = !!pinnedEntry && entryProgress(pinnedEntry, section).done === 0;
+    const wasFinished = completedBuildSession;
+
+    if (blank && draftId) {
+      const pruned = (cvData[list] || []).filter((e) => e._sortId !== pinnedEntry._sortId);
+      updateCvData({ [list]: pruned });
+      CVService.saveDraft({ _id: draftId, [list]: pruned }).catch((err) =>
+        console.error('Failed to prune the cancelled entry', err)
+      );
+    }
+
+    push({ who: 'unpinrole' });
+    setPhase(wasFinished ? 'build:done' : 'build:sections');
+    ariaSays(t('ariaStudio.chat.buildCancelled'));
+  };
+
   // ─── Project ideas ───
   //
   // The generative mirror of the entry picker: when the role wants a project and the CV
@@ -3807,6 +3866,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 // it is the user's call.
                 onNextRole={nextEntry}
                 onDone={finishSection}
+                // The way OUT. Not "done" — done stamps the section finished and is gated on
+                // the entry being complete; this just stops, and is always available.
+                onCancel={cancelFocus}
                 // CORRECT one captured field, in place on the card. Straight through to
                 // the same narrow field-overwrite the interview's own capture uses —
                 // optimistic apply, {_id, <list>} save, rollback + toast on failure —
@@ -5018,11 +5080,16 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 company: pinnedEntry.company,
                 entryType: pinnedEntry.entryType,
               }}
-              // No missingKeywords and no onBack on the build track. Nothing has been
-              // scanned here, so there are no measured gaps to name — the job's must-haves
-              // stood in for them, which put the same two words under every role for the
-              // whole build. And this track has its own exits: the pinned card's "next
-              // role" / "done", plus Live Preview's Edit with Aria once the CV is finished.
+              // No missingKeywords on the build track. Nothing has been scanned here, so
+              // there are no measured gaps to name — the job's must-haves stood in for
+              // them, which put the same two words under every role for the whole build.
+              //
+              // onBack IS passed now. It used to be withheld on the grounds that the
+              // pinned card's "next role" / "done" were this track's exits — but "next
+              // role" is disabled until the entry is complete and "done" stamps the
+              // section finished, so an interview opened by mistake had no way out.
+              onBack={cancelFocus}
+              backLabel={t('ariaStudio.sectionCoach.cancelBuild')}
               messages={messages}
               onPush={push}
               onApply={async (add, remove) => {

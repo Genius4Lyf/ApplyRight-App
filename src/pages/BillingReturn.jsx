@@ -188,6 +188,7 @@ const BillingReturn = () => {
                 try {
                   localStorage.removeItem('arCheckoutOrigin');
                   localStorage.removeItem('arCheckoutTemplateId');
+                  localStorage.removeItem('arCheckoutFormat');
                 } catch {
                   /* non-fatal */
                 }

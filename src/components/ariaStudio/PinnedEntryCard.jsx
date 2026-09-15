@@ -94,6 +94,11 @@ const PinnedEntryCard = ({
   // { _id, <list> } save, and the rollback + toast if it fails; this card only decides
   // WHICH key changed and what it becomes. Absent → no ✎ renders, as before.
   onFieldSave,
+  // STOP, without finishing. `onDone` is gated on the entry being complete and stamps the
+  // section done; this one closes the interview and leaves everything already applied in
+  // place. It is the only exit that works when the user opened the interview by mistake.
+  // Absent → no Cancel renders.
+  onCancel,
   busy,
   messagePulse = 0,
   reviewHint = '',
@@ -563,6 +568,16 @@ const PinnedEntryCard = ({
                   className="text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
                 >
                   ✎ {t('ariaStudio.pinnedEntry.edit')}
+                </button>
+              )}
+              {onCancel && (
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  disabled={busy}
+                  className="ml-auto text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                >
+                  {t('ariaStudio.pinnedEntry.cancel')}
                 </button>
               )}
             </div>

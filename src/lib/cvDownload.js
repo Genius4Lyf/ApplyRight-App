@@ -47,6 +47,48 @@ export function resolveDownloadTemplate(templateId) {
 //   { ok: false, needsPaywall: true }   → show DownloadPaywallModal (402 NEED_DOWNLOAD)
 //   { ok: false, error }                → show a failure toast
 
+// WHICH FORMAT THE USER ASKED FOR, ACROSS A PAYMENT.
+//
+// Checkout is a full page navigation to Flutterwave and back, so nothing in memory
+// survives it. The template id already rode across in localStorage; the format did not,
+// and the return path was hard-coded to the PDF. So clicking "Download Word", paying
+// ₦1,000 for the single-download pass and coming back delivered a PDF — and spent the
+// pass on it, because the backend consumes a download unit per request in either format.
+// Getting the Word file then cost a second ₦1,000.
+//
+// Read and write live together here so the writer (the paywall modal) and the reader (the
+// CV Studio page) cannot drift on the key or on what counts as a valid value. Both sides
+// swallow storage errors: a private window with storage blocked should still be able to
+// buy a download, and falling back to 'pdf' is what this page did before Word existed.
+export const CHECKOUT_FORMAT_KEY = 'arCheckoutFormat';
+
+/** @param {unknown} value @returns {'pdf'|'docx'} */
+export const normalizeDownloadFormat = (value) => (value === 'docx' ? 'docx' : 'pdf');
+
+export function stashCheckoutFormat(format) {
+  try {
+    localStorage.setItem(CHECKOUT_FORMAT_KEY, normalizeDownloadFormat(format));
+  } catch {
+    /* non-fatal — the return path falls back to pdf */
+  }
+}
+
+export function readCheckoutFormat() {
+  try {
+    return normalizeDownloadFormat(localStorage.getItem(CHECKOUT_FORMAT_KEY));
+  } catch {
+    return 'pdf';
+  }
+}
+
+export function clearCheckoutFormat() {
+  try {
+    localStorage.removeItem(CHECKOUT_FORMAT_KEY);
+  } catch {
+    /* non-fatal */
+  }
+}
+
 /**
  * The filename both formats use. Falls back to "Document" when the profile has no name.
  * @param {object} userProfile

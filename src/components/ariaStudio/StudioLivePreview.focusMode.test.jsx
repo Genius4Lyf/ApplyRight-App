@@ -139,24 +139,83 @@ describe('StudioLivePreview — locking the active row', () => {
     expect(within(row).queryByLabelText(i18n.t('ariaStudio.livePreview.removeEntry'))).toBeNull();
   });
 
-  it('leaves every OTHER row untouched', () => {
+  // REWRITTEN CONTRACT. This used to assert that every other row stayed fully operable —
+  // which meant that while Aria was interviewing one role you could still reorder the list
+  // under her, hand-edit a sibling, or delete an entry, and a second "Build with Aria"
+  // would yank her pin off the role she was mid-question on. The whole document is inert
+  // for the length of an interview now.
+  it('locks every OTHER row too, without hiding anything', () => {
     mockCvData = draft;
     mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
     render(<StudioLivePreview />);
 
-    // One of the two experience rows keeps its reorder controls; both remaining entries
-    // keep their ✎ and trash.
+    // Still THERE — a control that vanishes reads as a bug, a greyed one reads as a rule.
     expect(grips()).toHaveLength(1);
     expect(pencils()).toHaveLength(2);
 
-    // And the sibling is still fully operable — its ✎ opens, not a locked no-op.
+    // …and inert, each saying why.
+    const reason = i18n.t('ariaStudio.livePreview.lockedWhileAria');
+    grips().forEach((g) => {
+      expect(g.disabled).toBe(true);
+      expect(g.getAttribute('title')).toBe(reason);
+    });
+    pencils().forEach((p) => {
+      expect(p.disabled).toBe(true);
+      expect(p.getAttribute('title')).toBe(reason);
+    });
+
+    // The menu genuinely does not open, so nothing behind it is reachable either.
     fireEvent.click(pencils()[0]);
     expect(
       screen.queryByRole('menuitem', { name: i18n.t('ariaStudio.livePreview.editManually') })
-    ).toBeTruthy();
+    ).toBeNull();
     expect(
       screen.queryByRole('menuitem', { name: i18n.t('ariaStudio.livePreview.removeEntry') })
-    ).toBeTruthy();
+    ).toBeNull();
+  });
+
+  it('puts the way OUT on the marker itself', () => {
+    // Telling someone the panel is locked and putting the unlock in another column is how
+    // a lock becomes a trap. The Cancel sits on the badge that explains the lock.
+    mockCvData = draft;
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    render(<StudioLivePreview />);
+
+    const cancel = within(activeRow()).getByText(i18n.t('ariaStudio.livePreview.cancelAria'));
+    fireEvent.click(cancel);
+
+    // ASKS, never tears down itself: the pin has to close before the entry it points at
+    // can leave cvData, and only StudioChat can order that.
+    expect(mockRequestStudioCommand).toHaveBeenCalledWith('cancelFocus', 'experience', 'exp-a');
+  });
+
+  it('offers the cancel on the ACTIVE row only', () => {
+    mockCvData = draft;
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    render(<StudioLivePreview />);
+
+    expect(screen.queryAllByText(i18n.t('ariaStudio.livePreview.cancelAria'))).toHaveLength(1);
+  });
+
+  it('blocks the two controls that would hijack the chat to another section', () => {
+    // "Suggest skills with Aria" and "Draft with Aria" set the phase themselves, which
+    // would strand the interview with the role still pinned and Aria somewhere else.
+    mockCvData = draft;
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    render(<StudioLivePreview />);
+
+    const reason = i18n.t('ariaStudio.livePreview.lockedWhileAria');
+    for (const key of [
+      'ariaStudio.livePreview.addManually',
+      'ariaStudio.livePreview.buildWithAria',
+    ]) {
+      const buttons = screen.queryAllByText(i18n.t(key));
+      expect(buttons.length).toBeGreaterThan(0);
+      buttons.forEach((b) => {
+        expect(b.disabled).toBe(true);
+        expect(b.getAttribute('title')).toBe(reason);
+      });
+    }
   });
 
   it('unmarks and unlocks the instant the interview closes', () => {

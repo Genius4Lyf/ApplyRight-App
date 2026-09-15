@@ -23,12 +23,21 @@ const PreviewEntryRow = ({
   removeReason = '',
   isActive = false,
   readOnly = false,
+  // A THIRD scope, alongside readOnly and isActive: Aria is mid-interview somewhere in
+  // this document, so no row may be reordered, hand-edited or deleted out from under her.
+  // Deliberately NOT folded into readOnly — that prop also HIDES things (an empty
+  // certifications block returns null under it), and sections vanishing for the length of
+  // an interview would read as the panel breaking.
+  locked = false,
+  // () => void — stop the interview this row is the subject of. Only ever passed to the
+  // active row, which is the one showing the marker.
+  onCancelActive,
   children,
 }) => {
   const { t } = useTranslation();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id,
-    disabled: isActive || readOnly,
+    disabled: isActive || readOnly || locked,
   });
   const [confirming, setConfirming] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -103,9 +112,14 @@ const PreviewEntryRow = ({
               type="button"
               {...attributes}
               {...listeners}
+              disabled={locked}
               aria-label={t('common.sortable.dragToReorder')}
-              title={t('common.sortable.dragToReorder')}
-              className={`${control} cursor-grab touch-none active:cursor-grabbing`}
+              title={
+                locked
+                  ? t('ariaStudio.livePreview.lockedWhileAria')
+                  : t('common.sortable.dragToReorder')
+              }
+              className={`${control} cursor-grab touch-none active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-40`}
             >
               <GripVertical className="h-3.5 w-3.5" />
             </button>
@@ -115,11 +129,16 @@ const PreviewEntryRow = ({
               ref={menuButtonRef}
               type="button"
               onClick={() => setMenuOpen((open) => !open)}
+              disabled={locked}
               aria-label={t('ariaStudio.livePreview.editEntry')}
-              title={t('ariaStudio.livePreview.entryActions')}
+              title={
+                locked
+                  ? t('ariaStudio.livePreview.lockedWhileAria')
+                  : t('ariaStudio.livePreview.entryActions')
+              }
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className={control}
+              className={`${control} disabled:cursor-not-allowed disabled:opacity-40`}
             >
               <MoreVertical className="h-3.5 w-3.5" />
             </button>
@@ -231,6 +250,18 @@ const PreviewEntryRow = ({
           <span className="whitespace-nowrap font-mono text-[9px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.livePreview.ariaIsHere')}
           </span>
+          {/* The way out, ON the marker that says why everything else is inert. Telling
+              someone their panel is locked and putting the unlock in another column is
+              how a lock becomes a trap. */}
+          {onCancelActive && (
+            <button
+              type="button"
+              onClick={onCancelActive}
+              className="whitespace-nowrap rounded-full px-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-slate-500 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+            >
+              {t('ariaStudio.livePreview.cancelAria')}
+            </button>
+          )}
         </div>
       )}
 

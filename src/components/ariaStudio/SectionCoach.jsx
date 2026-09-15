@@ -51,12 +51,19 @@ const SectionCoach = ({
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
   onDone, // (result|null) => void — the interview produced bullets, or the entry vanished
-  // () => void — leave without applying anything. Omitted on surfaces that have their own
-  // way out (the build track exits via the pinned card's "next role" / "done"), and the
-  // button is then not rendered at all, the way SkillsCard omits its hunt affordance where
-  // no chat can host it. Kept separate from onDone(null): that is the 404 "entry deleted"
-  // contract, which the build track answers through its self-clearing pin instead.
+  // () => void — leave without applying anything. Kept separate from onDone(null): that is
+  // the 404 "entry deleted" contract.
+  //
+  // This USED to be omitted on the build track, on the reasoning that the pinned card's
+  // "next role" / "done" were its exits. They are not exits: "next role" is disabled until
+  // the entry is complete, and "done" stamps the section finished. Someone who opened the
+  // interview by mistake had no way out of it at all, which is what the build track now
+  // passes a cancel for.
   onBack,
+  // What that control says. The fix track is going back somewhere ("Back to sections");
+  // the build track is stopping ("Cancel"), and calling that "back" would promise a
+  // destination it does not have.
+  backLabel = '',
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
   careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
   onPickCareerStage, // (k) => void — lifts the pick to the parent
@@ -434,7 +441,7 @@ const SectionCoach = ({
                   onClick={onBack}
                   className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
                 >
-                  ← {t('ariaStudio.sectionCoach.backToSections')}
+                  {backLabel || `← ${t('ariaStudio.sectionCoach.backToSections')}`}
                 </button>
               )}
               {nearTurnLimit && (

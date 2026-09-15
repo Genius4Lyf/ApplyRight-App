@@ -87,7 +87,12 @@ import StudioDesignRail from '../components/cv/StudioDesignRail';
 import StudioOverlay from '../components/ariaStudio/StudioOverlay';
 import useCvRailInline from '../hooks/useCvRailLayout';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
-import { downloadPdf, downloadDocx } from '../lib/cvDownload';
+import {
+  downloadPdf,
+  downloadDocx,
+  readCheckoutFormat,
+  clearCheckoutFormat,
+} from '../lib/cvDownload';
 import { useMinVisible } from '../hooks/useMinVisible';
 import { useTemplatePromo } from '../lib/promos';
 import { isTemplateUnlocked } from '../lib/templateAccess';
@@ -140,6 +145,17 @@ const ResumeReview = () => {
       return TEMPLATES.some((template) => template.id === stored) ? stored : null;
     } catch {
       return null;
+    }
+  });
+  // Which format the paywall interrupted. Read once, on the same terms as the template
+  // id above: only on a ?paid=1 return, and only a value we recognise. Anything else
+  // falls back to 'pdf', which is what this page did before Word existed.
+  const [checkoutFormat] = useState(() => {
+    if (searchParams.get('paid') !== '1') return 'pdf';
+    try {
+      return readCheckoutFormat();
+    } catch {
+      return 'pdf';
     }
   });
   const { triggerInterstitial } = useInterstitial();
@@ -778,50 +794,6 @@ const ResumeReview = () => {
     navigate,
   };
 
-  const handleUnlock = async () => {
-    if (!templateToUnlock) return;
-    setUnlocking(true);
-    try {
-      // Price is server-owned (config/templates) — send only the id. The cost this
-      // used to send was ignored server-side, but a client that appears to set a
-      // price is an invitation to trust one.
-      const res = await api.post('/billing/unlock-template', {
-        templateId: templateToUnlock.id,
-      });
-
-      if (res.data.success) {
-        toast.success('Template unlocked!');
-        // Update local profile
-        setUserProfile((prev) => ({
-          ...prev,
-          credits: res.data.credits,
-          unlockedTemplates: res.data.unlockedTemplates,
-        }));
-
-        // Dispatch global event to update navbar and other components
-        window.dispatchEvent(
-          new CustomEvent('userDataUpdated', {
-            detail: { credits: res.data.credits, unlockedTemplates: res.data.unlockedTemplates },
-          })
-        );
-        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.credits }));
-
-        setTemplateId(templateToUnlock.id); // Select it
-        setUnlockModalOpen(false);
-        setTemplateToUnlock(null);
-      }
-    } catch (error) {
-      console.error('Unlock failed', error);
-      if (error.response?.data?.error === 'INSUFFICIENT_CREDITS') {
-        toast.error('Insufficient A.I credits.');
-      } else {
-        toast.error('Failed to unlock template');
-      }
-    } finally {
-      setUnlocking(false);
-    }
-  };
-
   // NATIVE ANDROID ONLY: AdMob SSV has already credited the account server-side,
   // so we just refresh the user profile. The AdPlayer never mounts on web, so
   // this only runs on native.
@@ -860,6 +832,16 @@ const ResumeReview = () => {
       setUnlockModalOpen(true);
     }
   };
+
+  // WHICH FORMAT THE USER ACTUALLY ASKED FOR.
+  //
+  // Three gates can interrupt a download and resume it later: a locked template, the
+  // native rewarded ad, and the download paywall. None of them used to remember the
+  // format, so all three resumed as a PDF. Someone who clicked "Download Word", hit the
+  // paywall, paid for the single-download pass and was sent back got a PDF — and the
+  // pass was spent on it, because the backend consumes a download unit per request in
+  // either format. They then had to pay again for the file they originally asked for.
+  const pendingFormatRef = useRef('pdf');
 
   // Download Ad Logic
   const performDownload = async () => {
@@ -918,19 +900,11 @@ const ResumeReview = () => {
     }
   };
 
-  // Word (.docx) export — built from the CV DATA (no DOM clone needed). Same
-  // gates as the PDF: a locked template opens the unlock modal, and a
-  // NEED_DOWNLOAD 402 opens the same download paywall. One download unit covers
+  // Word (.docx) export — built from the CV DATA (no DOM clone needed). The gates
+  // themselves live in handleDownloadClick, shared with the PDF, so a Word click is
+  // gated identically and — crucially — resumes as Word. One download unit covers
   // either format (the backend consumes it once).
-  const handleDownloadDocx = async () => {
-    // Locked template → unlock modal first (same gate as the PDF click).
-    if (!isUnlocked(templateId)) {
-      const template = TEMPLATES.find((t) => t.id === templateId);
-      setTemplateToUnlock(template);
-      setUnlockModalOpen(true);
-      return;
-    }
-
+  const performDownloadDocx = async () => {
     try {
       setIsDownloadingDocx(true);
 
@@ -968,7 +942,18 @@ const ResumeReview = () => {
     }
   };
 
-  const handleDownloadClick = () => {
+  // The ONE place a requested format becomes an actual download. Every resume path
+  // (paid, ad watched, template unlocked) calls this instead of performDownload, so the
+  // format the user clicked is the format they get.
+  const resumeDownload = (format = pendingFormatRef.current) =>
+    format === 'docx' ? performDownloadDocx() : performDownload();
+
+  const handleDownloadClick = (format = 'pdf') => {
+    // Remembered BEFORE any gate can return early — every branch below hands the user
+    // off to something that comes back later, and this is the only record of what they
+    // asked for.
+    pendingFormatRef.current = format;
+
     // 1. Check if unlocked
     if (!isUnlocked(templateId)) {
       const template = TEMPLATES.find((t) => t.id === templateId);
@@ -993,7 +978,7 @@ const ResumeReview = () => {
     }
 
     // If no ad needed (or user is paid), proceed
-    performDownload();
+    resumeDownload(format);
     // Increment count after successful download start (or we can do it inside performDownload?
     // Better here to avoid double counting if fail? No, performDownload is async but starts immediately.
     // Let's increment here.
@@ -1003,31 +988,88 @@ const ResumeReview = () => {
     }
   };
 
+  const handleUnlock = async () => {
+    if (!templateToUnlock) return;
+    setUnlocking(true);
+    try {
+      // Price is server-owned (config/templates) — send only the id. The cost this
+      // used to send was ignored server-side, but a client that appears to set a
+      // price is an invitation to trust one.
+      const res = await api.post('/billing/unlock-template', {
+        templateId: templateToUnlock.id,
+      });
+
+      if (res.data.success) {
+        toast.success('Template unlocked!');
+        // Update local profile
+        setUserProfile((prev) => ({
+          ...prev,
+          credits: res.data.credits,
+          unlockedTemplates: res.data.unlockedTemplates,
+        }));
+
+        // Dispatch global event to update navbar and other components
+        window.dispatchEvent(
+          new CustomEvent('userDataUpdated', {
+            detail: { credits: res.data.credits, unlockedTemplates: res.data.unlockedTemplates },
+          })
+        );
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: res.data.credits }));
+
+        setTemplateId(templateToUnlock.id); // Select it
+        setUnlockModalOpen(false);
+        setTemplateToUnlock(null);
+        // Resume the download the lock interrupted. This used to stop here, so a click
+        // on Download (either format) against a locked template was silently swallowed
+        // and the user had to find the button again after unlocking.
+        resumeDownload();
+      }
+    } catch (error) {
+      console.error('Unlock failed', error);
+      if (error.response?.data?.error === 'INSUFFICIENT_CREDITS') {
+        toast.error('Insufficient A.I credits.');
+      } else {
+        toast.error('Failed to unlock template');
+      }
+    } finally {
+      setUnlocking(false);
+    }
+  };
+
   const handleDownloadAdComplete = () => {
     setDownloadAdOpen(false);
     // Increment count since they "paid" with an ad for this download
     const current = parseInt(localStorage.getItem('download_count') || '0');
     localStorage.setItem('download_count', (current + 1).toString());
 
-    performDownload();
+    resumeDownload();
   };
 
   // Auto-download after a successful CV-download purchase. When a free user pays
   // for the ₦1,000 single-download pass, BillingReturn sends them back here with
   // ?paid=1. The pass is now on their account, so we fire the download straight
-  // away — a one-time pass should deliver the PDF, not dump them on a page to
+  // away — a one-time pass should deliver the file, not dump them on a page to
   // hunt for the button again. The Download button stays visible as a fallback in
   // case the browser blocks the programmatic save (some mobile in-app webviews).
+  //
+  // IN THE FORMAT THEY PAID FOR. Checkout is a full page navigation, so the in-memory
+  // pendingFormatRef is gone by the time we get back; the format rides across in
+  // localStorage beside the template id, the same way and cleared in the same place.
   const autoDownloadFiredRef = useRef(false);
   useEffect(() => {
     if (autoDownloadFiredRef.current) return;
     if (searchParams.get('paid') !== '1') return;
-    // Wait until the application + preview are loaded so #resume-content exists
-    // for serialization.
     if (loading || showLoader || !application || !userProfile) return;
 
-    const contentId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
-    if (!document.getElementById(contentId)) return;
+    const paidFormat = checkoutFormat === 'docx' ? 'docx' : 'pdf';
+
+    // The PDF is a serialization of the rendered preview, so it has to wait for the DOM.
+    // The Word file is built from the CV's markdown and needs no node at all — gating it
+    // on one would strand a paid download on any page that never painted a preview.
+    if (paidFormat === 'pdf') {
+      const contentId = activeTab === 'resume' ? 'resume-content' : 'cover-letter-content';
+      if (!document.getElementById(contentId)) return;
+    }
 
     autoDownloadFiredRef.current = true;
 
@@ -1040,10 +1082,11 @@ const ResumeReview = () => {
     // Let the visible Studio paint once before serialization. The final download
     // result is the only notification shown for this paid handoff.
     setTimeout(() => {
-      performDownload();
+      resumeDownload(paidFormat);
     }, 600);
     try {
       localStorage.removeItem('arCheckoutTemplateId');
+      clearCheckoutFormat();
     } catch {
       /* non-fatal */
     }
@@ -1258,6 +1301,9 @@ const ResumeReview = () => {
         open={showDownloadPaywall}
         onClose={() => setShowDownloadPaywall(false)}
         templateId={templateId}
+        // Read at render, which is safe: the ref is set before the setState that opens
+        // the modal, so the render that mounts it already carries the right format.
+        format={pendingFormatRef.current}
       />
 
       <SummaryTrim
@@ -1710,7 +1756,7 @@ const ResumeReview = () => {
                         disabled={isDownloadingDocx}
                         onClick={() => {
                           setDownloadMenuOpen(false);
-                          handleDownloadDocx();
+                          handleDownloadClick('docx');
                         }}
                         className="flex w-full items-center gap-2.5 px-3 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
                       >
@@ -2307,7 +2353,7 @@ const ResumeReview = () => {
                 disabled={isDownloadingDocx}
                 onClick={() => {
                   setDownloadSheetOpen(false);
-                  handleDownloadDocx();
+                  handleDownloadClick('docx');
                 }}
                 className="flex w-full items-center gap-3 px-5 py-3.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-wait transition-colors"
               >

@@ -14,6 +14,11 @@ import {
   downloadPdf,
   downloadDocx,
   resolveDownloadTemplate,
+  stashCheckoutFormat,
+  readCheckoutFormat,
+  clearCheckoutFormat,
+  normalizeDownloadFormat,
+  CHECKOUT_FORMAT_KEY,
   DEFAULT_TEMPLATE_ID,
 } from './cvDownload';
 import { TEMPLATES } from '../data/templates';
@@ -315,5 +320,66 @@ describe('downloadDocx', () => {
     const res = await downloadDocx(opts);
     expect(res.ok).toBe(false);
     expect(res.needsPaywall).toBeUndefined();
+  });
+});
+
+describe('the format survives a payment', () => {
+  // THE BUG THAT COST REAL MONEY.
+  //
+  // Checkout is a full page navigation, so nothing in memory survives it. The template id
+  // already rode across in localStorage; the format did not, and the ?paid=1 return path
+  // was hard-coded to performDownload() — the PDF-only one.
+  //
+  // So: click "Download Word" → hit the ₦1,000 paywall → pay → get sent back → receive a
+  // PDF. And the pass is spent on it, because the backend consumes a download unit per
+  // request in either format (docx.controller.js consumeDownload), so the Word file the
+  // user actually wanted cost a second ₦1,000.
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  it('remembers Word across the redirect', () => {
+    stashCheckoutFormat('docx');
+    expect(readCheckoutFormat()).toBe('docx');
+  });
+
+  it('defaults to PDF when nothing was stashed', () => {
+    // Every path that predates this — a direct link, a cleared browser, an older tab
+    // mid-checkout — must behave exactly as the page did before Word existed.
+    expect(readCheckoutFormat()).toBe('pdf');
+  });
+
+  it('refuses a value it does not recognise rather than passing it on', () => {
+    // A junk value reaching the dispatcher would fall through to the PDF branch anyway,
+    // but silently: normalising here keeps "what formats exist" in one place.
+    localStorage.setItem(CHECKOUT_FORMAT_KEY, 'exe');
+    expect(readCheckoutFormat()).toBe('pdf');
+    expect(normalizeDownloadFormat(undefined)).toBe('pdf');
+    expect(normalizeDownloadFormat('docx')).toBe('docx');
+  });
+
+  it('is cleared once the download has fired, so the NEXT one is not Word too', () => {
+    stashCheckoutFormat('docx');
+    clearCheckoutFormat();
+    expect(readCheckoutFormat()).toBe('pdf');
+  });
+
+  it('never throws when storage is unavailable', () => {
+    // A private window can throw on both read and write. Someone should still be able to
+    // buy a download there; they just get the PDF default back.
+    const real = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('blocked');
+      },
+    });
+    try {
+      expect(() => stashCheckoutFormat('docx')).not.toThrow();
+      expect(readCheckoutFormat()).toBe('pdf');
+      expect(() => clearCheckoutFormat()).not.toThrow();
+    } finally {
+      Object.defineProperty(window, 'localStorage', real);
+    }
   });
 });

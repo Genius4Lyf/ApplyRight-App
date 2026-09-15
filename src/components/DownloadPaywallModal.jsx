@@ -7,6 +7,7 @@ import { Download, Crown, X, FileCheck2, ScanLine, Sparkles, ShieldCheck } from 
 import billingService from '../services/billing.service';
 import { toast } from 'sonner';
 import { formatNgn, formatUsd, DOWNLOAD_PASS } from '../lib/plans';
+import { stashCheckoutFormat } from '../lib/cvDownload';
 import useBillingRegion from '../hooks/useBillingRegion';
 
 // Shown when a download is blocked (no pass / not subscribed). Two ways forward:
@@ -14,7 +15,7 @@ import useBillingRegion from '../hooks/useBillingRegion';
 //   - any paid subscription (unlimited downloads)
 // The copy sells the real PDF over a screenshot: ATS-readable selectable text,
 // crisp print quality, exact template formatting.
-const DownloadPaywallModal = ({ open, onClose, templateId }) => {
+const DownloadPaywallModal = ({ open, onClose, templateId, format = 'pdf' }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
@@ -45,11 +46,17 @@ const DownloadPaywallModal = ({ open, onClose, templateId }) => {
       // Stash where we are so BillingReturn sends the user back to this exact CV
       // page (with ?paid=1) after paying, instead of the dashboard. The download
       // page auto-fires the download on return — this is a one-time pass, so we
-      // deliver the PDF immediately rather than making them hunt for it again.
+      // deliver the file immediately rather than making them hunt for it again.
+      //
+      // The FORMAT rides along for the same reason the template id does: checkout is a
+      // full page navigation, so nothing in memory survives it. Without this the return
+      // always fired the PDF, and a pass bought to get a Word file was spent on a PDF —
+      // the backend charges a download unit per request, in either format.
       try {
         localStorage.setItem('arPostCheckout', window.location.pathname);
         localStorage.setItem('arCheckoutIntent', 'download');
         localStorage.setItem('arCheckoutOrigin', window.location.pathname);
+        stashCheckoutFormat(format);
         if (templateId) localStorage.setItem('arCheckoutTemplateId', templateId);
       } catch {
         /* non-fatal — falls back to the dashboard */

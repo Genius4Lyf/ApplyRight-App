@@ -38,7 +38,11 @@ const field =
 // document but hands out no affordances. Only the two triggers go — the paragraph (and
 // its "no summary yet" placeholder) still renders, because seeing the summary appear is
 // the point of the panel.
-const PreviewSummaryBlock = ({ onDraftWithAria, readOnly = false }) => {
+// `locked` is the INTERVIEW lock, not the completeness one: Aria is mid-interview on an
+// entry somewhere, and sending her to draft a summary would move the whole chat off the
+// role she is asking about. Disables, never hides — unlike readOnly, which removes the
+// controls entirely.
+const PreviewSummaryBlock = ({ onDraftWithAria, readOnly = false, locked = false }) => {
   const { t } = useTranslation();
   const { cvData, applySummary } = useAriaStudio();
   const summary = (cvData?.professionalSummary || '').trim();
@@ -155,7 +159,9 @@ const PreviewSummaryBlock = ({ onDraftWithAria, readOnly = false }) => {
             <button
               type="button"
               onClick={onDraftWithAria}
-              className={`${quietButton} ${revealOnHover}`}
+              disabled={locked}
+              title={locked ? t('ariaStudio.livePreview.lockedWhileAria') : undefined}
+              className={`${quietButton} ${revealOnHover} disabled:cursor-not-allowed disabled:opacity-40`}
             >
               <AriaOrbit size={11} tone="mono" className="shrink-0" />
               {t('ariaStudio.livePreview.draftSummaryWithAria')}
