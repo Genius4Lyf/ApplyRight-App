@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AriaLoader from './ui/AriaLoader';
+import useMedia from '../hooks/useMedia';
 
 /**
  * LoadingScreen - Full-screen loading overlay with a rotating message and an
@@ -14,6 +15,12 @@ const LoadingScreen = ({
 }) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  // 48px was sized for desktop and never revisited for a phone screen — every other
+  // full-screen route loader in the app tops out at 40 (see AriaLoader's callers), so 48
+  // was already the outlier. Below the 640px breakpoint this app already treats as
+  // "mobile" elsewhere, drop to the same 32px those loaders use.
+  const isMobile = useMedia('(max-width: 639px)');
+  const markSize = isMobile ? 32 : 48;
 
   const MESSAGE_ROTATION_TIME = 3500;
 
@@ -46,7 +53,7 @@ const LoadingScreen = ({
       <div className="absolute inset-0 overflow-hidden pointer-events-none bg-[#f6f6f3] dark:bg-slate-950"></div>
 
       <div className="relative z-10 flex flex-col items-center text-center max-w-sm w-full">
-        <AriaLoader inline size={48} label="Working…" className="mb-4" />
+        <AriaLoader inline size={markSize} label="Working…" className="mb-4" />
         <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
           {currentMessage}
         </h2>
