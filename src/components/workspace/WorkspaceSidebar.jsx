@@ -3,6 +3,7 @@ import { X, FileText, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 import StudioSidebarNav from '../ariaStudio/StudioSidebarNav';
 import StudioSidebarProfile from '../ariaStudio/StudioSidebarProfile';
 import NewCvMenu from './NewCvMenu';
@@ -50,6 +51,7 @@ const WorkspaceSidebar = ({
   inline = false,
 }) => {
   const { t } = useTranslation();
+  const orbitSize = useOrbitSize(44);
   // Which row is asking "are you sure?". The confirmation happens IN the row rather than
   // in a modal: this panel is itself an overlay with a focus trap, and stacking a second
   // trap on top of it is how dialogs end up unclosable on a phone.
@@ -129,7 +131,7 @@ const WorkspaceSidebar = ({
           {loading && (
             <div role="status" aria-label={t('ariaStudio.sessionRail.loading')}>
               <span className="aria-orbit-slow inline-block">
-                <AriaOrbit size={44} working />
+                <AriaOrbit size={orbitSize} working />
               </span>
             </div>
           )}

@@ -52,6 +52,7 @@ import { getPrepId, mergeInterviewPrepResponse } from '../../utils/interviewPrep
 import { decodeEntities } from '../../lib/decodeEntities';
 import AriaComposer from '../cv/AriaComposer';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 import AriaThinking from '../cv/AriaThinking';
 import RewriteRoleCard from './RewriteRoleCard';
 import ProjectIdeasCard from './ProjectIdeasCard';
@@ -3474,6 +3475,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     messages.every((message) => message._opening);
   const restoringSession = !working && (loading || waitingForSavedThread || restoringPrep);
   const studioTransition = restoringSession ? 'restore' : openingStudio ? 'opening' : null;
+  // Capped on a phone: this overlay covers the whole chat column, which on a narrow
+  // screen is the whole screen, and 56px there reads as an illustration not a spinner.
+  const openingOrbit = useOrbitSize(studioTransition === 'opening' ? 56 : 48);
   // The fix session in play, read from the markers — so it survives a refresh exactly
   // the way the phase does.
   const activeFix = openFix(messages);
@@ -3843,7 +3847,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
             >
               <div className="text-center">
                 <span className="aria-orbit-slow inline-block">
-                  <AriaOrbit size={studioTransition === 'opening' ? 56 : 48} working />
+                  <AriaOrbit size={openingOrbit} working />
                 </span>
                 <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                   {t(

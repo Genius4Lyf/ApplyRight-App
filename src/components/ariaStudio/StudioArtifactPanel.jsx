@@ -11,6 +11,7 @@ import {
   withoutBlankEntries,
 } from '../../lib/studioFlow';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 
 // The right rail — a standing summary of where the tailored CV is right now: the role
 // it's aimed at, the fit score, the per-section dots, and what the job keeps asking for
@@ -20,6 +21,7 @@ import AriaOrbit from '../cv/AriaOrbit';
 // refresh without re-scanning (and without re-charging).
 const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
   const { t } = useTranslation();
+  const orbitSize = useOrbitSize(44);
   const { cvData } = useAriaStudio();
   const [openSection, setOpenSection] = useState(null);
 
@@ -421,7 +423,7 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
         <div className="flex-1 min-h-0 flex items-center justify-center p-6">
           <div className="max-w-[230px] text-center">
             <span className="aria-orbit-slow inline-block">
-              <AriaOrbit size={44} working />
+              <AriaOrbit size={orbitSize} working />
             </span>
             <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.16em] text-slate-400 dark:text-slate-500">
               {t('ariaStudio.studioArtifactPanel.standingBy')}

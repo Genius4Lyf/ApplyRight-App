@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 import AriaThinking from '../cv/AriaThinking';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 import CVService from '../../services/cv.service';
 import { costForActionTier } from '../../lib/models';
 import { SPRING_CARD } from '../../lib/ariaMotion';
@@ -100,6 +101,7 @@ const JobCaptureCard = ({
   onCancel,
 }) => {
   const { t } = useTranslation();
+  const orbitSize = useOrbitSize(52);
   const reduce = useReducedMotion();
   // The reading floor deliberately keeps this component alive past its own request, so
   // the resolve path has to know whether anyone is still looking.
@@ -357,7 +359,7 @@ const JobCaptureCard = ({
         aria-live="polite"
       >
         <span className="aria-orbit-slow inline-block">
-          <AriaOrbit size={52} working />
+          <AriaOrbit size={orbitSize} working />
         </span>
         <p className="mt-4 text-[15px] font-semibold text-slate-800 dark:text-slate-100">
           {t('ariaStudio.jobCapture.fetching')}

@@ -28,6 +28,7 @@ import {
   parseBullets,
 } from '../../lib/studioPreview';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 import CvLanguageToggle from '../cv/CvLanguageToggle';
 import PreviewEntryRow from './PreviewEntryRow';
 import PreviewEntryEditor from './PreviewEntryEditor';
@@ -488,6 +489,8 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // and languages blocks return null under it when empty), so reusing it would make
   // sections disappear for the length of an interview. This one only ever disables.
   const ariaBusy = !!activeEntry;
+  // The empty-state mark, capped on a phone where this panel is the whole screen.
+  const orbitSize = useOrbitSize(44);
   // Asking, not doing: StudioChat owns the teardown ordering, because the pin has to close
   // before the entry it points at can leave cvData.
   const cancelActive = (section, sortId) =>
@@ -638,7 +641,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
         <div className="flex-1 min-h-0 flex items-center justify-center p-6">
           <div className="max-w-[240px] text-center">
             <span className="aria-orbit-slow inline-block">
-              <AriaOrbit size={44} working />
+              <AriaOrbit size={orbitSize} working />
             </span>
             <p className="mt-4 text-[12.5px] text-slate-500 dark:text-slate-400 leading-relaxed">
               {t(emptyStateKey)}

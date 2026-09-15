@@ -4,6 +4,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 
 // The analysis is the one charged step in a prep session, and the slowest — a full read
 // of a CV against a job description takes several seconds. A bare spinner for that long
@@ -27,6 +28,7 @@ const STEP_MS = 2400;
 
 const PrepAnalyzingCard = ({ jobTitle }) => {
   const { t } = useTranslation();
+  const orbitSize = useOrbitSize(56);
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
 
@@ -45,7 +47,7 @@ const PrepAnalyzingCard = ({ jobTitle }) => {
       >
         <div className="flex flex-col items-center text-center">
           <span className="aria-orbit-slow inline-block">
-            <AriaOrbit size={56} working />
+            <AriaOrbit size={orbitSize} working />
           </span>
 
           {/* The line CHANGES, so it is announced; the heading around it does not. Fixed

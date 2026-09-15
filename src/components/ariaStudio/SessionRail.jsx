@@ -7,6 +7,7 @@ import { BAND_TEXT, TAG_TONE } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import { CREDIT_COSTS } from '../../lib/credits';
 import AriaOrbit from '../cv/AriaOrbit';
+import useOrbitSize from '../../hooks/useOrbitSize';
 import StudioSidebarNav from './StudioSidebarNav';
 import StudioSidebarProfile from './StudioSidebarProfile';
 import RailFilter from '../workspace/RailFilter';
@@ -49,6 +50,7 @@ const SessionRail = ({
   onBeforeCreditStore,
 }) => {
   const { t } = useTranslation();
+  const orbitSize = useOrbitSize(44);
   // Which row is mid-rename, and its draft text.
   const [renamingId, setRenamingId] = useState(null);
   const [renameDraft, setRenameDraft] = useState('');
@@ -193,7 +195,7 @@ const SessionRail = ({
         {loading && (
           <div role="status" aria-label={t('ariaStudio.sessionRail.loading')}>
             <span className="aria-orbit-slow inline-block">
-              <AriaOrbit size={44} working />
+              <AriaOrbit size={orbitSize} working />
             </span>
           </div>
         )}
@@ -202,7 +204,7 @@ const SessionRail = ({
         {!loading && sessions.length === 0 && (
           <div className="flex flex-col items-center px-4 text-center">
             <span className="aria-orbit-slow inline-block">
-              <AriaOrbit size={44} working />
+              <AriaOrbit size={orbitSize} working />
             </span>
             <p className="mt-3 text-[12.5px] leading-relaxed text-slate-500 dark:text-slate-400">
               {t('ariaStudio.sessionRail.noSessionsYet')}
