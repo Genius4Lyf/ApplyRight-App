@@ -30,11 +30,34 @@ export const currentEntry = () => {
   return src || null;
 };
 
+let probeCount = 0;
+
 /** The entry chunk the server is serving right now, or null if it cannot be read. */
 export const fetchDeployedEntry = async () => {
   try {
-    // `no-store` so this question is never answered from the cache it is asking about.
-    const res = await fetch('/', { cache: 'no-store', credentials: 'same-origin' });
+    // TWO defences, because `no-store` alone was not enough on iOS.
+    //
+    // `cache: 'no-store'` is the correct request, and on Chrome it is sufficient. WebKit
+    // is far less willing to bypass its caches for a same-origin document, so an iPhone
+    // could answer "what is the server serving?" out of the very cache the question is
+    // about — comparing the running build against itself, concluding nothing had changed,
+    // and never once offering the update. Which is exactly the shape of the report: the
+    // banner appearing on Android and never on iOS.
+    //
+    // A unique URL removes the possibility entirely, because there is nothing under that
+    // URL to have cached. It costs nothing: the SPA redirect serves index.html for any
+    // path, and this runs a handful of times an hour per tab.
+    //
+    // The header is belt-and-braces for an intermediary that ignores the fetch option.
+    //
+    // A counter alongside the clock, because `Date.now()` alone is not unique: two checks
+    // in the same millisecond would share a URL, and the second would be answerable from
+    // the first. Rare, but the whole point of this line is to leave no such gap.
+    const res = await fetch(`/?_v=${Date.now()}-${(probeCount += 1)}`, {
+      cache: 'no-store',
+      credentials: 'same-origin',
+      headers: { 'Cache-Control': 'no-cache' },
+    });
     if (!res.ok) return null;
     return ENTRY_RE.exec(await res.text())?.[1] || null;
   } catch {

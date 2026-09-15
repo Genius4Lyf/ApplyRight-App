@@ -91,7 +91,31 @@ describe('appUpdate — is a newer build live?', () => {
 
     await isUpdateAvailable();
 
-    expect(fetch).toHaveBeenCalledWith('/', expect.objectContaining({ cache: 'no-store' }));
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({ cache: 'no-store' })
+    );
+  });
+
+  it('asks at a URL nothing can have cached', async () => {
+    // `no-store` is the correct request and is enough on Chrome. WebKit is much less
+    // willing to bypass its caches for a same-origin document, so an iPhone could answer
+    // this question out of the very cache it is asking about — comparing the running
+    // build against itself and never offering the update. Reported as: the banner shows
+    // on Android and never on iOS.
+    //
+    // A URL that has never been requested before cannot have a cached answer.
+    bootedFrom('/assets/index-OLD.js');
+    serve(html('/assets/index-NEW.js'));
+
+    await isUpdateAvailable();
+    const [first] = fetch.mock.calls[0];
+
+    expect(first).toMatch(/^\/\?/);
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true, text: async () => '' }));
+    await isUpdateAvailable();
+    // …and a different one each time, or the second check inherits the first's answer.
+    expect(fetch.mock.calls[0][0]).not.toBe(first);
   });
 });
 

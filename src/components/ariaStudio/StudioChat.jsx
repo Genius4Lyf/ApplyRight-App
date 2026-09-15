@@ -82,6 +82,8 @@ import CareerStageAskCard from './CareerStageAskCard';
 import EducationSavedCard from './EducationSavedCard';
 import ContactConfirmCard from './ContactConfirmCard';
 import PinnedEntryCard from './PinnedEntryCard';
+import CancelInterviewConfirm from './CancelInterviewConfirm';
+import { parseBullets } from '../../lib/studioPreview';
 import EntryCaptureCard from './EntryCaptureCard';
 import ProjectTypeCard from './ProjectTypeCard';
 import ExperienceTypeCard from './ExperienceTypeCard';
@@ -974,7 +976,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       // The panel never tears this down itself — one owner of the ordering, or the entry
       // can leave cvData before the pin that points at it is closed.
       // eslint-disable-next-line no-use-before-define
-      cancelFocus();
+      requestCancelFocus();
       return;
     }
 
@@ -2984,9 +2986,18 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // deliberately never discards them. The one thing removed is an entry Aria created that
   // nobody ever typed into, which would otherwise sit in the CV as a blank "Role /
   // Company" row forever, which is a bug we have already had once.
-  const cancelFocus = () => {
+  // Stopping is a decision ABOUT THE ROLE, so it asks first. Null = nothing pending.
+  // Holds the entry's own identity rather than reading pinnedEntry at confirm time: the
+  // dialog is describing a specific role, and it must act on the one it described.
+  const [cancelPrompt, setCancelPrompt] = useState(null);
+
+  const requestCancelFocus = () => {
     if (roleBusy) return;
 
+    // The FIX tracks keep their immediate cancel. Those interviews never create an entry —
+    // they are opened against a role that already existed and is already on the CV — so
+    // there is nothing to decide the fate of, and their own Back/Skip controls have always
+    // backed straight out.
     if (phase === 'fix:rewrite') {
       clearRewrite();
       setPhase('results');
@@ -2996,24 +3007,53 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       cancelFix();
       return;
     }
-    if (!String(phase).startsWith('build:')) return;
+    if (!String(phase).startsWith('build:') || !pinnedEntry) return;
 
-    const section = pinnedSectionKey;
-    const list = SECTION_LIST[section] || 'experience';
-    const blank = !!pinnedEntry && entryProgress(pinnedEntry, section).done === 0;
+    setCancelPrompt({
+      sortId: pinnedEntry._sortId,
+      section: pinnedSectionKey,
+      title: pinnedEntry.title || pinnedEntry.degree || '',
+      // BULLETS decide the shape of the question, not captured fields. A role with a title
+      // and no bullets still reaches the CV as a heading with nothing under it, which is
+      // the empty-row bug by another name; a role with bullets holds the user's own
+      // answers, some of which cost credits to turn into those bullets.
+      bullets: parseBullets(pinnedEntry.description).length,
+    });
+  };
+
+  // ─── The teardown itself, once they have answered. ───
+  //
+  // Cancelling is NOT finishing: no rolerecord, no DONE marker, no section advanced.
+  //
+  // What it must do is close the transcript MARKER. activeEntry is republished from that
+  // marker on every render, so clearing state alone achieves nothing, and derivePhase
+  // rebuilds the whole interview from a pin left open — cancel, refresh, and it would be
+  // sitting there again.
+  //
+  // Whatever is kept stays kept: applying is a checkpoint, not a verdict, and a
+  // studioPending survives too — those are bullets the user spent credits on, and this
+  // file deliberately never discards them.
+  const cancelFocus = ({ remove }) => {
+    const pending = cancelPrompt;
+    setCancelPrompt(null);
+    if (!pending) return;
+
+    const list = SECTION_LIST[pending.section] || 'experience';
     const wasFinished = completedBuildSession;
 
-    if (blank && draftId) {
-      const pruned = (cvData[list] || []).filter((e) => e._sortId !== pinnedEntry._sortId);
+    if (remove && draftId) {
+      const pruned = (cvData[list] || []).filter((e) => e._sortId !== pending.sortId);
       updateCvData({ [list]: pruned });
       CVService.saveDraft({ _id: draftId, [list]: pruned }).catch((err) =>
-        console.error('Failed to prune the cancelled entry', err)
+        console.error('Failed to remove the cancelled entry', err)
       );
     }
 
     push({ who: 'unpinrole' });
     setPhase(wasFinished ? 'build:done' : 'build:sections');
-    ariaSays(t('ariaStudio.chat.buildCancelled'));
+    ariaSays(
+      remove ? t('ariaStudio.chat.buildCancelledDeleted') : t('ariaStudio.chat.buildCancelled')
+    );
   };
 
   // ─── Project ideas ───
@@ -3868,7 +3908,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 onDone={finishSection}
                 // The way OUT. Not "done" — done stamps the section finished and is gated on
                 // the entry being complete; this just stops, and is always available.
-                onCancel={cancelFocus}
+                onCancel={requestCancelFocus}
                 // CORRECT one captured field, in place on the card. Straight through to
                 // the same narrow field-overwrite the interview's own capture uses —
                 // optimistic apply, {_id, <list>} save, rollback + toast on failure —
@@ -5088,7 +5128,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               // pinned card's "next role" / "done" were this track's exits — but "next
               // role" is disabled until the entry is complete and "done" stamps the
               // section finished, so an interview opened by mistake had no way out.
-              onBack={cancelFocus}
+              onBack={requestCancelFocus}
               backLabel={t('ariaStudio.sectionCoach.cancelBuild')}
               messages={messages}
               onPush={push}
@@ -5253,6 +5293,19 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
           focused-section input stays put and ONLY the messages scroll. Empty (zero-height)
           during the coach's picker/results phases, which have no input of their own. */}
       {coachOwnsInput && <div ref={setCoachDock} className="shrink-0" />}
+
+      {/* Stopping an interview asks first, and the answer decides whether the role stays.
+          Portalled to the body from here, so it is reachable from the edit panel too —
+          on a phone that panel is a full-width sheet covering this whole column, and a
+          dialog rendered inside the chat would be invisible from one of its own triggers. */}
+      <CancelInterviewConfirm
+        open={!!cancelPrompt}
+        entryTitle={cancelPrompt?.title || ''}
+        bullets={cancelPrompt?.bullets || 0}
+        onKeep={() => cancelFocus({ remove: false })}
+        onDelete={() => cancelFocus({ remove: true })}
+        onBack={() => setCancelPrompt(null)}
+      />
 
       {/* Off-screen CV — the PDF path serialises a real DOM node, and a chat has none.
           Mounted only once there's something to print. */}

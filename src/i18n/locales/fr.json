@@ -4849,6 +4849,17 @@
       "missing": "Manquant · {{n}}",
       "readFromCv": "Extrait de votre CV"
     },
+    "cancelInterview": {
+      "title": "Arrêter ici ?",
+      "thisRole": "ce poste",
+      "bodyEmpty": "Vous n’avez encore ajouté aucun point à {{name}} : il apparaîtrait sur votre CV comme un titre sans rien en dessous. L’arrêt le supprimera.",
+      "bodyWithBullets_one": "{{name}} compte 1 point. Garder le poste et arrêter l’entretien, ou tout supprimer ?",
+      "bodyWithBullets_other": "{{name}} compte {{count}} points. Garder le poste et arrêter l’entretien, ou tout supprimer ?",
+      "keep": "Garder le poste, arrêter ici",
+      "deleteInstead": "Supprimer le poste",
+      "deleteAndStop": "Supprimer et arrêter",
+      "goBack": "Non, continuer"
+    },
     "chat": {
       "opener": "Bienvenue — je suis Aria. Je suis là pour vous aider à créer un CV qui raconte votre parcours avec intention, afin que vous postuliez de la bonne manière, pas à l’aveugle. Envoyez-moi un message à tout moment pendant sa création, puis revenez le modifier et l’affiner quand vous le souhaitez.",
       "kindOpenerBuild": "Bienvenue — je suis Aria. Nous allons créer un CV qui vous aide à postuler avec intention, pas à l’aveugle. Écrivez-moi à tout moment pendant sa création et revenez le modifier ou l’affiner quand vous le souhaitez — voici comment nous allons commencer.",
@@ -5112,6 +5123,7 @@
       "useCardAbove": "Utilisez la carte ci-dessus ↑",
       "pinCleared": "Ce poste n'est plus sur votre CV, donc je l'ai laissé de côté. Voulez-vous en ajouter un autre ?",
       "buildCancelled": "Pas de souci — je m'arrête là. Tout ce que vous avez déjà ajouté reste sur votre CV.",
+      "buildCancelledDeleted": "C’est fait — je m’arrête là et j’ai retiré celui-ci de votre CV.",
       "toast": {
         "recomputeFailed": "Impossible de recalculer le score pour l'instant.",
         "summaryInsufficientCredits": "Pas assez de crédits pour un résumé — rechargez et réessayez.",

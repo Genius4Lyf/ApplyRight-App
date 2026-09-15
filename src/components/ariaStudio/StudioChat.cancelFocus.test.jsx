@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import React, { useEffect } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, act, waitFor } from '@testing-library/react';
+import { render, screen, cleanup, act, fireEvent, waitFor } from '@testing-library/react';
 import i18n from '../../i18n';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import StudioChat from './StudioChat';
@@ -73,10 +73,26 @@ const mountStudio = async (draft) => {
 
 const transcript = () => ctx?.cvData?.coachChats?.studio || [];
 const countOf = (who) => transcript().filter((m) => m.who === who).length;
-const cancel = async () => {
+
+// Cancel is TWO steps now. The command only opens the question; a button in the dialog is
+// what actually ends the interview, and which button decides whether the role survives.
+const askToCancel = async () => {
   await act(async () => {
     ctx.requestStudioCommand('cancelFocus', 'experience', 'a');
   });
+  return screen.getByRole('dialog');
+};
+const answer = async (key) => {
+  const label = t(`ariaStudio.cancelInterview.${key}`);
+  await act(async () => {
+    fireEvent.click(screen.getByText(label));
+  });
+};
+const cancelKeeping = async () => {
+  await askToCancel();
+  // A role with bullets offers Keep; a blank one has only "delete it and stop", which is
+  // the same teardown with the row removed.
+  await answer('keep');
 };
 
 // A build session mid-interview on role 'a', which has real content on it already.
@@ -129,7 +145,7 @@ describe('cancelling a build interview', () => {
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
     expect(countOf('unpinrole')).toBe(0);
 
-    await cancel();
+    await cancelKeeping();
 
     // Without this the pin is still open in the persisted transcript, activeEntry is
     // republished from it on the next render, and a refresh reopens the whole interview.
@@ -143,7 +159,7 @@ describe('cancelling a build interview', () => {
     await mountStudio(pinnedDraft());
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
 
-    await cancel();
+    await cancelKeeping();
     await waitFor(() => expect(countOf('unpinrole')).toBe(1));
 
     expect(countOf('rolerecord')).toBe(0);
@@ -156,7 +172,7 @@ describe('cancelling a build interview', () => {
     await mountStudio(pinnedDraft());
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
 
-    await cancel();
+    await cancelKeeping();
     await waitFor(() => expect(countOf('unpinrole')).toBe(1));
 
     expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['a', 'b']);
@@ -167,7 +183,7 @@ describe('cancelling a build interview', () => {
     await mountStudio(pinnedDraft());
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
 
-    await cancel();
+    await cancelKeeping();
     await waitFor(() =>
       expect(transcript().some((m) => m.text === t('ariaStudio.chat.buildCancelled'))).toBe(true)
     );
@@ -186,11 +202,25 @@ describe('cancelling an interview that never got anywhere', () => {
       ],
     });
 
+  it('offers no way to KEEP a role with nothing on it', async () => {
+    // Keeping it would put a heading with nothing under it on the CV, which is exactly
+    // the ghost-row bug. The only two answers are delete-and-stop, or carry on.
+    await mountStudio(blankDraft());
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await askToCancel();
+
+    expect(screen.queryByText(t('ariaStudio.cancelInterview.keep'))).toBeNull();
+    expect(screen.getByText(t('ariaStudio.cancelInterview.deleteAndStop'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.cancelInterview.goBack'))).toBeTruthy();
+  });
+
   it('removes the empty row it created', async () => {
     await mountStudio(blankDraft());
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
 
-    await cancel();
+    await askToCancel();
+    await answer('deleteAndStop');
 
     await waitFor(() => expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['b']));
     // And the removal is persisted, not just local — a blank that survives the reload is
@@ -209,7 +239,65 @@ describe('cancelling an interview that never got anywhere', () => {
     await mountStudio(blankDraft());
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
 
-    await cancel();
+    await askToCancel();
+    await answer('deleteAndStop');
     await waitFor(() => expect(countOf('unpinrole')).toBe(1));
+  });
+});
+
+describe('it asks before it does anything', () => {
+  // Cancel used to take effect on the click, which was wrong in both directions: a
+  // mis-tap silently deleted a role Aria had just created, and there was no way to stop
+  // the interview while KEEPING a role that already had bullets on it.
+  it('changes nothing until an answer is given', async () => {
+    await mountStudio(pinnedDraft());
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await askToCancel();
+
+    // The question is open; the interview is not over and the role is untouched.
+    expect(countOf('unpinrole')).toBe(0);
+    expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['a', 'b']);
+  });
+
+  it('backs out cleanly, leaving the interview exactly where it was', async () => {
+    await mountStudio(pinnedDraft());
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await askToCancel();
+    await answer('goBack');
+
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(countOf('unpinrole')).toBe(0);
+    expect(countOf('pinrole')).toBe(1);
+    expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['a', 'b']);
+  });
+
+  it('names the role it is about to act on', async () => {
+    // The dialog is reachable from three places, including a panel that may be showing a
+    // different part of the CV. Naming the role is what stops it reading as "delete
+    // something".
+    await mountStudio(pinnedDraft());
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await askToCancel();
+    expect(screen.getByRole('dialog').textContent).toContain('Engineer');
+  });
+
+  it('lets the user DELETE a role that has bullets, if that is what they want', async () => {
+    await mountStudio(pinnedDraft());
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await askToCancel();
+    await answer('deleteInstead');
+
+    await waitFor(() => expect(ctx.cvData.experience.map((e) => e._sortId)).toEqual(['b']));
+    await waitFor(() => expect(countOf('unpinrole')).toBe(1));
+    // A different line, because a different thing happened to their CV.
+    await waitFor(() =>
+      expect(transcript().some((m) => m.text === t('ariaStudio.chat.buildCancelledDeleted'))).toBe(
+        true
+      )
+    );
   });
 });

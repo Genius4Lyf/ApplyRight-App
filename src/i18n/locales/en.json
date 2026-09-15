@@ -4853,6 +4853,17 @@
       "missing": "Missing · {{n}}",
       "readFromCv": "Read from your CV"
     },
+    "cancelInterview": {
+      "title": "Stop here?",
+      "thisRole": "this role",
+      "bodyEmpty": "You haven’t added any bullet points to {{name}} yet, so it would sit on your CV as a heading with nothing under it. Stopping will delete it.",
+      "bodyWithBullets_one": "{{name}} has 1 bullet point on it. Keep the role and stop the interview, or delete the whole thing?",
+      "bodyWithBullets_other": "{{name}} has {{count}} bullet points on it. Keep the role and stop the interview, or delete the whole thing?",
+      "keep": "Keep the role, stop here",
+      "deleteInstead": "Delete the role",
+      "deleteAndStop": "Delete it and stop",
+      "goBack": "Never mind, carry on"
+    },
     "chat": {
       "opener": "Welcome — I’m ARIA. I’m here to help you create a CV that tells your story with purpose, so you can apply the right way, not blindly. Send me a message anytime while we build it, then return to edit and refine it whenever you need.",
       "kindOpenerBuild": "Welcome — I’m ARIA. We’ll build a CV that helps you apply with purpose, not blindly. Message me anytime as we create it, and come back to edit or refine it whenever you need — here’s how we’ll begin.",
@@ -5116,6 +5127,7 @@
       "useCardAbove": "Use the card above ↑",
       "pinCleared": "That role isn't on your CV any more, so I've let it go. Want to add another?",
       "buildCancelled": "No problem — I've stopped there. Anything you already added is still on your CV.",
+      "buildCancelledDeleted": "Done — I’ve stopped there and taken that one off your CV.",
       "toast": {
         "recomputeFailed": "Couldn't re-score just now.",
         "summaryInsufficientCredits": "Not enough credits for a summary — top up and try again.",
