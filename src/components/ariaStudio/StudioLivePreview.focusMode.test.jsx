@@ -91,7 +91,7 @@ describe('StudioLivePreview — marking the entry Aria is on', () => {
 
   it('marks exactly the matching row', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     expect(marks()).toHaveLength(1);
@@ -113,7 +113,7 @@ describe('StudioLivePreview — marking the entry Aria is on', () => {
   // discusses it. Only the controls go.
   it('leaves the row CONTENT fully visible', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     const row = activeRow();
@@ -127,7 +127,7 @@ describe('StudioLivePreview — marking the entry Aria is on', () => {
 describe('StudioLivePreview — locking the active row', () => {
   it('drops the ENTIRE control cluster on that row', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     const row = activeRow();
@@ -146,7 +146,7 @@ describe('StudioLivePreview — locking the active row', () => {
   // for the length of an interview now.
   it('locks every OTHER row too, without hiding anything', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     // Still THERE — a control that vanishes reads as a bug, a greyed one reads as a rule.
@@ -178,7 +178,7 @@ describe('StudioLivePreview — locking the active row', () => {
     // Telling someone the panel is locked and putting the unlock in another column is how
     // a lock becomes a trap. The Cancel sits on the badge that explains the lock.
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     const cancel = within(activeRow()).getByText(i18n.t('ariaStudio.livePreview.cancelAria'));
@@ -191,17 +191,32 @@ describe('StudioLivePreview — locking the active row', () => {
 
   it('offers the cancel on the ACTIVE row only', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     expect(screen.queryAllByText(i18n.t('ariaStudio.livePreview.cancelAria'))).toHaveLength(1);
+  });
+
+  it('withholds the cancel on an interview that has no way out', () => {
+    // The first role and the first project of a NEW CV: Aria opens those herself as the
+    // next step of the build, and there is nothing behind them to go back to. The chat's
+    // own Cancel is withheld on the same flag, so this is not the panel disagreeing with
+    // the pinned card — it is the second door into the same room.
+    mockCvData = draft;
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: false };
+    render(<StudioLivePreview />);
+
+    expect(screen.queryAllByText(i18n.t('ariaStudio.livePreview.cancelAria'))).toHaveLength(0);
+    // The LOCK is unaffected — the row still says Aria is on it, and every other row is
+    // still inert. Withholding the exit must not also unlock the document.
+    expect(screen.getByText(i18n.t('ariaStudio.livePreview.ariaIsHere'))).toBeTruthy();
   });
 
   it('blocks the two controls that would hijack the chat to another section', () => {
     // "Suggest skills with Aria" and "Draft with Aria" set the phase themselves, which
     // would strand the interview with the role still pinned and Aria somewhere else.
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     render(<StudioLivePreview />);
 
     const reason = i18n.t('ariaStudio.livePreview.lockedWhileAria');
@@ -220,7 +235,7 @@ describe('StudioLivePreview — locking the active row', () => {
 
   it('unmarks and unlocks the instant the interview closes', () => {
     mockCvData = draft;
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     const { rerender } = render(<StudioLivePreview />);
     expect(marks()).toHaveLength(1);
 
@@ -250,7 +265,7 @@ describe('StudioLivePreview — the lock outranks the manual editor', () => {
     await waitFor(() => expect(screen.getByLabelText('Role')).toBeTruthy());
 
     // Aria takes that same entry.
-    mockActiveEntry = { section: 'experience', sortId: 'exp-a' };
+    mockActiveEntry = { section: 'experience', sortId: 'exp-a', cancellable: true };
     rerender(<StudioLivePreview />);
 
     // The editor is gone and the row is back, marked and locked.

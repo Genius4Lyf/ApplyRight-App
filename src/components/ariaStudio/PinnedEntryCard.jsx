@@ -570,12 +570,17 @@ const PinnedEntryCard = ({
                   ✎ {t('ariaStudio.pinnedEntry.edit')}
                 </button>
               )}
+              {/* DANGER, not another quiet grey link. It is the only control here that
+                  throws work away, and it sat in the same muted grey as "Edit" — which
+                  made the one destructive action the least visible thing in the row.
+                  Rose text on a hover fill, not a filled button: it must read as serious
+                  without competing with "Next role" for the primary slot. */}
               {onCancel && (
                 <button
                   type="button"
                   onClick={onCancel}
                   disabled={busy}
-                  className="ml-auto text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                  className="ml-auto text-[12px] font-semibold px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 transition-colors disabled:opacity-50"
                 >
                   {t('ariaStudio.pinnedEntry.cancel')}
                 </button>

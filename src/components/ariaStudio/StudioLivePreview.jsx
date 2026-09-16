@@ -213,8 +213,11 @@ const ReorderableList = ({
         // Aria is on SOME row: every other row goes inert too, or the user can reorder,
         // hand-edit or delete the document out from under a live interview.
         locked={!!activeEntry}
+        // Same gate as the chat's own Cancel (activeEntry.cancellable is stamped from the
+        // pin marker). Aria's FIRST role or project on a new CV has no exit anywhere —
+        // offering one here would just be the other door into a room with no exit.
         onCancelActive={
-          !!activeEntry && entry._sortId === activeEntry.sortId
+          !!activeEntry && activeEntry.cancellable && entry._sortId === activeEntry.sortId
             ? () => onCancelActive?.(activeEntry.section, activeEntry.sortId)
             : undefined
         }

@@ -20,6 +20,7 @@ import {
   resolvePinnedEntry,
   pinnedSortId,
   pinnedSection,
+  pinCancellable,
   resolveProjectType,
   SECTION_LIST,
   PROJECT_TYPES,
@@ -704,6 +705,11 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // 'experience' when nothing is pinned at all, which would turn the control on across
   // the whole app.
   const bulletCopy = pinnedSectionRaw === 'experience' || pinnedSectionRaw === 'project';
+  // Does this interview offer a way out? Read from the pin's own marker, so it is fixed
+  // for the life of the interview and survives a refresh. Gates BOTH surfaces that can
+  // cancel — the pinned card's control and the preview panel's — so the rule cannot be
+  // walked around by cancelling from the other one.
+  const pinCanCancel = pinCancellable(messages, cvData);
   // The project type: the PERSISTED entry field first, then this thread's marker. The
   // entry is what a tailored project (cloned, so no marker) and an "Edit with Aria"
   // interview have, and it's what the backend now reads too — so resolving it this way
@@ -837,7 +843,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       if (cvData?.studioKind === 'build') {
         // The tail of startEntry: this entry already exists, so pin it and drop into its
         // field capture. Field-by-field, exactly as if Aria had just created it.
-        push({ who: 'pinrole', sortId, section });
+        // Always cancellable — this pin exists because the user pressed "Edit with Aria"
+        // on a row they picked, which is the clearest possible statement of intent, and
+        // the entry already exists so leaving cannot empty the section.
+        push({ who: 'pinrole', sortId, section, cancellable: true });
         setPhase(`build:${section}`);
         // ...but unlike startEntry's own callers (enterSection, nextEntry), which each
         // follow the pin with an opener, arriving from the preview's ✎ is the one route
@@ -987,8 +996,11 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       // Build track only (tailor is disabled). enterSection creates a fresh entry, pins it
       // and drops into the from-scratch interview (type chip → capture → bullets). On
       // finish, Phase 1's completeness-aware finishSection lands it back on the finish card.
+      // forceCancellable: the user pressed "+ Add" themselves, so this interview always
+      // has a way out — even when it is the section's first entry, which Aria opening the
+      // same section conversationally would not have.
       // eslint-disable-next-line no-use-before-define
-      if (cvData?.studioKind === 'build') enterSection(section);
+      if (cvData?.studioKind === 'build') enterSection(section, { forceCancellable: true });
       return;
     }
 
@@ -2486,7 +2498,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // Create a REAL entry, then pin it. The entry has to exist on the saved draft before
   // any /coach call, because generate-bullets resolves its target by _sortId server-side —
   // a locally-invented placeholder would have nothing to write into.
-  const startEntry = async (section) => {
+  // `cancellable` rides on the pin marker rather than being worked out later — see
+  // pinCancellable. It answers "did the user choose to open this?", which is knowable only
+  // here, at the moment it opens, and is gone by the next render.
+  const startEntry = async (section, { cancellable = false } = {}) => {
     if (roleBusy) return null;
     setRoleBusy('next');
     try {
@@ -2497,7 +2512,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
             ? await addEducation()
             : await addRole();
       if (!sortId) return null;
-      push({ who: 'pinrole', sortId, section });
+      push({ who: 'pinrole', sortId, section, cancellable });
       setPhase(`build:${section}`);
       return sortId;
     } finally {
@@ -2515,10 +2530,18 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // is right the first time and wrong every time after: "+ Add" on the Live Preview can
   // fire this on a section that already has three entries, where "let's start" reads as if
   // Aria lost the thread. Counted BEFORE startEntry, which creates the entry it pins.
-  const enterSection = async (section) => {
+  //
+  // `hadEntries` does double duty now: it also decides whether this interview gets a
+  // Cancel. Aria opening the FIRST role or project of a new CV is the build proceeding,
+  // and has no exit; everything after it was asked for. `forceCancellable` is how the
+  // preview's "+ Add" overrides that — it lands here too, but the user clicked it, so it
+  // is cancellable even when the section is still empty.
+  const enterSection = async (section, { forceCancellable = false } = {}) => {
     const listKey = section === 'project' ? 'projects' : section;
     const hadEntries = (cvData?.[listKey] || []).length > 0;
-    const sortId = await startEntry(section);
+    const sortId = await startEntry(section, {
+      cancellable: forceCancellable || hadEntries || section === 'education',
+    });
     if (!sortId) return;
     ariaSays(hadEntries ? t(`ariaStudio.chat.nextEntry.${section}`) : SECTION_OPENER[section]);
   };
@@ -2626,7 +2649,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
         },
         { who: 'unpinrole' }
       );
-      const sortId = await startEntry(pinnedSectionKey);
+      // Always cancellable: reaching a "next" entry means the previous one was finished,
+      // so abandoning this one cannot leave the section empty.
+      const sortId = await startEntry(pinnedSectionKey, { cancellable: true });
       if (sortId) {
         ariaSays(
           pinnedSectionKey === 'project'
@@ -3137,6 +3162,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   const buildFromIdea = async (idea, contextArg) => {
     if (!idea || roleBusy) return;
     const context = contextArg || cvData?.studioPending?.context || 'build';
+    // Read BEFORE addProject, which is what makes the list non-empty. Same rule as
+    // enterSection: the first project of a new CV is Aria continuing the build.
+    const hadProjects = (cvData?.projects || []).length > 0;
     setRoleBusy('next');
     try {
       const sortId = await addProject({ title: idea.title });
@@ -3165,7 +3193,12 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
         });
         setPhase('fix:coach');
       } else {
-        push(...typeTurns, { who: 'pinrole', sortId, section: 'project' });
+        push(...typeTurns, {
+          who: 'pinrole',
+          sortId,
+          section: 'project',
+          cancellable: hadProjects,
+        });
         setPhase('build:project');
       }
 
@@ -3616,17 +3649,34 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
 
   useEffect(() => {
     if (focusedPinSortId) {
-      setActiveEntry?.({ section: pinnedSectionKey, sortId: focusedPinSortId });
+      // `cancellable` rides along so the preview panel can show or withhold its own
+      // Cancel on the same rule, without re-deriving it from a transcript it never reads.
+      setActiveEntry?.({
+        section: pinnedSectionKey,
+        sortId: focusedPinSortId,
+        cancellable: pinCanCancel,
+      });
     } else if (focusedFixSortId) {
-      setActiveEntry?.({ section: focusedFixSection, sortId: focusedFixSortId });
+      // The tailor track's sessions are always abandonable — cancelFix has been their
+      // exit since before the build track had one — so they never withhold the control.
+      setActiveEntry?.({
+        section: focusedFixSection,
+        sortId: focusedFixSortId,
+        cancellable: true,
+      });
     } else if (focusedRewriteSortId) {
-      setActiveEntry?.({ section: focusedRewriteSection, sortId: focusedRewriteSortId });
+      setActiveEntry?.({
+        section: focusedRewriteSection,
+        sortId: focusedRewriteSortId,
+        cancellable: true,
+      });
     } else {
       setActiveEntry?.(null);
     }
   }, [
     focusedPinSortId,
     pinnedSectionKey,
+    pinCanCancel,
     focusedFixSection,
     focusedFixSortId,
     focusedRewriteSection,
@@ -3910,9 +3960,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 // it is the user's call.
                 onNextRole={nextEntry}
                 onDone={finishSection}
-                // The way OUT. Not "done" — done stamps the section finished and is gated on
-                // the entry being complete; this just stops, and is always available.
-                onCancel={requestCancelFocus}
+                // The way OUT. Not "done" — done stamps the section finished and is gated
+                // on the entry being complete; this just stops. Withheld on the first role
+                // and first project of a new CV, where there is nothing to go back to.
+                onCancel={pinCanCancel ? requestCancelFocus : undefined}
                 // CORRECT one captured field, in place on the card. Straight through to
                 // the same narrow field-overwrite the interview's own capture uses —
                 // optimistic apply, {_id, <list>} save, rollback + toast on failure —
@@ -5128,12 +5179,13 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               // there are no measured gaps to name — the job's must-haves stood in for
               // them, which put the same two words under every role for the whole build.
               //
-              // onBack IS passed now. It used to be withheld on the grounds that the
-              // pinned card's "next role" / "done" were this track's exits — but "next
-              // role" is disabled until the entry is complete and "done" stamps the
-              // section finished, so an interview opened by mistake had no way out.
-              onBack={requestCancelFocus}
-              backLabel={t('ariaStudio.sectionCoach.cancelBuild')}
+              // NO onBack. This track's Cancel lives on the pinned "Building" card, and
+              // there only. It briefly also sat here, as a link under the textarea — but
+              // the composer is where you ANSWER her question, and a quiet way to abandon
+              // the interview directly beneath the box you are typing into is both easy to
+              // hit by accident and the wrong place to reason about leaving. The pinned
+              // card is where the interview's other exits ("next role", "done") already
+              // are, so all three now read as one set of choices about this role.
               messages={messages}
               onPush={push}
               onApply={async (add, remove) => {
@@ -5200,6 +5252,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                       who: 'pinrole',
                       sortId: pinnedEntry._sortId,
                       section: pinnedSectionKey,
+                      // Re-opening the SAME entry, so it inherits what the original pin
+                      // decided. Recomputing would hand a Cancel to a first role that
+                      // started without one, just because it has now applied bullets.
+                      cancellable: pinCanCancel,
                     });
                     setBuildRoundNonce((n) => n + 1);
                     ariaSays(

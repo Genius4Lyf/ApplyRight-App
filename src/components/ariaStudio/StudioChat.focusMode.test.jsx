@@ -196,7 +196,9 @@ describe('StudioChat — focus in a BUILD interview', () => {
     });
 
     await waitFor(() => expect(countOf('pinrole')).toBe(1));
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'experience', sortId: 'a' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'experience', sortId: 'a' })
+    );
     await waitFor(() => expect(countOf('focus')).toBe(1));
     expect(screen.getByText(/Focus.*Engineer/)).toBeTruthy();
   });
@@ -227,7 +229,9 @@ describe('StudioChat — focus in a BUILD interview', () => {
       ctx.requestStudioCommand('editWithAria', 'project', 'p1');
     });
 
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'project', sortId: 'p1' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'project', sortId: 'p1' })
+    );
   });
 
   // The marker has to disappear the moment the interview closes, or the preview keeps a
@@ -239,7 +243,9 @@ describe('StudioChat — focus in a BUILD interview', () => {
     await act(async () => {
       ctx.requestStudioCommand('editWithAria', 'experience', 'a');
     });
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'experience', sortId: 'a' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'experience', sortId: 'a' })
+    );
 
     await act(async () => {
       ctx.requestStudioCommand('deleteEntry', 'experience', 'a');
@@ -249,6 +255,38 @@ describe('StudioChat — focus in a BUILD interview', () => {
     await waitFor(() => expect(ctx.activeEntry).toBeNull());
     await waitFor(() => expect(countOf('unfocus')).toBe(1));
     expect(screen.getByText('Focus mode exited')).toBeTruthy();
+  });
+
+  // The THIRD thing this mirror publishes, and the reason it exists: whether the interview
+  // can be abandoned. The preview panel draws its own Cancel from this and nothing else —
+  // it never reads the transcript — so if the flag stopped riding along, the panel would
+  // quietly offer a way out of the one interview that must not have one (the first role of
+  // a new CV), disagreeing with the pinned card about the same interview.
+  it('publishes whether the interview can be cancelled', async () => {
+    await mountStudio(buildDraft());
+
+    // "Edit with Aria" is the user picking a row deliberately — always cancellable.
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'experience', 'a');
+    });
+    await waitFor(() => expect(ctx.activeEntry?.cancellable).toBe(true));
+  });
+
+  it('publishes cancellable:false for a role Aria opened herself', async () => {
+    // The opening move of a fresh build: Aria creates the first role and interviews on it.
+    // The marker carries the decision, so this is what a refresh mid-interview restores.
+    const draft = buildDraft();
+    draft.coachChats.studio = [
+      { who: 'buildstart' },
+      { who: 'pinrole', sortId: 'a', section: 'experience', cancellable: false },
+    ];
+    await mountStudio(draft);
+
+    // Still focused on the right row — withholding the exit must not disturb the mirror.
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'experience', sortId: 'a' })
+    );
+    expect(ctx.activeEntry.cancellable).toBe(false);
   });
 });
 
@@ -262,7 +300,9 @@ describe('StudioChat — focus in a TAILOR interview', () => {
     });
 
     await waitFor(() => expect(countOf('fixstart')).toBe(1));
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'experience', sortId: 'a' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'experience', sortId: 'a' })
+    );
   });
 
   it('publishes a focused PROJECT as a project, not experience', async () => {
@@ -273,7 +313,9 @@ describe('StudioChat — focus in a TAILOR interview', () => {
     });
 
     await waitFor(() => expect(countOf('fixstart')).toBe(1));
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'project', sortId: 'p1' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'project', sortId: 'p1' })
+    );
   });
 });
 
@@ -310,7 +352,9 @@ describe('StudioChat — focus during a REWRITE', () => {
 
     // fix:rewrite — the card owns the entry now.
     await waitFor(() => expect(ctx.cvData.studioPending?.kind).toBe('rewrite'));
-    await waitFor(() => expect(ctx.activeEntry).toEqual({ section: 'project', sortId: 'p1' }));
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'project', sortId: 'p1' })
+    );
 
     // Handing the same entry from the card to the interview must not blink the marker off:
     // the source changes from the rewrite target to the open fix, the entry does not.
@@ -320,6 +364,6 @@ describe('StudioChat — focus during a REWRITE', () => {
     });
 
     await waitFor(() => expect(countOf('fixstart')).toBe(2));
-    expect(ctx.activeEntry).toEqual({ section: 'project', sortId: 'p1' });
+    expect(ctx.activeEntry).toMatchObject({ section: 'project', sortId: 'p1' });
   });
 });

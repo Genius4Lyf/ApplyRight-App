@@ -492,6 +492,36 @@ export const SECTION_LIST = {
 };
 
 /**
+ * Whether the open interview may be CANCELLED.
+ *
+ * An interview the user walked into deliberately — "+ Add", "Edit with Aria", "Next role",
+ * or re-entering a section that already has entries — can be abandoned. The FIRST role and
+ * the FIRST project of a new CV cannot: Aria opens those herself as the next step of the
+ * build, and an exit there would leave a brand-new CV empty in the section she is asking
+ * about. That reads as the build having failed, not as a choice the user made.
+ *
+ * Education is always cancellable. It is a short optional detour rather than the spine of
+ * the CV, and a qualification opened by mistake should not be a one-way door.
+ *
+ * THE FLAG IS STAMPED ON THE `pinrole` MARKER when the pin opens; it is not computed here.
+ * That is deliberate — `derivePhase` rebuilds the whole interview from these markers on
+ * refresh, and a value recomputed from today's cvData would flip the moment a second entry
+ * existed, so a Cancel could appear mid-interview in a session that started without one.
+ *
+ * Markers written before this field existed fall back to the shape of the document: an
+ * entry that is not the only one in its section was necessarily reached by a "next" or an
+ * "add", so it is cancellable.
+ */
+export function pinCancellable(msgs = [], cvData = null) {
+  const last = [...msgs].reverse().find((m) => m?.who === 'pinrole' || m?.who === 'unpinrole');
+  if (last?.who !== 'pinrole') return false;
+  if (typeof last.cancellable === 'boolean') return last.cancellable;
+  const section = last.section || 'experience';
+  if (section === 'education') return true;
+  return (cvData?.[SECTION_LIST[section] || section] || []).length > 1;
+}
+
+/**
  * Resolve the pinned entry against the live draft.
  *
  * Returns null when the marker points at an entry that no longer exists — deleted from

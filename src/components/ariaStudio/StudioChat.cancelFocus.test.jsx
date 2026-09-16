@@ -301,3 +301,108 @@ describe('it asks before it does anything', () => {
     );
   });
 });
+
+// ─── WHERE the way out lives, and who gets one ───
+//
+// Two rules, both asked for after the first version shipped in three places at once:
+//
+//   1. Cancel belongs on the pinned "Building" card, and nowhere else in the chat. It
+//      briefly also sat under the message box, which is where you ANSWER her question —
+//      a quiet abandon-this link directly beneath the box you type into.
+//   2. The FIRST role of a new CV has no Cancel at all. Aria opens that one herself as
+//      the next step of the build; leaving it would empty the section she is asking about.
+describe('where the cancel appears', () => {
+  const cancelLabel = () => t('ariaStudio.pinnedEntry.cancel');
+  const doneLabel = () => t('ariaStudio.pinnedEntry.copy.experience.done');
+
+  // The pinned card only mounts once the entry is past its form (see showPinnedEntryCard),
+  // so a role has to be this complete before there is a card to look for a Cancel on.
+  const staged = (over = {}) => ({
+    _sortId: 'a',
+    entryType: 'job',
+    title: 'Engineer',
+    company: 'Acme',
+    startDate: '2020',
+    description: '• one',
+    ...over,
+  });
+
+  const draftWith = ({ cancellable, experience }) =>
+    pinnedDraft({
+      experience,
+      coachChats: {
+        studio: [
+          { who: 'buildstart' },
+          { who: 'pinrole', sortId: 'a', section: 'experience', cancellable },
+        ],
+      },
+    });
+
+  const byLabel = (label) =>
+    screen.queryAllByRole('button').find((b) => b.textContent?.trim() === label);
+  const cancelControl = () => byLabel(cancelLabel());
+
+  // The card starts collapsed, and while collapsed its body is `inert` + aria-hidden — so
+  // a role query finds nothing inside it either way. Open it the way the user does before
+  // asserting anything about the actions, or a test would pass just as happily against a
+  // Cancel that is still there.
+  const openCard = async () => {
+    // By its "Building" label, not just by aria-expanded — the chat has other collapsible
+    // controls, and picking the wrong one would leave the card shut and every assertion
+    // below it meaningless.
+    const header = await waitFor(() => {
+      const el = screen
+        .queryAllByRole('button')
+        .find(
+          (b) =>
+            b.getAttribute('aria-expanded') === 'false' &&
+            b.textContent?.includes(t('ariaStudio.pinnedEntry.copy.experience.label'))
+        );
+      expect(el).toBeTruthy();
+      return el;
+    });
+    await act(async () => {
+      fireEvent.click(header);
+    });
+    // The card is genuinely open once its other actions are reachable. Asserting this
+    // FIRST is what makes a later "no Cancel" mean something.
+    await waitFor(() => expect(byLabel(doneLabel())).toBeTruthy());
+  };
+
+  it('puts it on the pinned card once the interview is one the user chose', async () => {
+    await mountStudio(
+      draftWith({ cancellable: true, experience: [staged(), staged({ _sortId: 'b' })] })
+    );
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await openCard();
+    expect(cancelControl()).toBeTruthy();
+  });
+
+  it('withholds it on the first role of a new CV', async () => {
+    // Aria opened this one herself as the opening move of the build. There is nothing
+    // behind it to go back to, so it has no exit — on this card or on the preview panel.
+    await mountStudio(draftWith({ cancellable: false, experience: [staged()] }));
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await openCard();
+    expect(cancelControl()).toBeUndefined();
+  });
+
+  it('never renders one under the message box', async () => {
+    // It briefly lived there too, as a link in the composer footer — directly beneath the
+    // box you answer her questions in. The footer is a named node so this can be asserted
+    // without depending on the layout around it.
+    await mountStudio(
+      draftWith({ cancellable: true, experience: [staged(), staged({ _sortId: 'b' })] })
+    );
+    await waitFor(() => expect(countOf('pinrole')).toBe(1));
+
+    await openCard();
+    expect(cancelControl()).toBeTruthy();
+
+    document.querySelectorAll('[data-coach-footer]').forEach((footer) => {
+      expect(footer.textContent).not.toMatch(/cancel/i);
+    });
+  });
+});
