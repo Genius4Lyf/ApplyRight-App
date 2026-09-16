@@ -542,13 +542,18 @@ const PinnedEntryCard = ({
               </div>
             )}
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            {/* On a phone the two decisions — carry on, or close the section — go
+                full-width and stacked; the two quiet controls stay on one row beneath
+                them. `sm:contents` dissolves that sub-row from `sm` up, so Edit and Cancel
+                become direct children of this flex row again and Cancel's `ml-auto` keeps
+                pushing it to the far right exactly as before. */}
+            <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
               <button
                 type="button"
                 onClick={onNextRole}
                 disabled={busy || done < total}
                 title={done < total ? t('ariaStudio.pinnedEntry.finishFirst') : undefined}
-                className="btn-primary px-3.5 py-1.5 text-[14px] disabled:opacity-40"
+                className="btn-primary w-full sm:w-auto px-3.5 py-2.5 sm:py-1.5 text-[14px] disabled:opacity-40"
               >
                 {busy === 'next' ? t('ariaStudio.pinnedEntry.saving') : t(copy.nextKey)}
               </button>
@@ -556,35 +561,37 @@ const PinnedEntryCard = ({
                 type="button"
                 onClick={onDone}
                 disabled={busy}
-                className="text-[12px] font-semibold px-3 py-1.5 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+                className="w-full sm:w-auto text-[12px] font-semibold px-3 py-2.5 sm:py-1.5 rounded-lg sm:rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
               >
                 {busy === 'done' ? t('ariaStudio.pinnedEntry.finishing') : t(copy.doneKey)}
               </button>
-              {onEdit && (
-                <button
-                  type="button"
-                  onClick={onEdit}
-                  disabled={busy}
-                  className="text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
-                >
-                  ✎ {t('ariaStudio.pinnedEntry.edit')}
-                </button>
-              )}
-              {/* DANGER, not another quiet grey link. It is the only control here that
+              <div className="flex w-full items-center sm:contents">
+                {onEdit && (
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    disabled={busy}
+                    className="text-[12px] font-semibold px-2 py-1.5 rounded-lg text-slate-400 dark:text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors disabled:opacity-50"
+                  >
+                    ✎ {t('ariaStudio.pinnedEntry.edit')}
+                  </button>
+                )}
+                {/* DANGER, not another quiet grey link. It is the only control here that
                   throws work away, and it sat in the same muted grey as "Edit" — which
                   made the one destructive action the least visible thing in the row.
                   Rose text on a hover fill, not a filled button: it must read as serious
                   without competing with "Next role" for the primary slot. */}
-              {onCancel && (
-                <button
-                  type="button"
-                  onClick={onCancel}
-                  disabled={busy}
-                  className="ml-auto text-[12px] font-semibold px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 transition-colors disabled:opacity-50"
-                >
-                  {t('ariaStudio.pinnedEntry.cancel')}
-                </button>
-              )}
+                {onCancel && (
+                  <button
+                    type="button"
+                    onClick={onCancel}
+                    disabled={busy}
+                    className="ml-auto text-[12px] font-semibold px-2.5 py-1.5 rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 hover:text-rose-700 dark:hover:bg-rose-950/40 dark:hover:text-rose-300 transition-colors disabled:opacity-50"
+                  >
+                    {t('ariaStudio.pinnedEntry.cancel')}
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

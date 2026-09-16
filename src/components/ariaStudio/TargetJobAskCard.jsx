@@ -33,20 +33,26 @@ const TargetJobAskCard = ({ onYes, onNo }) => {
 
           <SectionIntroBrief section="target_job" />
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <button type="button" onClick={onYes} className="btn-primary px-4 py-2 text-[16px]">
+          {/* Stacked and full-width on a phone, inline from `sm` up. Saying no is a
+              first-class answer here, so it gets the same width as saying yes. */}
+          <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+            <button
+              type="button"
+              onClick={onYes}
+              className="btn-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 text-[16px]"
+            >
               {t('ariaStudio.targetJobAsk.yesIHaveOne')}
             </button>
             <button
               type="button"
               onClick={onNo}
-              className="text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="w-full sm:w-auto text-[14px] font-semibold px-3 py-2.5 sm:py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
             >
               {t('ariaStudio.targetJobAsk.notYet')}
             </button>
           </div>
 
-          <p className="mt-2.5 text-[14px] text-slate-400 dark:text-slate-500">
+          <p className="mt-2.5 text-center sm:text-left text-[14px] text-slate-400 dark:text-slate-500">
             {t('ariaStudio.targetJobAsk.addLater')}
           </p>
         </div>

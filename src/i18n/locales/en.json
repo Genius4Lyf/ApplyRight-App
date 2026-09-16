@@ -4258,6 +4258,23 @@
     "projectType": {
       "whatKind": "What kind of project is it?"
     },
+    "contactSave": {
+      "eyebrow": "Save these for next time?",
+      "body": "I can keep these on your profile, so every new CV starts with them already filled in. You can change or remove them any time from your account.",
+      "fields": {
+        "phone": "Phone number",
+        "linkedin": "LinkedIn",
+        "website": "Website / portfolio",
+        "location": "Location"
+      },
+      "save": "Save to my profile",
+      "saving": "Saving…",
+      "notNow": "Not now",
+      "neverAsk": "Don't ask again",
+      "saved_one": "Saved. Your next CV will start with it filled in.",
+      "saved_other": "Saved. Your next CV will start with them filled in.",
+      "failed": "I couldn't save that just now — it's still on this CV, so nothing is lost."
+    },
     "sectionIntro": {
       "briefLabel": "About this section",
       "withAriaLabel": "Working with me",

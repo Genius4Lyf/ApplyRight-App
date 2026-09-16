@@ -77,6 +77,13 @@ import SectionCoach from './SectionCoach';
 import SummaryFixCard from './SummaryFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
 import SectionIntroCard from './SectionIntroCard';
+import ContactSaveCard from './ContactSaveCard';
+import UserService from '../../services/user.service';
+import {
+  contactSaveAllowed,
+  contactSavePayload,
+  unsavedContactDetails,
+} from '../../lib/contactSave';
 import BuildRoadmapCard from './BuildRoadmapCard';
 import StudioUploadCard from './StudioUploadCard';
 import TargetJobAskCard from './TargetJobAskCard';
@@ -438,6 +445,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // the ANSWER is a marker, so a refresh mid-typing returns to the question rather than
   // an empty form pretending to hold something.
   const [buildJobOpen, setBuildJobOpen] = useState(false);
+  // Contact details on this CV that the account doesn't have yet. Session-only: "Not now"
+  // just empties it, and the persisted refusal is settings.hideContactSavePrompt.
+  const [contactSaveRows, setContactSaveRows] = useState([]);
+  const [contactSaving, setContactSaving] = useState(false);
   // 'next' | 'field' | 'done' | null — which pinned-card action is in flight.
   const [roleBusy, setRoleBusy] = useState(null);
   const [pinMessage, setPinMessage] = useState({ sortId: null, nonce: 0 });
@@ -2450,6 +2461,23 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     setPhase('build:job');
   };
 
+  // Does this CV hold a contact detail the account is missing? That is the chore worth
+  // removing — people retype the same phone number into every CV they build. Defined above
+  // confirmContact because that is where it is called from, and this file's lint config
+  // reports a const used before its declaration.
+  const offerContactSave = async (info) => {
+    if (!info) return;
+    try {
+      const profile = await UserService.getProfile();
+      if (!profile || !contactSaveAllowed(profile)) return;
+      const rows = unsavedContactDetails(info, profile);
+      if (rows.length) setContactSaveRows(rows);
+    } catch (err) {
+      // A profile we cannot read is not a reason to interrupt anyone's build.
+      console.error('Could not check saved contact details', err);
+    }
+  };
+
   const confirmContact = async (info) => {
     setApplyingFix(true);
     try {
@@ -2484,8 +2512,43 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
         setPhase('build:sections');
         ariaSays(t('ariaStudio.chat.confirmContactDone'));
       }, t('ariaStudio.chat.thinking.contactSaved'));
+      // Deliberately NOT awaited: the build moves on at once, and the offer appears a beat
+      // later if there is anything to offer. A slow or failing profile read must never be
+      // something the user waits behind.
+      offerContactSave(info);
     } finally {
       setApplyingFix(false);
+    }
+  };
+
+  const saveContactDetails = async (chosen) => {
+    const body = contactSavePayload(contactSaveRows, chosen);
+    if (!Object.keys(body).length) return;
+    setContactSaving(true);
+    try {
+      await UserService.saveContactDetails(body);
+      setContactSaveRows([]);
+      ariaSays(t('ariaStudio.contactSave.saved', { count: chosen.length }));
+    } catch (err) {
+      console.error('Failed to save contact details to profile', err);
+      // The values are already on the CV, so nothing is lost — say exactly that.
+      toast.error(t('ariaStudio.contactSave.failed'));
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  // Two different answers. This one closes the card for this CV only.
+  const dismissContactSave = () => setContactSaveRows([]);
+
+  // …and this one is the persisted "stop asking". Closed optimistically: the user has
+  // said no, so the card goes whether or not the write lands.
+  const neverAskContactSave = async () => {
+    setContactSaveRows([]);
+    try {
+      await UserService.updateSettings({ hideContactSavePrompt: true });
+    } catch (err) {
+      console.error('Could not persist the contact-save opt-out', err);
     }
   };
 
@@ -4667,6 +4730,23 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                   onEdit={editBuildBrief}
                 />
               )}
+
+              {/* Offered once the contact block is confirmed, above the section menu rather
+                  than instead of it: saving a phone number to the profile is a convenience
+                  and must never stand between someone and the next section. */}
+              {ready &&
+                phase === 'build:sections' &&
+                !pinnedEntry &&
+                contactSaveRows.length > 0 && (
+                  <ContactSaveCard
+                    key="contactsave"
+                    rows={contactSaveRows}
+                    saving={contactSaving}
+                    onSave={saveContactDetails}
+                    onDismiss={dismissContactSave}
+                    onNeverAsk={neverAskContactSave}
+                  />
+                )}
 
               {/* The section menu — whatever is still unfinished, in builder order. */}
               {ready && phase === 'build:sections' && !pinnedEntry && nextSection && (

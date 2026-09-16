@@ -35,22 +35,27 @@ const CareerStageAskCard = ({ onPick, onSkip }) => {
 
           <SectionIntroBrief section="career_stage" />
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          {/* Stacked and full-width on a phone, inline from `sm` up — three labels of very
+              different lengths wrap into a ragged two-and-one on a narrow screen. */}
+          <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap gap-2">
             {CAREER_STAGES.map((s) => (
               <button
                 key={s.k}
                 type="button"
                 onClick={() => onPick(s.k)}
-                className="text-[16px] font-semibold px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                className="w-full sm:w-auto text-[16px] font-semibold px-4 py-2.5 sm:py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 {t(s.labelKey)}
               </button>
             ))}
           </div>
+          {/* Centred under the stack on a phone, where the choices are full-width and a
+              left-aligned link reads as belonging to the last button rather than to all of
+              them. Back to the left once the buttons sit inline. */}
           <button
             type="button"
             onClick={onSkip}
-            className="mt-3 text-[14px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+            className="mt-3 w-full sm:w-auto text-center sm:text-left text-[14px] font-semibold text-slate-400 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
           >
             {t('ariaStudio.chat.careerStage.skip')}
           </button>

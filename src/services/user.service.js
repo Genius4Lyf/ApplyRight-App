@@ -79,9 +79,36 @@ const exportData = async () => {
   window.URL.revokeObjectURL(url);
 };
 
+// The account's own copy of the details a CV asks for every time. Read so Aria can tell
+// what is genuinely NEW on a CV rather than offering to save something already saved.
+const getProfile = async () => {
+  const response = await api.get('/users/profile');
+  return response.data || null;
+};
+
+// Save contact details Aria noticed on a CV to the account. Same PUT the Profile page
+// uses — deliberately, so there is one write path and one whitelist to keep honest.
+//
+// The stored user blob is refreshed the way updateSettings does it: several surfaces read
+// contact details out of localStorage rather than refetching, and leaving a stale blob
+// behind would have Aria re-offer a value she just saved.
+const saveContactDetails = async (fields) => {
+  const response = await api.put('/users/profile', fields);
+  if (response.data) {
+    const stored = JSON.parse(localStorage.getItem('user') || 'null');
+    if (stored) {
+      localStorage.setItem('user', JSON.stringify({ ...stored, ...response.data }));
+      window.dispatchEvent(new Event('userDataUpdated'));
+    }
+  }
+  return response.data || null;
+};
+
 const UserService = {
   updateSettings,
   updateLanguage,
+  getProfile,
+  saveContactDetails,
   deleteAccount,
   getReferralStats,
   getActivityStats,

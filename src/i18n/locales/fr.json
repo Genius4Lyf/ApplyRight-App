@@ -4254,6 +4254,23 @@
     "projectType": {
       "whatKind": "De quel type de projet s'agit-il ?"
     },
+    "contactSave": {
+      "eyebrow": "Les garder pour la prochaine fois ?",
+      "body": "Je peux les conserver dans votre profil : chaque nouveau CV démarrera alors avec ces champs déjà remplis. Vous pouvez les modifier ou les supprimer à tout moment depuis votre compte.",
+      "fields": {
+        "phone": "Numéro de téléphone",
+        "linkedin": "LinkedIn",
+        "website": "Site web / portfolio",
+        "location": "Localisation"
+      },
+      "save": "Enregistrer dans mon profil",
+      "saving": "Enregistrement…",
+      "notNow": "Pas maintenant",
+      "neverAsk": "Ne plus me le demander",
+      "saved_one": "C'est enregistré. Votre prochain CV démarrera avec ce champ déjà rempli.",
+      "saved_other": "C'est enregistré. Votre prochain CV démarrera avec ces champs déjà remplis.",
+      "failed": "Je n'ai pas réussi à l'enregistrer pour le moment — l'information reste sur ce CV, rien n'est perdu."
+    },
     "sectionIntro": {
       "briefLabel": "À propos de cette section",
       "withAriaLabel": "Travailler avec moi",

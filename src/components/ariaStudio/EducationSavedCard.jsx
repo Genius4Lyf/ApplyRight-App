@@ -35,12 +35,15 @@ const EducationSavedCard = ({ heading, onAddAnother, onDone, busy }) => {
             : t('ariaStudio.educationSaved.onYourCvNoName')}
         </p>
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        {/* Stacked and full-width on a phone, inline from `sm` up — "Add another
+            qualification" is long enough to push "Done with education" onto its own line
+            anyway, which reads as two unrelated controls rather than a pair. */}
+        <div className="mt-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
           <button
             type="button"
             onClick={onAddAnother}
             disabled={!!busy}
-            className="btn-primary px-4 py-2 text-[16px] disabled:opacity-50"
+            className="btn-primary w-full sm:w-auto px-4 py-2.5 sm:py-2 text-[16px] disabled:opacity-50"
           >
             {busy === 'next'
               ? t('ariaStudio.pinnedEntry.saving')
@@ -50,7 +53,7 @@ const EducationSavedCard = ({ heading, onAddAnother, onDone, busy }) => {
             type="button"
             onClick={onDone}
             disabled={!!busy}
-            className="text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
+            className="w-full sm:w-auto text-[14px] font-semibold px-3 py-2.5 sm:py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50"
           >
             {busy === 'done'
               ? t('ariaStudio.pinnedEntry.finishing')

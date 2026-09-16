@@ -106,6 +106,7 @@ const Profile = () => {
     lastName: '',
     otherName: '',
     phone: '',
+    location: '',
     portfolioUrl: '',
     linkedinUrl: '',
     currentJobTitle: '',
@@ -196,6 +197,7 @@ const Profile = () => {
         lastName: userData.lastName || '',
         otherName: userData.otherName || '',
         phone: userData.phone || '',
+        location: userData.location || '',
         portfolioUrl: userData.portfolioUrl || '',
         linkedinUrl: userData.linkedinUrl || '',
         currentJobTitle: userData.currentJobTitle || '',
@@ -283,6 +285,7 @@ const Profile = () => {
         lastName: formData.lastName,
         otherName: formData.otherName,
         phone: formData.phone,
+        location: formData.location,
         portfolioUrl: formData.portfolioUrl,
         linkedinUrl: formData.linkedinUrl,
         currentJobTitle: formData.currentJobTitle,
@@ -627,6 +630,25 @@ const Profile = () => {
                           value={formData.phone}
                           onChange={handleChange}
                           placeholder="e.g. 09017134882"
+                          className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
+                        />
+                      </div>
+                      {/* Prints on the CV as the contact block's address, and seeds every
+                          new CV — which is why it belongs here and not only per document. */}
+                      <div>
+                        <label
+                          htmlFor="location"
+                          className="block text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-1"
+                        >
+                          Location
+                        </label>
+                        <input
+                          id="location"
+                          type="text"
+                          name="location"
+                          value={formData.location}
+                          onChange={handleChange}
+                          placeholder="e.g. Lagos, Nigeria"
                           className="w-full p-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-900 dark:focus:ring-slate-100 outline-none dark:bg-slate-900 dark:border-slate-600 dark:text-slate-100 dark:placeholder-slate-500"
                         />
                       </div>

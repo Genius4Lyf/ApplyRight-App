@@ -246,6 +246,8 @@ describe('locale files', () => {
       'cvStudio.designPanel.lineHeightOpt.compact',
       'cvStudio.designPanel.lineHeightOpt.normal',
       'cvStudio.designPanel.sectionGapOpt.normal',
+      // Aria's offer to remember a contact detail: the row label is the network's own name.
+      'ariaStudio.contactSave.fields.linkedin', // "LinkedIn" — a brand, not a word
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);
