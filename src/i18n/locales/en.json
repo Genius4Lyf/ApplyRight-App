@@ -4258,6 +4258,55 @@
     "projectType": {
       "whatKind": "What kind of project is it?"
     },
+    "sectionIntro": {
+      "briefLabel": "About this section",
+      "withAriaLabel": "Working with me",
+      "learnMore": "Learn more",
+      "hide": "Hide",
+      "career_stage": {
+        "whatItIs": "Where you are right now, in one tap. It is not a label on your CV — nobody but me ever sees it.",
+        "typesLead": "Pick the one that fits. This is what actually changes:",
+        "types": {
+          "grad": "Coursework, projects, campus leadership, volunteering, part-time or informal work, internships and NYSC all count as real experience. I won't ask you for a business metric — impact here is scope: \"used by the whole final-year class\".",
+          "experienced": "I'll dig for the achievement behind each duty, and for a real figure wherever you have one. Where you don't, we use scope or scale instead — and I keep every line inside the authority the job actually carried.",
+          "changer": "I'll lead with what carries over and translate it toward the new field, counting both sides: the wins from your old work, and the study, certificates or freelance that came out of the switch."
+        },
+        "withAria": "Skip it if you'd rather — I'll read the shape of your CV and assume student or experienced. But I can never guess \"changing careers\" from a document. That one only counts if you tell me."
+      },
+      "target_job": {
+        "whatItIs": "The role you're aiming at. One job advert, pasted or described — that's all I need.",
+        "withAria": "Paste the whole advert if you have one, even the messy parts. I read it so that every section after this is written for that job, instead of for everyone's."
+      },
+      "experience": {
+        "whatItIs": "Everywhere you have worked, in any form — and the part recruiters read hardest.",
+        "typesLead": "Five kinds of experience belong here. If you are a student, all five count:",
+        "types": {
+          "job": "Paid, ongoing employment — full-time or not.",
+          "internship": "A placement, attachment or NYSC posting, however short.",
+          "partTime": "Shifts, a side hustle, freelance gigs, the family business.",
+          "volunteer": "Unpaid work, campus or club leadership, duties at church or mosque.",
+          "coursework": "A graded project or capstone you would happily defend in an interview."
+        },
+        "withAria": "Tell me what happened in your own words — messy is fine, shaping it is my job. When I ask for a number you don't have, give me the scale instead: how many, how often, how big."
+      },
+      "project": {
+        "whatItIs": "Things you chose to build or run — your strongest card when work experience is thin.",
+        "typesLead": "Three kinds, and I frame each one differently:",
+        "withAria": "Start with what the thing actually does, and what YOUR part in it was rather than the team's. Have a link? Give it to me — a project someone can open beats one they have to imagine."
+      },
+      "education": {
+        "whatItIs": "Your degrees, diplomas and certificates, plus the coursework worth showing.",
+        "withAria": "Give me the qualification, the school and when you finished. If your CGPA is strong, say so; if it isn't, we leave it out and lead with something better."
+      },
+      "skills": {
+        "whatItIs": "The tools and abilities you could be asked to prove on your first day.",
+        "withAria": "Name only what you have really used — six honest skills beat twenty you would freeze on. Give me the proper name of each tool and I'll match it to the words the advert uses."
+      },
+      "summary": {
+        "whatItIs": "The two or three lines at the top that decide whether the rest gets read.",
+        "withAria": "You don't have to write this one. Tell me who you are and what you're after, and I'll draft it from everything you have already given me — then change any word you don't like."
+      }
+    },
     "pinnedEntry": {
       "liveStatus": "ARIA is actively working on this entry",
       "copy": {

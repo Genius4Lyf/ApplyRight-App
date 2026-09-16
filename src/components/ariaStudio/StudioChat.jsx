@@ -58,7 +58,6 @@ import AriaThinking from '../cv/AriaThinking';
 import RewriteRoleCard from './RewriteRoleCard';
 import ProjectIdeasCard from './ProjectIdeasCard';
 import ModeChooser from './ModeChooser';
-import CardEyebrow from './CardEyebrow';
 import PrepAnalyzingCard from './PrepAnalyzingCard';
 import PrepCvCard from './PrepCvCard';
 import PrepResultsCard from './PrepResultsCard';
@@ -77,6 +76,7 @@ import EntryPickerCard from './EntryPickerCard';
 import SectionCoach from './SectionCoach';
 import SummaryFixCard from './SummaryFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
+import SectionIntroCard from './SectionIntroCard';
 import BuildRoadmapCard from './BuildRoadmapCard';
 import StudioUploadCard from './StudioUploadCard';
 import TargetJobAskCard from './TargetJobAskCard';
@@ -4674,31 +4674,20 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                   cardKey={`sections-${nextSection.key}`}
                   key={`sections-${nextSection.key}`}
                 >
-                  <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-                    <CardEyebrow icon={nextSection.icon}>{nextSection.eyebrow}</CardEyebrow>
-                    <p className="mt-2 text-[14px] leading-relaxed text-slate-600 dark:text-slate-300">
-                      {nextSection.blurb}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={nextSection.start}
-                      disabled={roleBusy}
-                      className="btn-primary w-full mt-3 py-2 text-sm disabled:opacity-50"
-                    >
-                      {roleBusy ? t('ariaStudio.buildRoadmap.settingUp') : nextSection.cta}
-                    </button>
-                    {/* Optional sections get a guilt-free out, stated plainly. */}
-                    {nextSection.skip && (
-                      <button
-                        type="button"
-                        onClick={nextSection.skip}
-                        disabled={roleBusy}
-                        className="w-full mt-2 text-[11.5px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-100 py-1.5 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {nextSection.skipLabel}
-                      </button>
-                    )}
-                  </div>
+                  {/* Carries the illustrated brief for the six sections people walk into
+                      cold; `certs` has no SECTION_INTRO entry and renders exactly the
+                      plain card this used to be. */}
+                  <SectionIntroCard
+                    section={nextSection.key}
+                    icon={nextSection.icon}
+                    eyebrow={nextSection.eyebrow}
+                    blurb={nextSection.blurb}
+                    cta={nextSection.cta}
+                    onStart={nextSection.start}
+                    busy={roleBusy}
+                    skip={nextSection.skip}
+                    skipLabel={nextSection.skipLabel}
+                  />
                 </AriaCard>
               )}
 

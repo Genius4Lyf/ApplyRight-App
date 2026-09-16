@@ -2,6 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 import CardEyebrow from './CardEyebrow';
+import { SectionIntroArt, SectionIntroBrief } from './SectionIntroCard';
+import { introFor } from '../../lib/sectionIntro';
 
 // Ask ONCE whether there's a specific job in mind, because the answer changes every
 // question that follows: with a JD, the Role Brief grounds what Aria probes for; without
@@ -11,32 +13,43 @@ import CardEyebrow from './CardEyebrow';
 // they have a role picked out, and framing that as opting out would imply they're doing
 // it wrong. The Yes branch reuses JobCaptureCard (the caller swaps this card for it);
 // there is deliberately no second JD form in the codebase.
+//
+// This card carries the illustrated brief too. The target job never passes through the
+// section hub — it is asked for here, before the build proper starts — but it is the same
+// "about to walk into a section you may not understand" moment, and pasting a whole job
+// advert is exactly the step people get wrong by summarising it instead.
 const TargetJobAskCard = ({ onYes, onNo }) => {
   const { t } = useTranslation();
   return (
     <AriaCard cardKey="jobask">
-      <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-        <CardEyebrow>{t('ariaStudio.targetJobAsk.oneThingFirst')}</CardEyebrow>
-        <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
-          {t('ariaStudio.targetJobAsk.areYouAiming')}
-        </p>
+      <div className="w-full min-w-0 overflow-hidden rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <SectionIntroArt art={introFor('target_job')?.art} />
 
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <button type="button" onClick={onYes} className="btn-primary px-4 py-2 text-[16px]">
-            {t('ariaStudio.targetJobAsk.yesIHaveOne')}
-          </button>
-          <button
-            type="button"
-            onClick={onNo}
-            className="text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-          >
-            {t('ariaStudio.targetJobAsk.notYet')}
-          </button>
+        <div className="p-5">
+          <CardEyebrow>{t('ariaStudio.targetJobAsk.oneThingFirst')}</CardEyebrow>
+          <p className="mt-2 text-[16px] leading-relaxed text-slate-600 dark:text-slate-300">
+            {t('ariaStudio.targetJobAsk.areYouAiming')}
+          </p>
+
+          <SectionIntroBrief section="target_job" />
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <button type="button" onClick={onYes} className="btn-primary px-4 py-2 text-[16px]">
+              {t('ariaStudio.targetJobAsk.yesIHaveOne')}
+            </button>
+            <button
+              type="button"
+              onClick={onNo}
+              className="text-[14px] font-semibold px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+            >
+              {t('ariaStudio.targetJobAsk.notYet')}
+            </button>
+          </div>
+
+          <p className="mt-2.5 text-[14px] text-slate-400 dark:text-slate-500">
+            {t('ariaStudio.targetJobAsk.addLater')}
+          </p>
         </div>
-
-        <p className="mt-2.5 text-[14px] text-slate-400 dark:text-slate-500">
-          {t('ariaStudio.targetJobAsk.addLater')}
-        </p>
       </div>
     </AriaCard>
   );

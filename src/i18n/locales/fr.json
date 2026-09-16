@@ -4254,6 +4254,55 @@
     "projectType": {
       "whatKind": "De quel type de projet s'agit-il ?"
     },
+    "sectionIntro": {
+      "briefLabel": "À propos de cette section",
+      "withAriaLabel": "Travailler avec moi",
+      "learnMore": "En savoir plus",
+      "hide": "Masquer",
+      "career_stage": {
+        "whatItIs": "Où vous en êtes aujourd'hui, en un clic. Ce n'est pas une mention sur votre CV — personne d'autre que moi ne la voit.",
+        "typesLead": "Choisissez ce qui vous correspond. Voici ce que cela change vraiment :",
+        "types": {
+          "grad": "Travaux de cours, projets, responsabilités étudiantes, bénévolat, petits boulots, stages et service civique comptent tous comme de vraies expériences. Je ne vous réclamerai pas de chiffre d'affaires — ici, l'impact se mesure en ampleur : « utilisé par toute la promotion ».",
+          "experienced": "Je chercherai la réussite derrière chaque tâche, et un chiffre réel partout où vous en avez un. Sinon, nous parlons d'ampleur ou d'échelle — et je garde chaque ligne dans les limites des responsabilités que le poste vous donnait vraiment.",
+          "changer": "Je mets en avant ce qui se transpose et je le traduis vers votre nouveau domaine, en comptant les deux côtés : vos réussites passées, et les formations, certifications ou missions nées de la reconversion."
+        },
+        "withAria": "Vous pouvez passer cette question — je lirai alors la forme de votre CV et supposerai « étudiant » ou « expérimenté ». Mais je ne peux jamais deviner « reconversion » à partir d'un document. Celle-là ne compte que si vous me le dites."
+      },
+      "target_job": {
+        "whatItIs": "Le poste que vous visez. Une seule annonce, collée ou décrite — il ne m'en faut pas plus.",
+        "withAria": "Collez l'annonce entière si vous l'avez, même les passages brouillons. Je la lis pour que chaque section suivante soit écrite pour ce poste-là, et non pour n'importe lequel."
+      },
+      "experience": {
+        "whatItIs": "Tout ce que vous avez exercé, sous quelque forme que ce soit — et la partie que les recruteurs lisent le plus attentivement.",
+        "typesLead": "Cinq types d'expérience ont leur place ici. Si vous êtes étudiant, les cinq comptent :",
+        "types": {
+          "job": "Un emploi rémunéré et durable — à temps plein ou non.",
+          "internship": "Un stage ou une affectation, même de courte durée.",
+          "partTime": "Des vacations, un petit boulot, des missions freelance, l'entreprise familiale.",
+          "volunteer": "Du bénévolat, des responsabilités associatives ou étudiantes, un engagement religieux.",
+          "coursework": "Un projet noté ou un mémoire que vous défendriez volontiers en entretien."
+        },
+        "withAria": "Racontez-moi ce qui s'est passé avec vos propres mots — le désordre ne me gêne pas, la mise en forme est mon travail. Quand je demande un chiffre que vous n'avez pas, donnez-moi l'ordre de grandeur : combien, à quelle fréquence, à quelle échelle."
+      },
+      "project": {
+        "whatItIs": "Ce que vous avez choisi de construire ou de mener — votre meilleur atout quand l'expérience professionnelle est mince.",
+        "typesLead": "Trois types, et je traite chacun différemment :",
+        "withAria": "Commencez par ce que la chose fait réellement, et par VOTRE rôle dedans plutôt que celui de l'équipe. Vous avez un lien ? Donnez-le-moi : un projet que l'on peut ouvrir vaut mieux qu'un projet qu'il faut imaginer."
+      },
+      "education": {
+        "whatItIs": "Vos diplômes et certificats, ainsi que les enseignements qui méritent d'être montrés.",
+        "withAria": "Donnez-moi le diplôme, l'établissement et l'année d'obtention. Si votre moyenne est bonne, dites-le ; sinon, nous l'omettons et mettons en avant quelque chose de plus fort."
+      },
+      "skills": {
+        "whatItIs": "Les outils et les savoir-faire que l'on pourrait vous demander de prouver dès le premier jour.",
+        "withAria": "Ne citez que ce que vous avez vraiment pratiqué — six compétences honnêtes valent mieux que vingt sur lesquelles vous bloqueriez. Donnez-moi le nom exact de chaque outil et je le ferai correspondre aux mots employés dans l'annonce."
+      },
+      "summary": {
+        "whatItIs": "Les deux ou trois lignes du haut qui décident si l'on lit la suite.",
+        "withAria": "Vous n'êtes pas obligé de l'écrire vous-même. Dites-moi qui vous êtes et ce que vous cherchez, et je la rédige à partir de tout ce que vous m'avez déjà donné — ensuite, changez le moindre mot qui vous déplaît."
+      }
+    },
     "pinnedEntry": {
       "liveStatus": "Aria travaille activement sur cette entrée",
       "copy": {

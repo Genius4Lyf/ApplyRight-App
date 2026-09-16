@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import CopyMessageButton from '../cv/CopyMessageButton';
@@ -23,6 +25,7 @@ import CopyMessageButton from '../cv/CopyMessageButton';
 // Collapsed by default: it is help, and help that opens itself is in the way.
 const AnswerExamples = ({ examples = [] }) => {
   const { t } = useTranslation();
+  const reduce = useReducedMotion();
   const [open, setOpen] = useState(false);
   const bodyRef = useRef(null);
 
@@ -54,7 +57,9 @@ const AnswerExamples = ({ examples = [] }) => {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
-          className="flex w-full items-center justify-between gap-3 bg-slate-50 px-3 py-2 text-left transition-colors hover:bg-slate-100 dark:bg-slate-800/40 dark:hover:bg-slate-800/70"
+          // Paper, not a filled bar: the hairline border is what separates this from the
+          // chat behind it. Matches the section-intro brief's disclosure.
+          className="flex w-full items-center justify-between gap-3 bg-white px-3 py-2 text-left transition-colors hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/40"
         >
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-500 dark:text-slate-400">
             {t('ariaStudio.answerExamples.fullAnswer')}
@@ -67,26 +72,38 @@ const AnswerExamples = ({ examples = [] }) => {
           />
         </button>
 
-        {open && (
-          <div ref={bodyRef} className="border-t border-slate-200 dark:border-slate-800">
-            <ul className="divide-y divide-slate-100 dark:divide-slate-800/70">
-              {clean.map((s) => (
-                <li key={s} className="flex items-start gap-2 px-3 py-2">
-                  {/* Always visible, not hover-revealed: this panel exists TO be copied
+        {/* Height-animated so the panel grows and folds instead of snapping open. */}
+        <AnimatePresence initial={false}>
+          {open && (
+            <motion.div
+              key="examples"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={reduce ? { duration: 0 } : { duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="overflow-hidden"
+            >
+              <div ref={bodyRef} className="border-t border-slate-200 dark:border-slate-800">
+                <ul className="divide-y divide-slate-100 dark:divide-slate-800/70">
+                  {clean.map((s) => (
+                    <li key={s} className="flex items-start gap-2 px-3 py-2">
+                      {/* Always visible, not hover-revealed: this panel exists TO be copied
                       from, so hiding its only action would be a puzzle. */}
-                  <CopyMessageButton text={s} compact reveal="" className="mt-0.5 shrink-0" />
-                  <p className="min-w-0 text-[13px] italic leading-relaxed text-slate-600 dark:text-slate-300">
-                    {t('cvBuilder.askAria.exampleFormat', { answer: s })}
-                  </p>
-                </li>
-              ))}
-            </ul>
-            {/* Said out loud, every time — see the note at the top of this file. */}
-            <p className="border-t border-slate-100 px-3 py-2 text-[11px] leading-snug text-slate-400 dark:border-slate-800/70 dark:text-slate-500">
-              {t('ariaStudio.answerExamples.sampleNote')}
-            </p>
-          </div>
-        )}
+                      <CopyMessageButton text={s} compact reveal="" className="mt-0.5 shrink-0" />
+                      <p className="min-w-0 text-[13px] italic leading-relaxed text-slate-600 dark:text-slate-300">
+                        {t('cvBuilder.askAria.exampleFormat', { answer: s })}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+                {/* Said out loud, every time — see the note at the top of this file. */}
+                <p className="border-t border-slate-100 px-3 py-2 text-[11px] leading-snug text-slate-400 dark:border-slate-800/70 dark:text-slate-500">
+                  {t('ariaStudio.answerExamples.sampleNote')}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
