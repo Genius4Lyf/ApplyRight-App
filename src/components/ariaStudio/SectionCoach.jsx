@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import AnswerExamples from './AnswerExamples';
 import CVService from '../../services/cv.service';
 import { tierOf, costForActionTier } from '../../lib/models';
+import { failureReason } from '../../lib/ariaFailure';
 import { CAREER_STAGES } from '../../lib/careerStages';
 import { useAriaModel } from '../../hooks/useAriaModel';
 import { useGenerationModel } from '../../hooks/useGenerationModel';
@@ -67,6 +68,16 @@ const SectionCoach = ({
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
   careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
   onPickCareerStage, // (k) => void — lifts the pick to the parent
+  // ─── A turn that didn't get through ───
+  //
+  // The interview writes into StudioChat's stream, so StudioChat owns the failure too: it
+  // marks the user's own message "not sent" and renders the Retry under it. These two
+  // props are the interview's half of that contract.
+  onFailed, // (reasonKey) => void — mark THEIR last message, don't push an Aria bubble
+  // (fn|null) => void — hand StudioChat this coach's send, so Retry re-runs the INTERVIEW
+  // turn (focused on this entry, with its turn count) instead of dropping the answer into
+  // the general chat, which is what a plain resend from the stream would do.
+  onRegisterSend,
 }) => {
   const { t } = useTranslation();
   const isProject = entry?.section === 'project';
@@ -166,7 +177,13 @@ const SectionCoach = ({
   // primes a PAID generation with another entry's answers, and the model duly attributes
   // that entry's achievements to this one. (It also makes a fresh entry read as
   // mid-conversation, suppressing its opening suggestions and example.)
-  const coachMessages = sessionStart >= 0 ? messages.slice(sessionStart + 1) : messages;
+  //
+  // A message marked `failed` never reached the server, so it is not part of the
+  // conversation: dropping it here is what lets Retry resend it without the model seeing
+  // the same answer twice, and keeps an abandoned one out of the turn count below.
+  const coachMessages = (sessionStart >= 0 ? messages.slice(sessionStart + 1) : messages).filter(
+    (m) => !m.failed
+  );
 
   // Turns already spent on THIS coach session — DERIVED from the restored transcript
   // rather than counted in a ref. The ref reset to 0 on every refresh, so Aria reopened
@@ -174,8 +191,7 @@ const SectionCoach = ({
   // sitting right there in the stream. Never counted from the whole transcript: the
   // backend turns `buildTurns` into a hard "wrap this up now", so over-counting would end
   // an interview on turn one.
-  const turnsTaken =
-    sessionStart >= 0 ? messages.slice(sessionStart + 1).filter((m) => m.who === 'user').length : 0;
+  const turnsTaken = sessionStart >= 0 ? coachMessages.filter((m) => m.who === 'user').length : 0;
 
   // The turn budget is the AI CONVERSATION's, not the CV's — the server turns `buildTurns`
   // into a hard "wrap this up now". Shown as a permanent "1/10" it read like a score, and
@@ -291,23 +307,7 @@ const SectionCoach = ({
         setPhase('picking');
       }
     } catch (e) {
-      if (e?.response?.data?.code === 'INSUFFICIENT_CREDITS') {
-        // Pro model, no credits — the way out is switching back to Standard, not only topping up.
-        onPush({
-          who: 'aria',
-          text: t('ariaStudio.chat.proNeedsCredits'),
-        });
-      } else if (e?.response?.data?.code === 'CHAT_LIMIT_REACHED') {
-        onPush({
-          who: 'aria',
-          text: t('ariaStudio.chat.chatLimitReached'),
-        });
-      } else if (e?.response?.data?.code === 'BUILD_LIMIT_REACHED') {
-        onPush({
-          who: 'aria',
-          text: t('ariaStudio.chat.buildLimitReached'),
-        });
-      } else if (e?.response?.status === 404) {
+      if (e?.response?.status === 404) {
         // The entry was deleted WHILE this turn was in flight — the Live Preview's Remove,
         // or another tab. The backend answers 404 "that role is no longer in your CV" with
         // no `code`, so it's matched on status. Say what happened and close cleanly:
@@ -317,12 +317,35 @@ const SectionCoach = ({
         onPush({ who: 'aria', text: t('ariaStudio.sectionCoach.entryGone') });
         onDone?.(null);
       } else {
-        toast.error(t('ariaStudio.chat.chatUnreachable'));
+        // Everything else is a turn that DIDN'T HAPPEN — a 500, a rate limit, no credits
+        // for the Pro model, a daily cap. It used to be a red toast (gone by the time you
+        // looked up) or an Aria bubble saying what went wrong, and either way the answer
+        // they had just typed sat in the thread looking sent with no way forward but
+        // retyping it. Mark THEIR message instead: StudioChat renders the reason and a
+        // Retry under it, and the retry comes back through this same send.
+        //
+        // The toast survives ONLY as the fallback for a host that didn't wire onFailed —
+        // a turn that fails and says nothing at all would be worse than the bug this
+        // replaces.
+        if (onFailed) onFailed(failureReason(e));
+        else toast.error(t('ariaStudio.chat.chatUnreachable'));
       }
     } finally {
       setThinking(false);
     }
   };
+
+  // StudioChat's Retry lives on the message, which is in its stream, not ours — so it
+  // needs this send to call. Re-registered on EVERY render (no dep array) so the closure
+  // it holds is never stale: `thinking`, the turn count and the picked model all move.
+  //
+  // `busy` rides along because the retry DROPS the failed message before resending it: a
+  // send that refused (mid-turn) would leave it deleted and unsent, which is worse than
+  // the bug being fixed. StudioChat waits instead.
+  useEffect(() => {
+    onRegisterSend?.({ send, busy: thinking });
+    return () => onRegisterSend?.(null);
+  });
 
   const generate = async (reroll = false) => {
     setPhase('generating');

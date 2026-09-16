@@ -6,6 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
+import { FAILURE_TEXT, failureReason } from '../../lib/ariaFailure';
 import AriaMessageText from '../cv/AriaMessageText';
 import CopyMessageButton from '../cv/CopyMessageButton';
 import AriaMessageActions from '../cv/AriaMessageActions';
@@ -3333,7 +3334,38 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // requirementId → the server's verdict for a hunt already answered this session.
   const [huntedRequirements, setHuntedRequirements] = useState({});
 
-  const runHuntTurn = async (requirementId, thread, mode) => {
+  // ─── A message that didn't get through ───
+  //
+  // A failed turn used to leave the user's message sitting in the thread looking sent,
+  // with an Aria bubble underneath explaining the problem. The only way forward was to
+  // retype it — and because the failure text was pushed as a real message, it persisted
+  // into the transcript and got sent back to the model as if Aria had said it.
+  //
+  // Now the failure is marked ON the message that failed. It renders as "Not sent" with a
+  // Retry button, and clearing the mark is what sending again does. `failed` is a plain
+  // flag: the payload builder maps messages to { who, text }, so it never reaches the
+  // model, and derivePhase ignores anything it doesn't recognise.
+  //
+  // `via` records WHO was sending when it failed, because the thread has more than one
+  // sender: a question typed at the section hub is a general turn, but the same box
+  // during a role interview is SectionCoach's. Without it, retrying an interview answer
+  // re-sent it as an unfocused question — to a different endpoint shape, on a different
+  // meter, and out of the interview it belonged to.
+  const markLastUserFailed = (reasonKey, via = null) => {
+    setMessages((prev) => {
+      const at = prev.map((m) => m.who).lastIndexOf('user');
+      if (at === -1) return prev;
+      const next = [...prev];
+      next[at] = { ...next[at], failed: reasonKey, ...(via ? { failedVia: via } : {}) };
+      return next;
+    });
+  };
+
+  // `fromUser` says the turn was driven by a message they typed — which is the only case
+  // where there is something to mark as not-sent and resend. The opening probe carries no
+  // user message (it fires off a marker), so a failure there has nothing to retry and
+  // keeps the old closing behaviour.
+  const runHuntTurn = async (requirementId, thread, mode, fromUser = false) => {
     setThinking(true);
     try {
       const r = await CVService.coachChat({
@@ -3380,6 +3412,13 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       }
       return r;
     } catch (e) {
+      // Their answer to the hunt didn't get through. Mark it and LEAVE THE HUNT OPEN, so
+      // Retry sends it straight back into the same hunt (send() routes on activeHunt).
+      // Closing the hunt here used to throw away the probe as well as the answer.
+      if (fromUser) {
+        markLastUserFailed(failureReason(e));
+        return null;
+      }
       const code = e?.response?.data?.code;
       push({
         who: 'aria',
@@ -3414,59 +3453,39 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     await runHuntTurn(requirementId, messages, mode);
   };
 
-  // ─── A message that didn't get through ───
-  //
-  // A failed turn used to leave the user's message sitting in the thread looking sent,
-  // with an Aria bubble underneath explaining the problem. The only way forward was to
-  // retype it — and because the failure text was pushed as a real message, it persisted
-  // into the transcript and got sent back to the model as if Aria had said it.
-  //
-  // Now the failure is marked ON the message that failed. It renders as "Not sent" with a
-  // Retry button, and clearing the mark is what sending again does. `failed` is a plain
-  // flag: the payload builder maps messages to { who, text }, so it never reaches the
-  // model, and derivePhase ignores anything it doesn't recognise.
-  const markLastUserFailed = (reasonKey) => {
-    setMessages((prev) => {
-      const at = prev.map((m) => m.who).lastIndexOf('user');
-      if (at === -1) return prev;
-      const next = [...prev];
-      next[at] = { ...next[at], failed: reasonKey };
-      return next;
-    });
-  };
-
-  // Reason → what to tell them. RATE_LIMITED is the one this was built for: it used to
-  // fall through to "couldn't reach me", which reads as a broken connection rather than
-  // something that clears on its own.
-  const FAILURE_TEXT = {
-    RATE_LIMITED: 'ariaStudio.chat.failed.rateLimited',
-    INSUFFICIENT_CREDITS: 'ariaStudio.chat.proNeedsCredits',
-    CHAT_LIMIT_REACHED: 'ariaStudio.chat.chatLimitReached',
-    UNREACHABLE: 'ariaStudio.chat.chatUnreachable',
-  };
-
-  // Map a thrown request to the reason we show. A 429 from the limiter carries its own
-  // code; anything else without one is treated as unreachable.
-  const failureReason = (e) => {
-    const code = e?.response?.data?.code;
-    if (code && FAILURE_TEXT[code]) return code;
-    if (e?.response?.status === 429) return 'RATE_LIMITED';
-    return 'UNREACHABLE';
-  };
+  // The send of whichever SectionCoach is driving, or null — it registers itself on every
+  // render (see its onRegisterSend). This is how Retry reaches back into the interview.
+  const coachSendRef = useRef(null);
 
   // Send it again. Drops the failed copy first so the retry doesn't leave a duplicate of
   // their own message in the thread — the thing they were doing by hand.
   const retryFailed = (index) => {
     const message = messages[index];
     if (!message || thinking) return;
+    // An interview answer goes back to the interview. The coach drops `failed` messages
+    // from its own window, so the copy still sitting in its (not yet re-rendered) props
+    // can't reach the model twice or count as a spent turn.
+    const coach = message.failedVia === 'coach' ? coachSendRef.current : null;
+    // Mid-turn: its send would refuse, and the message would already be gone. Do nothing,
+    // exactly as the `thinking` guard above does for a general turn.
+    if (coach?.busy) return;
     setMessages((prev) => prev.filter((_, at) => at !== index));
+    // No coach registered means the interview has since closed — the general sender is
+    // the only one left, and it is a better home for their words than a dead button.
+    if (coach) {
+      coach.send(message.text);
+      return;
+    }
     send(message.text);
   };
 
   const send = async (raw) => {
     const text = (raw ?? input).trim();
     if (text.length < 2 || thinking) return;
-    const next = [...messages, { who: 'user', text }];
+    // A message marked `failed` never reached the server, so it is not part of the
+    // conversation and must not ride along in the payload — least of all on a retry,
+    // where it is the very message being resent.
+    const next = [...messages.filter((m) => !m.failed), { who: 'user', text }];
     push({ who: 'user', text });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
@@ -3478,7 +3497,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     // the hunt rather than to the general coach. An exploring hunt lets go on its own once
     // the conversation moves on (see the intent:'answer' branch in runHuntTurn).
     if (activeHunt) {
-      await runHuntTurn(activeHunt.requirementId, next, activeHunt.mode);
+      await runHuntTurn(activeHunt.requirementId, next, activeHunt.mode, true);
       return;
     }
 
@@ -5270,6 +5289,12 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               // are, so all three now read as one set of choices about this role.
               messages={messages}
               onPush={push}
+              // A turn that didn't get through is marked on THEIR message, with the Retry
+              // routed back into this interview rather than into the general chat — see retryFailed.
+              onFailed={(reason) => markLastUserFailed(reason, 'coach')}
+              onRegisterSend={(api) => {
+                coachSendRef.current = api;
+              }}
               onApply={async (add, remove) => {
                 setTransitionLabel(t('ariaStudio.chat.thinking.bulletsSaved'));
                 try {
@@ -5372,6 +5397,12 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               missingKeywords={activeFix.missingKeywords || []}
               messages={messages}
               onPush={push}
+              // A turn that didn't get through is marked on THEIR message, with the Retry
+              // routed back into this interview rather than into the general chat — see retryFailed.
+              onFailed={(reason) => markLastUserFailed(reason, 'coach')}
+              onRegisterSend={(api) => {
+                coachSendRef.current = api;
+              }}
               onApply={(add, remove) =>
                 applyRoleBulletDiff(activeFix.entry.section, activeFix.entry.sortId, add, remove)
               }

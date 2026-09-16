@@ -44,6 +44,7 @@ const entry = { section: 'experience', sortId: 'role-1', title: 'Engineer', comp
 const setup = (props = {}) => {
   const onPush = vi.fn();
   const onDone = vi.fn();
+  const onFailed = vi.fn();
   render(
     <AriaStudioProvider>
       <SectionCoach
@@ -53,12 +54,13 @@ const setup = (props = {}) => {
         onPush={onPush}
         onApply={vi.fn()}
         onDone={onDone}
+        onFailed={onFailed}
         careerStage="mid"
         {...props}
       />
     </AriaStudioProvider>
   );
-  return { onPush, onDone };
+  return { onPush, onDone, onFailed };
 };
 
 // Type into the composer and hit send. fireEvent, not user-event — the latter isn't a
@@ -100,14 +102,19 @@ describe('SectionCoach — entry deleted while a turn is in flight', () => {
     expect(toast.error).not.toHaveBeenCalled();
   });
 
-  it('still uses the generic error toast for a non-404 failure', async () => {
+  // This used to assert the toast. A toast was the wrong shape for it: it names the
+  // problem somewhere other than where the problem is, disappears on its own, and leaves
+  // the message that never arrived sitting in the thread looking sent. The failure is now
+  // reported up to the stream, which marks THEIR message and offers a Retry on it — see
+  // SectionCoach.retry.test.jsx. What has NOT changed is that the coach stays open.
+  it('reports a non-404 failure up to the stream instead, and stays open', async () => {
     CVService.coachChat.mockRejectedValueOnce({ response: { status: 500 } });
 
-    const { onDone } = setup();
+    const { onDone, onFailed } = setup();
     send('I led the migration');
 
-    // A real failure keeps its toast, and does NOT close the coach.
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    await waitFor(() => expect(onFailed).toHaveBeenCalledWith('UNREACHABLE'));
+    expect(toast.error).not.toHaveBeenCalled();
     expect(onDone).not.toHaveBeenCalled();
   });
 });

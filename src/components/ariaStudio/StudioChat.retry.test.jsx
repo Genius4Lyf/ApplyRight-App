@@ -9,7 +9,7 @@
 // Aria had supposedly said.
 import React, { useEffect } from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, cleanup, waitFor, screen, fireEvent } from '@testing-library/react';
+import { render, cleanup, waitFor, screen, fireEvent, act } from '@testing-library/react';
 
 import i18n from '../../i18n';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
@@ -170,5 +170,88 @@ describe('a message that failed to send', () => {
     // turn sent it back to the model as something she had said.
     const ariaLines = transcript().filter((m) => m.who === 'aria');
     expect(ariaLines.some((m) => m.text === i18n.t('ariaStudio.chat.chatUnreachable'))).toBe(false);
+  });
+});
+
+// ─── The same message, but typed INTO A ROLE INTERVIEW ───
+//
+// The interview owns the composer while it runs, so its turns go to /coach/chat FOCUSED on
+// the pinned entry, with the interview's turn count on them. A Retry that fell through to
+// the general sender would resend the answer as an unfocused question — different prompt,
+// different meter, and out of the interview it was an answer to — so the mark records who
+// was sending and the retry goes back to them.
+describe('a message that failed inside the role interview', () => {
+  const ANSWER = 'I ran the night shift on three rigs.';
+
+  // An entry with its fields captured and no bullets yet: the achievements interview,
+  // which is where the composer belongs to SectionCoach.
+  const interviewDraft = () => ({
+    ...draft(),
+    experience: [
+      {
+        _sortId: 'r1',
+        entryType: 'job',
+        title: 'Engineer',
+        company: 'Acme',
+        startDate: '2023-01',
+        description: '',
+      },
+    ],
+  });
+
+  const mountInterview = async () => {
+    localStorage.setItem('ariaStudio:draftId', 'd1');
+    CVService.getDraftById.mockResolvedValue(interviewDraft());
+    render(
+      <AriaStudioProvider>
+        <Handle />
+        <StudioChat />
+      </AriaStudioProvider>
+    );
+    await waitFor(() => expect(ctx?.draftId).toBe('d1'));
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'experience', 'r1');
+    });
+    return screen.findByPlaceholderText(i18n.t('ariaStudio.sectionCoach.activityPlaceholder'));
+  };
+
+  const answer = async (text = ANSWER) => {
+    const box = screen.getByPlaceholderText(i18n.t('ariaStudio.sectionCoach.activityPlaceholder'));
+    fireEvent.change(box, { target: { value: text } });
+    fireEvent.keyDown(box, { key: 'Enter', code: 'Enter' });
+  };
+
+  it('offers the same Retry on an interview answer', async () => {
+    rejectWith(500);
+    await mountInterview();
+    await answer();
+
+    expect(
+      await screen.findByRole('button', { name: i18n.t('ariaStudio.chat.failed.retry') })
+    ).toBeTruthy();
+    expect(screen.getByText(ANSWER)).toBeTruthy();
+  });
+
+  it('sends it back into the interview — focused, and without burning a turn', async () => {
+    rejectWith(500);
+    await mountInterview();
+    await answer();
+
+    CVService.coachChat.mockResolvedValueOnce({ reply: 'How many rigs was that?' });
+    fireEvent.click(
+      await screen.findByRole('button', { name: i18n.t('ariaStudio.chat.failed.retry') })
+    );
+
+    expect(await screen.findByText(/How many rigs/)).toBeTruthy();
+    const payload = CVService.coachChat.mock.calls.at(-1)[0];
+    // The interview's contract, not the general chat's: a focus, and turn one of ten.
+    expect(payload.focus).toEqual({ section: 'experience', sortId: 'r1' });
+    expect(payload.buildTurns).toBe(1);
+    // Sent once. Retyping by hand is what left two identical messages in the thread.
+    expect(payload.messages.filter((m) => m.text === ANSWER)).toHaveLength(1);
+    expect(screen.getAllByText(ANSWER)).toHaveLength(1);
+    expect(
+      screen.queryByRole('button', { name: i18n.t('ariaStudio.chat.failed.retry') })
+    ).toBeNull();
   });
 });
