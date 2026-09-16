@@ -2419,9 +2419,7 @@
       "loadFailed": "Failed to load your CVs",
       "retry": "Try again"
     },
-    "toasts": {
-      "deleted": "CV deleted",
-      "deleteFailed": "Failed to delete CV"
+    "toasts": {      "deleteFailed": "Failed to delete CV"
     }
   },
   "jobHistory": {
@@ -5333,9 +5331,7 @@
       "toast": {
         "agentPlanRequired": "An active agent plan is required to create CVs.",
         "removedFromStudio": "Removed from the Studio — the CV is still in My CVs.",
-        "removeFailed": "Couldn't remove that — try again.",
-        "deleted": "Deleted.",
-        "deleteFailed": "Couldn't delete that — try again.",
+        "removeFailed": "Couldn't remove that — try again.",        "deleteFailed": "Couldn't delete that — try again.",
         "duplicated": "Copied. You’re in the copy — the original is untouched.",
         "duplicateFailed": "Could not duplicate this CV.",
         "duplicateNotEnoughCredits": "Not enough credits to duplicate this CV.",

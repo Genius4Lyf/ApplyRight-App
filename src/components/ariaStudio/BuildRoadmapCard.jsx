@@ -1,10 +1,11 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { FileUp } from 'lucide-react';
+import { Check, FileUp } from 'lucide-react';
 import { BUILD_SECTIONS } from '../../lib/studioFlow';
 import { CREDIT_COSTS } from '../../lib/credits';
 import AriaCard from './AriaCard';
 import CardEyebrow from './CardEyebrow';
+import SectionIcon from './SectionIcon';
 
 // What building a CV with Aria actually involves, shown up front.
 //
@@ -28,62 +29,50 @@ const BuildRoadmapCard = ({ status = {}, onStart, starting, onUploadInstead }) =
           {t('ariaStudio.buildRoadmap.sixSections')}
         </p>
 
-        {/* THE PLAN, TWICE — one row per section on a real screen, one flowing line on a
-          phone.
+        {/* THE PLAN — two per row, the same at every width.
 
-          The six rows are reassurance, not a decision: nobody picks "Start building"
-          BECAUSE Projects is fourth. At full height they pushed the card past a phone
-          viewport, and since the chat anchors a new turn to its TOP, the two things the
-          card actually asks you to choose between fell below the fold — on the one screen
-          size where nothing tells you there is more to scroll to.
+          It used to render twice: a numbered column on real screens and a flowing
+          "Contact · Work history · Projects ·…" line on phones, because six full-height
+          rows pushed the card's two actual choices below a phone fold. The flowing version
+          solved the height and created a worse problem — the sections wrapped three, then
+          two, then one, so a fixed list of six looked like a ragged paragraph rather than
+          a plan.
 
-          Same sections, same order, same done-state in both; only the density changes. */}
-        <ul className="mt-3 flex flex-wrap gap-x-2 gap-y-1 text-[13.5px] leading-relaxed sm:hidden">
-          {BUILD_SECTIONS.map((s, i) => {
+          A two-column grid is three even rows, which is short enough for the phone case
+          the split was invented for, so the split is gone and there is one rendering to
+          keep honest instead of two.
+
+          The leading badge carries the section's icon, or a tick once it is done — one
+          marker, not a number AND an icon competing beside the same four words. */}
+        <ol className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
+          {BUILD_SECTIONS.map((s) => {
             const done = !!status[s.key];
             return (
-              <li
-                key={s.key}
-                className={`flex items-center gap-1 ${
-                  done
-                    ? 'text-slate-400 line-through decoration-1 dark:text-slate-500'
-                    : 'text-slate-700 dark:text-slate-200'
-                }`}
-              >
-                <span aria-hidden="true">{done ? '✓' : s.icon}</span>
-                <span>{t(s.labelKey)}</span>
-                {i < BUILD_SECTIONS.length - 1 && (
-                  <span aria-hidden="true" className="pl-1 text-slate-300 dark:text-slate-600">
-                    ·
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
-
-        <ol className="mt-3 hidden space-y-1.5 sm:block">
-          {BUILD_SECTIONS.map((s, i) => {
-            const done = !!status[s.key];
-            return (
-              <li key={s.key} className="flex items-center gap-2.5">
+              <li key={s.key} className="flex items-center gap-2 min-w-0">
+                {/* Bare glyph, no chip behind it. A filled circle gave six list markers the
+                    visual weight of six buttons, on a card whose only real control is the
+                    one below them — colour alone carries done-vs-pending. */}
                 <span
-                  className={`shrink-0 w-5 h-5 rounded-full flex items-center justify-center font-mono text-[10px] font-bold ${
+                  className={`shrink-0 ${
                     done
-                      ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
+                      ? 'text-emerald-600 dark:text-emerald-400'
+                      : 'text-slate-400 dark:text-slate-500'
                   }`}
                 >
-                  {done ? '✓' : i + 1}
+                  {done ? (
+                    <Check className="w-4 h-4" aria-hidden="true" />
+                  ) : (
+                    <SectionIcon section={s.key} className="w-4 h-4" />
+                  )}
                 </span>
                 <span
-                  className={`text-[14px] ${
+                  className={`min-w-0 text-[13px] leading-snug ${
                     done
                       ? 'text-slate-400 dark:text-slate-500 line-through decoration-1'
                       : 'text-slate-700 dark:text-slate-200'
                   }`}
                 >
-                  <span aria-hidden="true">{s.icon}</span> <span>{t(s.labelKey)}</span>
+                  {t(s.labelKey)}
                 </span>
               </li>
             );

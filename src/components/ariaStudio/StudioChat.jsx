@@ -31,7 +31,6 @@ import {
   ENTRY_SOURCE,
   sectionLabel,
   sectionNote,
-  sectionIcon,
   hasSubstance,
   scoreDelta,
   scoreSignature,
@@ -77,6 +76,7 @@ import SectionCoach from './SectionCoach';
 import SummaryFixCard from './SummaryFixCard';
 import SectionGuidanceCard from './SectionGuidanceCard';
 import SectionIntroCard from './SectionIntroCard';
+import SectionIcon from './SectionIcon';
 import ContactSaveCard from './ContactSaveCard';
 import UserService from '../../services/user.service';
 import {
@@ -3785,7 +3785,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   const nextSection = !closed('experiencedone')
     ? {
         key: 'experience',
-        icon: sectionIcon('experience'),
+        icon: (
+          <SectionIcon section="experience" className="w-3.5 h-3.5 inline-block align-middle" />
+        ),
         eyebrow: progress.status.experience
           ? t('ariaStudio.studioFlow.sections.experience')
           : t('ariaStudio.chat.nextUp'),
@@ -3807,7 +3809,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     : !closed('projectsdone')
       ? {
           key: 'project',
-          icon: sectionIcon('project'),
+          icon: <SectionIcon section="project" className="w-3.5 h-3.5 inline-block align-middle" />,
           eyebrow: t('ariaStudio.chat.sectionMenu.projectsEyebrow'),
           blurb: t('ariaStudio.chat.sectionMenu.projectsBlurb'),
           cta: t('ariaStudio.chat.sectionMenu.projectsCta'),
@@ -3821,7 +3823,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
       : !closed('educationdone')
         ? {
             key: 'education',
-            icon: sectionIcon('education'),
+            icon: (
+              <SectionIcon section="education" className="w-3.5 h-3.5 inline-block align-middle" />
+            ),
             eyebrow: t('ariaStudio.studioFlow.sections.education'),
             blurb: t('ariaStudio.chat.sectionMenu.educationBlurb'),
             cta: t('ariaStudio.chat.sectionMenu.educationCta'),
@@ -3832,7 +3836,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
         : !closed('certsdone')
           ? {
               key: 'certs',
-              icon: sectionIcon('certs'),
+              icon: (
+                <SectionIcon section="certs" className="w-3.5 h-3.5 inline-block align-middle" />
+              ),
               eyebrow: t('ariaStudio.chat.sectionMenu.certsEyebrow'),
               blurb: t('ariaStudio.chat.sectionMenu.certsBlurb'),
               cta: t('ariaStudio.chat.sectionMenu.certsCta'),
@@ -3846,7 +3852,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
           : !closed('skillsdone')
             ? {
                 key: 'skills',
-                icon: sectionIcon('skills'),
+                icon: (
+                  <SectionIcon section="skills" className="w-3.5 h-3.5 inline-block align-middle" />
+                ),
                 eyebrow: t('ariaStudio.studioFlow.sections.skills'),
                 blurb: t('ariaStudio.chat.sectionMenu.skillsBlurb'),
                 cta: t('ariaStudio.chat.sectionMenu.skillsCta'),
@@ -3860,7 +3868,12 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
             : !closed('summarydone')
               ? {
                   key: 'summary',
-                  icon: sectionIcon('summary'),
+                  icon: (
+                    <SectionIcon
+                      section="summary"
+                      className="w-3.5 h-3.5 inline-block align-middle"
+                    />
+                  ),
                   eyebrow: t('ariaStudio.chat.sectionMenu.summaryEyebrow'),
                   blurb: t('ariaStudio.chat.sectionMenu.summaryBlurb'),
                   cta: t('ariaStudio.chat.sectionMenu.summaryCta'),

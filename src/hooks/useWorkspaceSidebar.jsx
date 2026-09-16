@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { trashFlash } from '../lib/trashFlash';
 import CVService from '../services/cv.service';
 import InterviewPrepService from '../services/interviewPrep.service';
 import { getCompletionStatus } from '../lib/cvCompleteness';
@@ -137,7 +138,9 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
       try {
         await CVService.deleteDraft(row.id);
         setRows((current) => (current || []).filter((cv) => cv._id !== row.id));
-        toast.success(t('myCvs.toasts.deleted'));
+        // The row is already gone from the list above; a worded toast would just say so a
+        // second time. Failure below still needs its words.
+        trashFlash();
       } catch {
         toast.error(t('myCvs.toasts.deleteFailed'));
       }

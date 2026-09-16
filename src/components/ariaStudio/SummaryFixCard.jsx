@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import GenerationModelRow from '../cv/GenerationModelRow';
 import AriaCard from './AriaCard';
-import { sectionIcon } from '../../lib/studioFlow';
 import CardEyebrow from './CardEyebrow';
+import SectionIcon from './SectionIcon';
 
 // Career stage drives the whole shape of a summary — a student leads with potential,
 // a career-changer leads with transferable evidence. The backend's stage enum is
@@ -53,7 +53,11 @@ const SummaryFixCard = ({
     return (
       <AriaCard cardKey="summarydraft">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
-          <CardEyebrow icon={sectionIcon('summary')}>
+          <CardEyebrow
+            icon={
+              <SectionIcon section="summary" className="w-3.5 h-3.5 inline-block align-middle" />
+            }
+          >
             {wasReroll
               ? t('ariaStudio.summaryFix.anotherAngle')
               : t('ariaStudio.summaryFix.yourTailoredSummary')}
@@ -91,7 +95,11 @@ const SummaryFixCard = ({
     <AriaCard cardKey="summarystage">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
         <div className="flex items-start justify-between gap-3">
-          <CardEyebrow icon={sectionIcon('summary')}>
+          <CardEyebrow
+            icon={
+              <SectionIcon section="summary" className="w-3.5 h-3.5 inline-block align-middle" />
+            }
+          >
             {careerStage
               ? t('ariaStudio.summaryFix.readyToWrite')
               : t('ariaStudio.summaryFix.whereAreYou')}

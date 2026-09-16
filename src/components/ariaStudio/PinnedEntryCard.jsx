@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 
 import { ChevronDown, MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { entryProgress, bulletCount, sectionIcon } from '../../lib/studioFlow';
+import { entryProgress, bulletCount } from '../../lib/studioFlow';
+import SectionIcon from './SectionIcon';
 
 // The role being built, pinned to the top of the conversation.
 //
@@ -320,7 +321,8 @@ const PinnedEntryCard = ({
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:animate-none" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]" />
             </span>
-            <span aria-hidden="true">{sectionIcon(section)}</span> <span>{t(copy.labelKey)}</span>
+            <SectionIcon section={section} className="w-3.5 h-3.5 inline-block align-middle" />{' '}
+            <span>{t(copy.labelKey)}</span>
           </span>
           <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
             {heading}

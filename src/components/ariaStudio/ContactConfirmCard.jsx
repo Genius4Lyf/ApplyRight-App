@@ -4,8 +4,8 @@ import AriaCard from './AriaCard';
 import { loadPhoto, PHOTO_ACCEPT_ATTR } from '../../utils/cvPhoto';
 import PhotoFramer from './PhotoFramer';
 import CardEyebrow from './CardEyebrow';
+import SectionIcon from './SectionIcon';
 import HintedLabel from '../HintedLabel';
-import { sectionIcon } from '../../lib/studioFlow';
 
 const FIELDS = [
   {
@@ -113,7 +113,11 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
     return (
       <AriaCard cardKey="contactedit">
         <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-          <CardEyebrow icon={sectionIcon('contact')}>
+          <CardEyebrow
+            icon={
+              <SectionIcon section="contact" className="w-3.5 h-3.5 inline-block align-middle" />
+            }
+          >
             {isEmpty
               ? t('ariaStudio.contactConfirm.howReachYou')
               : t('ariaStudio.contactConfirm.yourDetails')}
@@ -280,7 +284,9 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
   return (
     <AriaCard cardKey="contactconfirm">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-900">
-        <CardEyebrow icon={sectionIcon('contact')}>
+        <CardEyebrow
+          icon={<SectionIcon section="contact" className="w-3.5 h-3.5 inline-block align-middle" />}
+        >
           {t('ariaStudio.contactConfirm.reviewDetails')}
         </CardEyebrow>
 

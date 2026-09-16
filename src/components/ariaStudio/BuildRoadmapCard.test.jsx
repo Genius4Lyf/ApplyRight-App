@@ -77,51 +77,55 @@ describe('BuildRoadmapCard — the upload fork', () => {
   });
 });
 
-describe('BuildRoadmapCard — fitting a phone', () => {
-  // The card outgrew a phone viewport, and the chat anchors a new turn to its TOP — so
-  // "Start building" and the upload option both fell below the fold, on the one screen
-  // size with nothing to say there was more below. The plan now renders twice: a compact
-  // line on phones, the numbered list from `sm` up.
-  // The card has exactly one of each: the compact plan is a <ul>, the numbered one an
-  // <ol>. Selecting by tag rather than by Tailwind class keeps these tests about the two
-  // renderings existing, not about which breakpoint utility spells them.
-  const lists = () => ({
-    compact: document.querySelector('ul'),
-    full: document.querySelector('ol'),
-  });
+describe('BuildRoadmapCard — the plan', () => {
+  // It used to render the six sections TWICE: a numbered column from `sm` up and a flowing
+  // "Contact · Work history · …" line on phones, because six full-height rows pushed the
+  // card's two actual choices below a phone fold. The flowing version fixed the height and
+  // broke the shape — six items wrapped three, then two, then one, so a fixed list looked
+  // like a ragged paragraph. One two-column grid is three even rows: short enough for the
+  // phone case, uniform at every width, and one rendering to keep honest instead of two.
+  const plan = () => document.querySelector('ol');
 
-  it('offers a compact plan on phones and the numbered one above sm', () => {
+  it('lays the six sections out two per row, once', () => {
     render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
 
-    const { compact, full } = lists();
-    expect(compact).toBeTruthy();
-    expect(full).toBeTruthy();
-    // Exactly one is ever displayed — the other is display:none, so it never doubles up
-    // visually or in the accessibility tree.
-    expect(full.className).toContain('hidden');
+    // One list, not two — the old split is what this replaces.
+    expect(document.querySelectorAll('ol')).toHaveLength(1);
+    expect(document.querySelector('ul')).toBeNull();
+    expect(plan().className).toContain('grid-cols-2');
+    expect(plan().querySelectorAll('li')).toHaveLength(BUILD_SECTIONS.length);
   });
 
-  it('names the same six sections either way', () => {
+  it('names every section', () => {
     render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
 
-    const { compact, full } = lists();
     BUILD_SECTIONS.forEach((s) => {
-      expect(compact.textContent).toContain(t(s.labelKey));
-      expect(full.textContent).toContain(t(s.labelKey));
+      expect(plan().textContent).toContain(t(s.labelKey));
     });
-    expect(compact.querySelectorAll('li')).toHaveLength(BUILD_SECTIONS.length);
   });
 
-  it('still shows what is already done in the compact plan', () => {
-    // A resumed session must not lose its ticks just because the screen is small.
+  it('marks a section already done with a drawn tick, not a struck emoji', () => {
+    // A resumed session must not lose its ticks.
     render(
       <BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} status={{ contact: true }} />
     );
 
-    const contactItem = [...lists().compact.querySelectorAll('li')].find((li) =>
+    const contactItem = [...plan().querySelectorAll('li')].find((li) =>
       li.textContent.includes(t('ariaStudio.studioFlow.sections.contact'))
     );
-    expect(contactItem.className).toContain('line-through');
-    expect(contactItem.textContent).toContain('✓');
+    expect(contactItem.querySelector('.line-through')).toBeTruthy();
+    // The marker is an icon now, so it carries no text — asserting on a '✓' character
+    // would quietly pass against a section that had lost its badge entirely.
+    expect(contactItem.querySelector('svg')).toBeTruthy();
+  });
+
+  it('gives every section a drawn icon rather than an emoji', () => {
+    render(<BuildRoadmapCard onStart={vi.fn()} onUploadInstead={vi.fn()} />);
+
+    // Emoji draw at their own intrinsic size and differ per platform, so a row of them is a
+    // row of mismatched heights that looks like three different products across OSes.
+    plan()
+      .querySelectorAll('li')
+      .forEach((li) => expect(li.querySelector('svg')).toBeTruthy());
   });
 });

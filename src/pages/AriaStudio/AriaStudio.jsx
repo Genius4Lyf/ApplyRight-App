@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { trashFlash } from '../../lib/trashFlash';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
@@ -313,7 +314,9 @@ const StudioDesk = () => {
       } else {
         await CVService.deleteDraft(session._id);
       }
-      toast.success(t('ariaStudio.desk.toast.deleted'));
+      // The row disappears from the list as this runs, which says "deleted" better than a
+      // sentence can — so this is the flourish, not an announcement. Errors keep their words.
+      trashFlash();
       await finishRemoval(session);
     } catch (err) {
       console.error('Failed to delete session', err);

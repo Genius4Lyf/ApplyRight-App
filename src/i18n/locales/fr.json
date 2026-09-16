@@ -2415,9 +2415,7 @@
       "loadFailed": "Échec du chargement de vos CV",
       "retry": "Réessayer"
     },
-    "toasts": {
-      "deleted": "CV supprimé",
-      "deleteFailed": "Échec de la suppression du CV"
+    "toasts": {      "deleteFailed": "Échec de la suppression du CV"
     }
   },
   "jobHistory": {
@@ -5329,9 +5327,7 @@
       "toast": {
         "agentPlanRequired": "Un plan agent actif est requis pour créer des CV.",
         "removedFromStudio": "Retiré du Studio — le CV est toujours dans Mes CV.",
-        "removeFailed": "Impossible de le retirer — réessayez.",
-        "deleted": "Supprimé.",
-        "deleteFailed": "Impossible de le supprimer — réessayez.",
+        "removeFailed": "Impossible de le retirer — réessayez.",        "deleteFailed": "Impossible de le supprimer — réessayez.",
         "duplicated": "Copié. Vous êtes dans la copie — l’original est intact.",
         "duplicateFailed": "Impossible de dupliquer ce CV.",
         "duplicateNotEnoughCredits": "Crédits insuffisants pour dupliquer ce CV.",
