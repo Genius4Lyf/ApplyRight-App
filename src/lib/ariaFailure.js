@@ -31,6 +31,17 @@ export const FAILURE_TEXT = {
  * @returns {keyof FAILURE_TEXT}
  */
 export const failureReason = (e) => {
+  // UNREACHABLE covers two very different things that look identical to the user: a
+  // request that never got a response (network, CORS, a 120s timeout, a proxy killing a
+  // cold start) and one the server answered 500. The first leaves NOTHING in the backend
+  // logs, which is exactly the case that is hard to chase later — so every failed turn
+  // leaves its status and code in the browser console, where it can still be read after
+  // the fact. One line, only on failure.
+  console.error('[aria] turn failed', {
+    status: e?.response?.status ?? null,
+    code: e?.response?.data?.code ?? null,
+    message: e?.message || '',
+  });
   const code = e?.response?.data?.code;
   if (code && FAILURE_TEXT[code]) return code;
   if (e?.response?.status === 429) return 'RATE_LIMITED';

@@ -255,3 +255,56 @@ describe('a message that failed inside the role interview', () => {
     ).toBeNull();
   });
 });
+
+// The PROJECT interview is the same SectionCoach, pointed at a project — one coaching
+// path, not two. Asserted rather than assumed, because the project track reaches it by a
+// different route (a type chip stands between the pin and the interview) and 'project' is
+// singular everywhere it travels: pass 'projects' and the focus silently addresses
+// nothing. This is the surface a student with no work history lives on.
+describe('a message that failed inside the PROJECT interview', () => {
+  const ANSWER = 'I built a bus-tracker app for my campus.';
+
+  const projectDraft = () => ({
+    ...draft(),
+    experience: [],
+    // entryType is the persisted project type, so the type chip is already answered and
+    // the pin lands straight in the achievements interview.
+    projects: [
+      { _sortId: 'p1', entryType: 'personal', title: 'Campus Bus Tracker', description: '' },
+    ],
+  });
+
+  it('marks it and retries it as a PROJECT turn', async () => {
+    localStorage.setItem('ariaStudio:draftId', 'd1');
+    CVService.getDraftById.mockResolvedValue(projectDraft());
+    CVService.coachChat.mockRejectedValueOnce({ response: { status: 500, data: {} } });
+    render(
+      <AriaStudioProvider>
+        <Handle />
+        <StudioChat />
+      </AriaStudioProvider>
+    );
+    await waitFor(() => expect(ctx?.draftId).toBe('d1'));
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'project', 'p1');
+    });
+
+    const box = await screen.findByPlaceholderText(
+      i18n.t('ariaStudio.sectionCoach.activityPlaceholder')
+    );
+    fireEvent.change(box, { target: { value: ANSWER } });
+    fireEvent.keyDown(box, { key: 'Enter', code: 'Enter' });
+
+    const retry = await screen.findByRole('button', {
+      name: i18n.t('ariaStudio.chat.failed.retry'),
+    });
+    CVService.coachChat.mockResolvedValueOnce({ reply: 'Who ended up using it?' });
+    fireEvent.click(retry);
+
+    expect(await screen.findByText(/Who ended up using it/)).toBeTruthy();
+    const payload = CVService.coachChat.mock.calls.at(-1)[0];
+    expect(payload.focus).toEqual({ section: 'project', sortId: 'p1' });
+    expect(payload.currentStepId).toBe('projects');
+    expect(screen.getAllByText(ANSWER)).toHaveLength(1);
+  });
+});
