@@ -161,7 +161,7 @@ const SessionRail = ({
         />
       </div>
 
-      <StudioSidebarNav onBeforeNavigate={onBeforeCreditStore} />
+      <StudioSidebarNav onBeforeNavigate={onBeforeCreditStore} surface="studio" />
 
       {/* The list header: what this region holds, and which slice of it you're reading.
         The icon takes over from the word "Recents" once there is something to filter —

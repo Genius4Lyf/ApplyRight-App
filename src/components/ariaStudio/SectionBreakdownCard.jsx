@@ -15,9 +15,15 @@ import AriaCard from './AriaCard';
 //
 // The rows come from the FREE deterministic scan, so they refresh on every recompute
 // without costing anything — which is what makes the fix loop viable.
+// Sections the build flow can actually reopen. `contact` is in because the build has a
+// contact step; anything the scan grows later stays out until there is a step to send it
+// to, so a new key can never render a button that leads nowhere.
+const REOPENABLE = new Set(['experience', 'projects', 'education', 'skills', 'summary', 'contact']);
+
 const SectionBreakdownCard = ({
   sections = [],
   onFix,
+  onReopen,
   onRecompute,
   recomputing,
   onRescan,
@@ -58,6 +64,19 @@ const SectionBreakdownCard = ({
             // verdicts, notes and re-score/re-check below are unaffected.
             const showFix =
               STUDIO_TAILORING_ENABLED && !dismissed && s.band !== 'ok' && s.band !== 'neutral';
+            // The always-on way back in. Same rows Fix would have claimed, but it reopens
+            // the ordinary build interview for that section instead of the parked tailoring
+            // loop — so a weak verdict has an action even with tailoring switched off, and
+            // "Not applicable" stops being the only button on a section the user was just
+            // told to improve. Hidden when Fix is showing: two competing primary actions on
+            // one row is worse than either alone.
+            const showReopen =
+              !showFix &&
+              !dismissed &&
+              !!onReopen &&
+              s.band !== 'ok' &&
+              s.band !== 'neutral' &&
+              REOPENABLE.has(s.key);
             const canDismiss = !dismissed && !!onDismissSection && isDismissable(s.key);
             return (
               <li key={s.key} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
@@ -90,8 +109,18 @@ const SectionBreakdownCard = ({
                     </button>
                   )}
                 </div>
-                {(showFix || canDismiss) && (
+                {(showFix || showReopen || canDismiss) && (
                   <div className="shrink-0 flex flex-col items-end gap-1">
+                    {showReopen && (
+                      <button
+                        type="button"
+                        onClick={() => onReopen?.(s)}
+                        disabled={busy}
+                        className="text-[12px] font-semibold px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors disabled:opacity-50"
+                      >
+                        {t('ariaStudio.sectionBreakdown.reopen')}
+                      </button>
+                    )}
                     {showFix && (
                       <button
                         type="button"

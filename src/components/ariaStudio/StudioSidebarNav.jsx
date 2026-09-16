@@ -38,7 +38,10 @@ import { homePathFor } from '../../lib/home';
 // useAccountWallet hook the navbar uses so there is only ever one wallet fetch/
 // localStorage-writer active on a page, and the shared homePathFor (lib/home.js) the
 // navbar also uses, rather than re-deriving it.
-const StudioSidebarNav = ({ onBeforeNavigate }) => {
+// `surface` says which room this rail is standing in: 'studio' shows Aria call minutes,
+// anything else shows interview minutes. Defaulted rather than required so no existing
+// mount changes behaviour by accident.
+const StudioSidebarNav = ({ onBeforeNavigate, surface = 'prep' }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,9 +56,26 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const isAgent = user?.role === 'agent';
   const homePath = homePathFor(user);
 
-  const { displayCredits, minutesLeft, freeTasteMin } = useAccountWallet(isAuthenticated);
-  // Paid minutes if there are any, otherwise whatever is left of the free 5-minute taste.
-  const interviewMinutes = minutesLeft ?? freeTasteMin ?? 0;
+  const { displayCredits, minutesLeft, freeTasteMin, ariaMinutesLeft, ariaFreeTasteMin } =
+    useAccountWallet(isAuthenticated);
+
+  // WHICH MINUTES THIS RAIL IS ABOUT.
+  //
+  // This component is mounted twice — by SessionRail in Aria Studio and by
+  // WorkspaceSidebar for Interview Prep — and until now both showed the interview balance,
+  // so the Studio advertised minutes it has no way to spend. They are two products with
+  // two balances, so the rail names the one belonging to the room you are standing in.
+  //
+  // Defaults to the interview for any caller that doesn't say, which keeps every existing
+  // mount (and its tests) reading exactly as before.
+  const isStudioSurface = surface === 'studio';
+  // Paid minutes if there are any, otherwise whatever is left of the free taste.
+  const minutes = isStudioSurface
+    ? (ariaMinutesLeft ?? ariaFreeTasteMin ?? 0)
+    : (minutesLeft ?? freeTasteMin ?? 0);
+  const minutesLabel = isStudioSurface
+    ? t('nav.account.ariaCallMinutes')
+    : t('nav.account.interviewMinutes');
 
   const at = (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`);
   const inAriaStudio = at('/aria-studio');
@@ -146,17 +166,15 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
           </span>
         </div>
         <div className="flex items-center justify-between text-[17px] sm:text-[12.5px]">
-          <span className="text-slate-500 dark:text-slate-400">
-            {t('nav.account.interviewMinutes')}
-          </span>
+          <span className="text-slate-500 dark:text-slate-400">{minutesLabel}</span>
           {/* At zero this said "0 min" and stopped there — a number with no next step,
               in the one place a user looks precisely BECAUSE they have run out. The slot
               becomes the way out instead. /credits is the right door for both cases: it
               sells minute top-ups to paid users and shows free users the plan that
               includes them, so this needs no tier check of its own. */}
-          {interviewMinutes > 0 ? (
+          {minutes > 0 ? (
             <span className="font-semibold text-amber-600 dark:text-amber-400">
-              {t('nav.account.minutesShort', { n: interviewMinutes })}
+              {t('nav.account.minutesShort', { n: minutes })}
             </span>
           ) : (
             <button

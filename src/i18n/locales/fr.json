@@ -179,6 +179,7 @@
       "creditsLeft_one": "{{count}} restant",
       "creditsLeft_other": "{{count}} restants",
       "interviewMinutes": "Minutes d'entretien",
+      "ariaCallMinutes": "Minutes d'appel Aria",
       "minutesShort": "{{n}} min",
       "topUpCredits": "Recharger mes crédits",
       "topUpAction": "Obtenir",
@@ -980,6 +981,9 @@
     },
     "creditStore": {
       "title": "Crédits et formules",
+      "ariaCallEyebrow": "Minutes d'appel Aria",
+      "ariaCallTitle": "Racontez votre CV à voix haute",
+      "ariaCallSubtitle": "Pour les postes et projets que vous savez décrire mais pas rédiger. Un solde distinct des minutes d'entretien.",
       "subtitle": "Gagnez des crédits gratuitement, rechargez en un instant ou prenez une formule pour vos minutes d’entretien en direct. Les crédits alimentent la rédaction de CV par IA, les lettres de motivation, l’analyse de poste et les modèles premium.",
       "yourCredits": "Vos crédits IA",
       "fromPlanWallet": "{{plan}} inclus dans la formule · {{wallet}} dans le portefeuille",
@@ -2415,7 +2419,8 @@
       "loadFailed": "Échec du chargement de vos CV",
       "retry": "Réessayer"
     },
-    "toasts": {      "deleteFailed": "Échec de la suppression du CV"
+    "toasts": {
+      "deleteFailed": "Échec de la suppression du CV"
     }
   },
   "jobHistory": {
@@ -4771,6 +4776,7 @@
       "allClear": "tout est bon",
       "toFix": "{{n}} à améliorer",
       "fix": "Corriger",
+      "reopen": "Y retourner avec Aria",
       "rescoring": "Recalcul…",
       "rescoreFree": "Recalculer · gratuit",
       "rechecking": "Nouvelle vérification…",
@@ -5218,6 +5224,19 @@
       },
       "replyUnreadable": "Cette réponse est revenue illisible — reposez-moi la question et je réessaierai."
     },
+    "ariaLive": {
+      "talkInstead": "En parler plutôt",
+      "spokenLabel": "Dicté",
+      "connecting": "Connexion…",
+      "listening": "À l'écoute",
+      "speaking": "Aria parle",
+      "justTalk": "Parlez simplement — j'en ferai des puces ensuite.",
+      "end": "Terminer l'appel",
+      "couldntStart": "Impossible de démarrer l'appel. Vous pouvez continuer à écrire.",
+      "outOfMinutes": "Vos minutes d'appel Aria sont épuisées. Vous pouvez en racheter, ou simplement continuer à écrire — les questions sont exactement les mêmes.",
+      "getMinutes": "Obtenir plus de minutes",
+      "keepTyping": "Continuer à écrire"
+    },
     "sectionCoach": {
       "rerollWasFree": "Cette relance était gratuite.",
       "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
@@ -5327,7 +5346,8 @@
       "toast": {
         "agentPlanRequired": "Un plan agent actif est requis pour créer des CV.",
         "removedFromStudio": "Retiré du Studio — le CV est toujours dans Mes CV.",
-        "removeFailed": "Impossible de le retirer — réessayez.",        "deleteFailed": "Impossible de le supprimer — réessayez.",
+        "removeFailed": "Impossible de le retirer — réessayez.",
+        "deleteFailed": "Impossible de le supprimer — réessayez.",
         "duplicated": "Copié. Vous êtes dans la copie — l’original est intact.",
         "duplicateFailed": "Impossible de dupliquer ce CV.",
         "duplicateNotEnoughCredits": "Crédits insuffisants pour dupliquer ce CV.",

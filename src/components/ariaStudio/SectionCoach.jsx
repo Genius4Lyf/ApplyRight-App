@@ -6,6 +6,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
+import { Phone } from 'lucide-react';
 import AnswerExamples from './AnswerExamples';
 import CVService from '../../services/cv.service';
 import { tierOf, costForActionTier } from '../../lib/models';
@@ -16,7 +17,9 @@ import { useAriaStudio } from '../../context/AriaStudioContext';
 import AriaComposer from '../cv/AriaComposer';
 import AriaThinking from '../cv/AriaThinking';
 import AriaCard from './AriaCard';
+import AriaLiveOrb from './AriaLiveOrb';
 import GenerationModelRow from '../cv/GenerationModelRow';
+import { createAriaCall, isAriaLiveSupported } from '../../lib/ariaLive';
 
 // The focused build-with, ported to the Studio. This is a COPY OF THE PROTOCOL from
 // the CV builder's AskAriaGenerate — not of the file, which is bound to CVContext and
@@ -67,8 +70,13 @@ const SectionCoach = ({
   dockNode = null, // the pinned DOM slot StudioChat provides for this composer (portal target)
   careerStage = null, // picked stage, lifted to StudioChat so it persists across roles
   onPickCareerStage, // (k) => void — lifts the pick to the parent
+  // () => void — take the user to buy Aria call minutes. A CALLBACK rather than a
+  // useNavigate in here: this component is mounted from several surfaces and by several
+  // test harnesses, and reaching for router context makes it unmountable without a Router
+  // it has no other need for.
+  onGetMinutes,
 }) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const isProject = entry?.section === 'project';
   // Mirrors the backend: a non-'job' experience entry type (internship/part-time/
   // volunteering/coursework) is coached gently even in an experienced session, so the
@@ -199,14 +207,24 @@ const SectionCoach = ({
     }
   };
 
-  const send = async (text) => {
+  // ONE turn function for typed and spoken answers alike.
+  //
+  // `spoken` changes two things and nothing else: the message is tagged so the stream can
+  // render it as speech, and the textarea is left alone (there is nothing in it). Everything
+  // that decides what Aria ASKS — the transcript window, buildTurns, the turn cap, the
+  // career-stage scrub, readyToDraft — is deliberately shared, so a call cannot drift into
+  // asking different questions from the typed build. It returns the reply text because a
+  // voice turn has to hand Aria something to say.
+  const send = async (text, { spoken = false } = {}) => {
     const val = (text ?? input).trim();
-    if (!val || thinking) return;
+    if (!val || thinking) return null;
 
     const next = [...coachMessages, { who: 'user', text: val }];
-    onPush({ who: 'user', text: val });
-    setInput('');
-    if (inputRef.current) inputRef.current.style.height = 'auto';
+    onPush({ who: 'user', text: val, ...(spoken ? { spoken: true } : null) });
+    if (!spoken) {
+      setInput('');
+      if (inputRef.current) inputRef.current.style.height = 'auto';
+    }
     setExampleAnswers([]);
     setThinking(true);
 
@@ -266,7 +284,12 @@ const SectionCoach = ({
       // `feedbackId` rides on the message so the 👍/👎 controls know what they rate, and
       // still know after a refresh. Dropping it made the build interview the only Aria
       // surface with no way to say an answer was wrong — on the turns that matter most.
-      onPush({ who: 'aria', text: reply, feedbackId: r.feedbackId });
+      onPush({
+        who: 'aria',
+        text: reply,
+        feedbackId: r.feedbackId,
+        ...(spoken ? { spoken: true } : null),
+      });
       setExampleAnswers(safeExamples);
       // A metered turn (flagship build-with, or general chat past the daily pool)
       // returns the post-charge balance — keep the wallet pill live without a refresh.
@@ -290,6 +313,7 @@ const SectionCoach = ({
         // Aria has enough truthful material; move directly to the bullet-count choice.
         setPhase('picking');
       }
+      return reply;
     } catch (e) {
       if (e?.response?.data?.code === 'INSUFFICIENT_CREDITS') {
         // Pro model, no credits — the way out is switching back to Standard, not only topping up.
@@ -319,6 +343,9 @@ const SectionCoach = ({
       } else {
         toast.error(t('ariaStudio.chat.chatUnreachable'));
       }
+      // Null, never a consolation string: a voice caller must not SPEAK an error message
+      // that has already been written into the stream as Aria's own words.
+      return null;
     } finally {
       setThinking(false);
     }
@@ -397,8 +424,161 @@ const SectionCoach = ({
   // she's interviewing. It must stay PINNED, not scroll away with the stream — so it's
   // portaled into StudioChat's docked slot (`dockNode`) rather than sitting inside the
   // scroll region. Falls back to inline only if the slot isn't attached yet (one frame).
-  const composer = phase === 'chat' && (
+  // ─── ARIA LIVE ───
+  //
+  // A spoken build is the SAME build. The call is only a different way to take a turn:
+  // `onDelegate` hands what the user said to the very same `send` a typed answer goes
+  // through, so buildTurns, the turn cap, the evidence ledger, the career-stage scrub and
+  // readyToDraft all behave identically. Nothing here decides what Aria asks.
+  const [call, setCall] = useState(null);
+  const [callStarting, setCallStarting] = useState(false);
+  const [callState, setCallState] = useState('connecting');
+  const [callStream, setCallStream] = useState(null);
+  const [callSecondsLeft, setCallSecondsLeft] = useState(null);
+  const [callOutOfMinutes, setCallOutOfMinutes] = useState(false);
+
+  // Roles and projects only. Education, skills and the summary are short factual fields
+  // where typing is faster than talking, so a call there would spend minutes to make the
+  // user slower. isAriaLiveSupported is false in the Android WebView (no RECORD_AUDIO),
+  // which is why the button simply does not render there rather than failing when pressed.
+  const canCall =
+    !call &&
+    !callOutOfMinutes &&
+    (entry?.section === 'experience' || entry?.section === 'project') &&
+    isAriaLiveSupported();
+
+  const endCall = () => {
+    setCall((current) => {
+      current?.stop();
+      return null;
+    });
+    setCallStream(null);
+    setCallSecondsLeft(null);
+    setCallState('connecting');
+  };
+
+  const startCall = async () => {
+    if (callStarting || call) return;
+    setCallStarting(true);
+    setCallOutOfMinutes(false);
+    const controller = createAriaCall({
+      draftId,
+      section: entry.section,
+      lang: i18n.language?.slice(0, 2) || 'en',
+      // THE BRAIN. One line, and it is the whole architecture: GPT-Live speaks, this
+      // answers, and the answer comes from the same place a typed turn's does.
+      onDelegate: (said) => send(said, { spoken: true }),
+      onState: setCallState,
+      onEnded: () => {
+        setCall(null);
+        setCallStream(null);
+        setCallSecondsLeft(null);
+      },
+      onError: (err) => console.error('[AriaLive]', err),
+    });
+
+    try {
+      await controller.start();
+      setCall(controller);
+      setCallStream(controller.getRemoteStream());
+    } catch (err) {
+      const code = err?.response?.data?.code;
+      if (code === 'NO_ARIA_MINUTES') {
+        // Not a failure — a boundary. Say so in the stream and offer both doors rather
+        // than a red toast that vanishes.
+        setCallOutOfMinutes(true);
+      } else {
+        toast.error(t('ariaStudio.ariaLive.couldntStart'));
+      }
+      controller.stop();
+    } finally {
+      setCallStarting(false);
+    }
+  };
+
+  // The countdown, and the client's half of the time limit. The SERVER is what actually
+  // hangs up (it holds a sideband on the session), so this is the visible clock rather
+  // than the enforcement — which is the right way round, and the opposite of how the mock
+  // interview works.
+  useEffect(() => {
+    if (!call) return undefined;
+    const tick = () => setCallSecondsLeft(call.secondsLeft());
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, [call]);
+
+  // The remote track arrives a beat after the answer is set, so the orb's analyser has to
+  // wait for it rather than capture null once at start.
+  useEffect(() => {
+    if (!call || callStream) return undefined;
+    const id = setInterval(() => {
+      const s = call.getRemoteStream();
+      if (s) setCallStream(s);
+    }, 250);
+    return () => clearInterval(id);
+  }, [call, callStream]);
+
+  // Leaving the interview ends the call. Without this, moving to the bullet-count picker
+  // (which readyToDraft does on its own) would leave a paid call running with nobody
+  // talking to it.
+  useEffect(() => {
+    if (call && phase !== 'chat') endCall();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
+
+  useEffect(
+    () => () => {
+      call?.stop();
+    },
+    [call]
+  );
+
+  // ── THE CALL, standing where the textarea does ──
+  //
+  // Replaces the composer rather than joining it: during a call there is nothing to type
+  // into, and a disabled textarea is just furniture. The coach already renders no input at
+  // all in three of its four phases, so this is the seam, not a new one.
+  const callComposer = phase === 'chat' && call && (
     <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
+      <AriaLiveOrb
+        state={callState}
+        stream={callStream}
+        secondsLeft={callSecondsLeft}
+        onEnd={endCall}
+      />
+    </div>
+  );
+
+  const composer = phase === 'chat' && !call && (
+    <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
+      {/* Out of Aria call minutes. Deliberately NOT a red toast: running out is a boundary,
+          not a failure, and it arrives at the exact moment the user most needs to know that
+          the other way of answering still works. Both doors are on screen — buy more, or
+          carry on typing — and the typed path is never taken away. */}
+      {callOutOfMinutes && (
+        <div className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900">
+          <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+            {t('ariaStudio.ariaLive.outOfMinutes')}
+          </p>
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => onGetMinutes?.()}
+              className="btn-primary w-full px-3 py-2 text-[13px] sm:w-auto"
+            >
+              {t('ariaStudio.ariaLive.getMinutes')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setCallOutOfMinutes(false)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:w-auto"
+            >
+              {t('ariaStudio.ariaLive.keepTyping')}
+            </button>
+          </div>
+        </div>
+      )}
       <AriaComposer
         className=""
         inputRef={inputRef}
@@ -455,6 +635,23 @@ const SectionCoach = ({
           ) : null
         }
       />
+      {/* The way IN to a call. Offered only where speaking genuinely beats typing — a role
+          or a project — and only on the web: the Capacitor WebView has no microphone
+          permission wired up, so on Android this simply is not here and the textarea above
+          is the whole feature, which is the correct degradation. */}
+      {canCall && (
+        <button
+          type="button"
+          onClick={startCall}
+          disabled={thinking || callStarting}
+          className="mt-1.5 mx-auto flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-[11px] font-semibold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 dark:border-slate-600 dark:text-slate-400 dark:hover:border-white dark:hover:text-white"
+        >
+          <Phone className="h-3 w-3" aria-hidden="true" />
+          {callStarting
+            ? t('ariaStudio.ariaLive.connecting')
+            : t('ariaStudio.ariaLive.talkInstead')}
+        </button>
+      )}
     </div>
   );
 
@@ -680,6 +877,7 @@ const SectionCoach = ({
       {/* The coach's own input lives in the DOCKED slot (StudioChat's dockNode), so it
           stays pinned while the messages scroll. Inline fallback covers the one frame
           before the slot attaches (or if StudioChat provided none). */}
+      {callComposer ? (dockNode ? createPortal(callComposer, dockNode) : callComposer) : null}
       {composer ? (dockNode ? createPortal(composer, dockNode) : composer) : null}
     </>
   );

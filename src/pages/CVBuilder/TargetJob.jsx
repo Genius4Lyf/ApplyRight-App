@@ -48,7 +48,11 @@ const TargetJob = () => {
   // Confirming the target hands off to the next step. Aria steps back to the
   // middle first so the move reads as her leading the way, not a hard cut.
   const [advancing, setAdvancing] = useState(false);
-  const [jobKeywords, setJobKeywords] = useState(cvData?.targetJob?.keywords || []);
+  // Presentation only, and deliberately NOT seeded from the CV. `targetJob.keywords` is
+  // not a field on DraftCV, so the value this used to read was always undefined — Mongoose
+  // strict mode had been dropping the write silently all along. The brief is what persists;
+  // these are the fallback chips shown only when the brief itself failed to build.
+  const [jobKeywords, setJobKeywords] = useState([]);
   const [jobBrief, setJobBrief] = useState(cvData?.targetJob?.brief || null);
   const hasUserEdited = useRef(false);
   const choiceTimer = useRef(null);
@@ -231,10 +235,35 @@ const TargetJob = () => {
       new Promise((resolve) => setTimeout(resolve, reduceMotion ? 180 : 2400)),
     ]);
 
-    const completedTarget = { ...targetJob, keywords, brief };
+    // Persist through the SAME operation Aria Studio uses. Hand-assembling the object and
+    // pushing it through the generic /cv/save had two faults: `keywords` is not in the
+    // DraftCV schema so it was dropped without an error (a 200 that stored nothing), and
+    // `briefHash` was never written — so resolveDraftBrief saw a hash miss on the very next
+    // coach call and rebuilt a brief we already had. One writer, one place the brief and its
+    // hash and the JD-derived caches are kept in step.
+    //
+    // Best-effort: a failed save must not strand the user on the reading screen, and the
+    // optimistic local write above already carries the title and description forward.
+    let saved = null;
+    try {
+      const draftId = await ensureDraft?.();
+      if (draftId) {
+        const res = await CVService.studioUpdateTargetJob({
+          draftId,
+          jobTitle: title,
+          jobDescription: description,
+          brief,
+        });
+        saved = res?.targetJob || null;
+      }
+    } catch (err) {
+      console.error('Failed to persist the target job', err);
+    }
+
+    const completedTarget = saved || { ...targetJob, brief };
     setFormData(completedTarget);
     setJobKeywords(keywords);
-    setJobBrief(brief);
+    setJobBrief(completedTarget.brief || brief);
     updateCvData?.({ targetJob: completedTarget });
     setWorkspaceTransition('to-confirmation');
     setReadingJob(false);

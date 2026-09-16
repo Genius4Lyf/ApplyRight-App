@@ -169,3 +169,67 @@ describe('StudioSidebarNav — the wallet at empty', () => {
     expect(getMinutes()).toBeTruthy();
   });
 });
+
+// TWO PRODUCTS, TWO BALANCES.
+//
+// This component is mounted twice — by SessionRail in Aria Studio and by WorkspaceSidebar
+// for Interview Prep — and it used to show the interview balance in both, so the Studio
+// advertised minutes it has no way to spend. `surface` is what tells them apart, and these
+// pin that a mount which does NOT pass it keeps the old behaviour exactly.
+describe('StudioSidebarNav — which minutes this rail is about', () => {
+  const mountSurface = (surface) => {
+    localStorage.setItem('token', 't');
+    localStorage.setItem('user', JSON.stringify({}));
+    return render(
+      <MemoryRouter initialEntries={['/aria-studio']}>
+        <StudioSidebarNav surface={surface} />
+      </MemoryRouter>
+    );
+  };
+
+  beforeEach(() => {
+    walletState.value = {
+      displayCredits: 32,
+      minutesLeft: 20,
+      freeTasteMin: 5,
+      ariaMinutesLeft: 7,
+      ariaFreeTasteMin: 2,
+    };
+  });
+
+  it('shows Aria call minutes in the Studio', () => {
+    mountSurface('studio');
+    expect(screen.getByText(/aria call minutes/i)).toBeTruthy();
+    expect(screen.getByText(/7 min/i)).toBeTruthy();
+    // The interview balance must not leak in — 20 is the number that used to show here.
+    expect(screen.queryByText(/20 min/i)).toBeNull();
+  });
+
+  it('keeps interview minutes in Interview Prep', () => {
+    mountSurface('prep');
+    expect(screen.getByText(/interview minutes/i)).toBeTruthy();
+    expect(screen.getByText(/20 min/i)).toBeTruthy();
+    expect(screen.queryByText(/7 min/i)).toBeNull();
+  });
+
+  it('defaults to the interview balance when no surface is given', () => {
+    // Every mount that predates the split passes nothing, and none of them should change.
+    mountSurface(undefined);
+    expect(screen.getByText(/interview minutes/i)).toBeTruthy();
+    expect(screen.getByText(/20 min/i)).toBeTruthy();
+  });
+
+  it('offers a way to buy when the Aria balance is spent, even with interview minutes left', () => {
+    // The failure this prevents: a user with 20 interview minutes and no Aria minutes being
+    // shown "20 min" in the Studio and then told there is nothing to spend when they call.
+    walletState.value = {
+      displayCredits: 3,
+      minutesLeft: 20,
+      freeTasteMin: 5,
+      ariaMinutesLeft: 0,
+      ariaFreeTasteMin: 0,
+    };
+    mountSurface('studio');
+    expect(screen.queryByRole('button', { name: /get minutes/i })).toBeTruthy();
+  });
+});

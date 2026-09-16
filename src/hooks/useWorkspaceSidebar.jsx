@@ -182,6 +182,10 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
     onBuildWithAria: () => navigate('/aria-studio', { state: { start: 'build' } }),
     onBuildWithBuilder: () => navigate('/cv-builder/new'),
     onInterview: () => navigate('/aria-studio', { state: { start: 'prep' } }),
+    // Which minutes the account block should name. Every workspace surface here is an
+    // interview-or-CV list rather than the Studio itself, so none of them spend Aria call
+    // minutes; the Studio passes its own 'studio' from SessionRail.
+    surface: 'prep',
   };
 
   const sidebar = (
