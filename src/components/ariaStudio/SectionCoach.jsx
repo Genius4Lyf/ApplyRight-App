@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { Phone } from 'lucide-react';
@@ -20,8 +20,10 @@ import AriaThinking from '../cv/AriaThinking';
 import AriaCard from './AriaCard';
 import AriaLiveOrb from './AriaLiveOrb';
 import AriaCallTipsModal from './AriaCallTipsModal';
+import AriaCallIntroModal from './AriaCallIntroModal';
 import AriaCallSettingsButton from './AriaCallSettingsButton';
 import { readStoredCallSettings } from '../../lib/ariaCallSettings';
+import { callEnterAnim, dockCardAnim, pressable } from '../../lib/ariaMotion';
 import CallEndedCard from './CallEndedCard';
 import UserService from '../../services/user.service';
 import BillingService from '../../services/billing.service';
@@ -82,6 +84,11 @@ const SectionCoach = ({
   // test harnesses, and reaching for router context makes it unmountable without a Router
   // it has no other need for.
   onGetMinutes,
+  // true only on the BUILD track, where this coach opens straight after the entry form is
+  // filled in. That is the one moment the choice between typing and talking is live and
+  // unmade, so it is the one moment worth announcing calls at. Nothing happens on a second
+  // showing — the account flag closes it for good — so this is about WHERE, not how often.
+  announceCall = false,
   // ─── A turn that didn't get through ───
   //
   // The interview writes into StudioChat's stream, so StudioChat owns the failure too: it
@@ -94,6 +101,7 @@ const SectionCoach = ({
   onRegisterSend,
 }) => {
   const { t, i18n } = useTranslation();
+  const reduce = useReducedMotion();
   const isProject = entry?.section === 'project';
   // Mirrors the backend: a non-'job' experience entry type (internship/part-time/
   // volunteering/coursework) is coached gently even in an experienced session, so the
@@ -246,6 +254,40 @@ const SectionCoach = ({
   // How they like their calls. Seeded synchronously from the stored user so the chip shows
   // the real choice on first paint; saved to the account on every change so it follows them.
   const [callSettings, setCallSettings] = useState(readStoredCallSettings);
+
+  // THE ONE-TIME ANNOUNCEMENT — decided once, at mount, and never re-evaluated.
+  //
+  // Read from the STORED user rather than fetched. requestCall's rule holds here for the same
+  // reason: a coach mounts on every single entry of every build, and spending a round trip on
+  // a question that is "no" for everyone who has already been told would be a tax on the
+  // common path. The flag is written back through UserService.updateSettings, which refreshes
+  // the same stored blob, so the next mount reads the truth without asking the server either.
+  //
+  // `announceCall` is the build track's say-so: this fires when a role form has just been
+  // filled in, not when someone reopens a finished entry to fix its bullets.
+  //
+  // Unreadable storage means NO announcement. For an advert that is the right way to fail —
+  // showing it twice is worse than never showing it.
+  const [introOpen, setIntroOpen] = useState(() => {
+    if (!announceCall) return false;
+    if (entry?.section !== 'experience' && entry?.section !== 'project') return false;
+    if (!isAriaLiveSupported()) return false;
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || 'null');
+      return !!user && !user?.settings?.seenAriaCallIntro;
+    } catch {
+      return false;
+    }
+  });
+
+  // Seen on DISPLAY, not on dismissal. Escape, a reload, or closing the tab is still having
+  // been told — an announcement that survives every exit but the two buttons is an advert.
+  useEffect(() => {
+    if (!introOpen) return;
+    UserService.updateSettings({ seenAriaCallIntro: true }).catch((err) =>
+      console.error('Failed to record the Aria call intro', err)
+    );
+  }, [introOpen]);
 
   const send = async (text) => {
     const val = (text ?? input).trim();
@@ -721,53 +763,67 @@ const SectionCoach = ({
   // into, and a disabled textarea is just furniture. The coach already renders no input at
   // all in three of its four phases, so this is the seam, not a new one.
   const callComposer = phase === 'chat' && call && (
-    <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
+    // The whole input surface changing hands. Given its own entrance so the orb arrives
+    // rather than replacing the textarea between two frames.
+    <motion.div
+      {...callEnterAnim(reduce)}
+      className="relative shrink-0 pb-[env(safe-area-inset-bottom)]"
+    >
       <AriaLiveOrb
         state={callState}
         stream={callStream}
         secondsLeft={callSecondsLeft}
         onEnd={endCall}
       />
-    </div>
+    </motion.div>
   );
 
   const composer = phase === 'chat' && !call && (
     <div className="relative shrink-0 pb-[env(safe-area-inset-bottom)]">
-      {callEnded && (
-        <CallEndedCard
-          reason={callEnded.reason}
-          busy={thinking}
-          onWriteBullets={writeBulletsFromCall}
-          onKeepChatting={keepChattingAfterCall}
-        />
-      )}
-      {/* Out of Aria call minutes. Deliberately NOT a red toast: running out is a boundary,
-          not a failure, and it arrives at the exact moment the user most needs to know that
-          the other way of answering still works. Both doors are on screen — buy more, or
-          carry on typing — and the typed path is never taken away. */}
-      {callOutOfMinutes && (
-        <div className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900">
-          <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
-            {t('ariaStudio.ariaLive.outOfMinutes')}
-          </p>
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={() => onGetMinutes?.()}
-              className="btn-primary w-full px-3 py-2 text-[13px] sm:w-auto"
-            >
-              {t('ariaStudio.ariaLive.getMinutes')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setCallOutOfMinutes(false)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:w-auto"
-            >
-              {t('ariaStudio.ariaLive.keepTyping')}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Both notices open ABOVE the textarea, so they push it down. Animating the height
+          (dockCardAnim) makes that a movement rather than a jump — and, on the way out, lets
+          the composer rise back into the space instead of snapping into it. */}
+      <AnimatePresence initial={false}>
+        {callEnded && (
+          <motion.div key="callended" {...dockCardAnim(reduce)}>
+            <CallEndedCard
+              reason={callEnded.reason}
+              busy={thinking}
+              onWriteBullets={writeBulletsFromCall}
+              onKeepChatting={keepChattingAfterCall}
+            />
+          </motion.div>
+        )}
+        {/* Out of Aria call minutes. Deliberately NOT a red toast: running out is a boundary,
+            not a failure, and it arrives at the exact moment the user most needs to know that
+            the other way of answering still works. Both doors are on screen — buy more, or
+            carry on typing — and the typed path is never taken away. */}
+        {callOutOfMinutes && (
+          <motion.div key="outofminutes" {...dockCardAnim(reduce)}>
+            <div className="mb-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-[13px] leading-relaxed text-slate-600 dark:text-slate-300">
+                {t('ariaStudio.ariaLive.outOfMinutes')}
+              </p>
+              <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => onGetMinutes?.()}
+                  className="btn-primary w-full px-3 py-2 text-[13px] sm:w-auto"
+                >
+                  {t('ariaStudio.ariaLive.getMinutes')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCallOutOfMinutes(false)}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-[13px] font-semibold text-slate-600 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800 sm:w-auto"
+                >
+                  {t('ariaStudio.ariaLive.keepTyping')}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AriaComposer
         className=""
         inputRef={inputRef}
@@ -830,17 +886,22 @@ const SectionCoach = ({
           is the whole feature, which is the correct degradation. */}
       {canCall && (
         <div className="mt-1.5 flex flex-wrap items-center justify-center gap-2">
-          <button
+          {/* Takes the press. On a phone this chip is the doorway to a paid feature and the
+              only feedback was a hover colour, which a touch screen never shows — so the tap
+              landed with nothing to confirm it while the mic permission prompt was still
+              being decided. */}
+          <motion.button
             type="button"
             onClick={requestCall}
             disabled={thinking || callStarting}
+            {...pressable(reduce)}
             className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-[11px] font-semibold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 dark:border-slate-600 dark:text-slate-400 dark:hover:border-white dark:hover:text-white"
           >
             <Phone className="h-3 w-3" aria-hidden="true" />
             {callStarting
               ? t('ariaStudio.ariaLive.connecting')
               : t('ariaStudio.ariaLive.talkInstead')}
-          </button>
+          </motion.button>
           {/* How the call will go, right beside the way into it. Shows the current choice so
             nobody has to open it to know; most people won't need to. */}
           <AriaCallSettingsButton
@@ -1076,17 +1137,40 @@ const SectionCoach = ({
           stays pinned while the messages scroll. Inline fallback covers the one frame
           before the slot attaches (or if StudioChat provided none). */}
       {callComposer ? (dockNode ? createPortal(callComposer, dockNode) : callComposer) : null}
-      {/* Mounted only while open, so the "don't show again" box starts unticked every time
-          rather than remembering a tick from a dialog the user cancelled. */}
-      {callTipsOpen && (
-        <AriaCallTipsModal
-          open
-          settings={callSettings}
-          onSettingsChange={changeCallSettings}
-          onStart={startFromTips}
-          onCancel={() => setCallTipsOpen(false)}
-        />
-      )}
+      {/* ── The two call dialogs ──
+          Each is mounted ONLY while open, which starts them clean every time: the tips box
+          keeps no tick from a dialog that was cancelled, and the announcement keeps no tab.
+          AnimatePresence is what lets them still animate closed despite that — it holds the
+          subtree for the length of its exit, and the `exit` props inside the modals fire
+          through its presence context. Without it, closing would be a hard cut.
+
+          The announcement can never coincide with the tips: it closes before the call button
+          it talks about is reachable. */}
+      <AnimatePresence>
+        {introOpen && (
+          <AriaCallIntroModal
+            key="intro"
+            open
+            onKeepTyping={() => setIntroOpen(false)}
+            onGetMinutes={() => {
+              setIntroOpen(false);
+              onGetMinutes?.();
+            }}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {callTipsOpen && (
+          <AriaCallTipsModal
+            key="tips"
+            open
+            settings={callSettings}
+            onSettingsChange={changeCallSettings}
+            onStart={startFromTips}
+            onCancel={() => setCallTipsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
       {composer ? (dockNode ? createPortal(composer, dockNode) : composer) : null}
     </>
   );

@@ -202,7 +202,10 @@ describe('Aria Live — when the USER ends the call', () => {
     });
     // Nothing is spent on a model call until they actually type.
     expect(CVService.coachChat).not.toHaveBeenCalled();
-    expect(screen.queryByText(t('ariaStudio.ariaLive.ended.writeBullets'))).toBeNull();
+    // The card animates out of the dock, so it is still mounted for a few frames.
+    await waitFor(() =>
+      expect(screen.queryByText(t('ariaStudio.ariaLive.ended.writeBullets'))).toBeNull()
+    );
   });
 
   it('says the time ran out when it was the clock, not them', async () => {
@@ -403,6 +406,8 @@ describe('Aria Live — no free taste: you need minutes to call', () => {
     fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
     fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.keepTyping')));
 
-    expect(screen.queryByText(t('ariaStudio.ariaLive.outOfMinutes'))).toBeNull();
+    await waitFor(() =>
+      expect(screen.queryByText(t('ariaStudio.ariaLive.outOfMinutes'))).toBeNull()
+    );
   });
 });

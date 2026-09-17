@@ -5241,6 +5241,25 @@
       "outOfMinutes": "Talking to Aria uses Aria call minutes, and you have none right now. Get some to start a call — or carry on typing, and Aria will build this with you here.",
       "getMinutes": "Get more minutes",
       "keepTyping": "Keep typing",
+      "intro": {
+        "eyebrow": "New",
+        "title": "You can talk this one through instead",
+        "lead": "Aria can call you and ask about this role out loud. You talk, she listens and writes the bullet points afterwards.",
+        "faster": {
+          "title": "It's quicker than typing",
+          "body": "Most people say more in three minutes of talking than in twenty minutes of typing — and saying more is what makes the bullet points good."
+        },
+        "asItComes": {
+          "title": "Say it however it comes to you",
+          "body": "Out of order, halfway through a sentence, changing your mind — all fine. Nothing you say has to come out neatly."
+        },
+        "sheWrites": {
+          "title": "You don't do the wording",
+          "body": "Forget CV language and what should go where. Tell Aria about the job like you'd tell a friend; turning it into a CV is her half."
+        },
+        "getMinutes": "Get call minutes",
+        "keepTyping": "Continue typing"
+      },
       "tips": {
         "title": "Before you start",
         "lead": "You'll get the best bullet points out of this call if you give Aria plenty to work with.",

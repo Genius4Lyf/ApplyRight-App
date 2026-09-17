@@ -1,8 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
+// `motion` is used only via <motion.div> in JSX; this eslint config lacks jsx-uses-vars so it
+// reads as unused — the same false positive SectionCoach suppresses.
+// eslint-disable-next-line no-unused-vars
+import { motion, useReducedMotion } from 'framer-motion';
 import { Mic, MessageCircle, Search, TrendingUp, Clock, SlidersHorizontal } from 'lucide-react';
 import AriaCallSettingsControls from './AriaCallSettingsControls';
+import { modalAnim, scrimAnim } from '../../lib/ariaMotion';
 
 // THE BRIEF BEFORE THE CALL.
 //
@@ -62,6 +67,7 @@ const AriaCallTipsModal = ({ open, onStart, onCancel, settings, onSettingsChange
   const [dontShowAgain, setDontShowAgain] = useState(false);
   const [tab, setTab] = useState('tips');
   const startRef = useRef(null);
+  const reduce = useReducedMotion();
   const hasSettings = typeof onSettingsChange === 'function';
 
   useEffect(() => {
@@ -104,8 +110,12 @@ const AriaCallTipsModal = ({ open, onStart, onCancel, settings, onSettingsChange
   );
 
   return createPortal(
-    <div className="fixed inset-0 z-[300] flex items-center justify-center p-2 sm:p-4 short-screen:p-2 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-      <div
+    <motion.div
+      {...scrimAnim}
+      className="fixed inset-0 z-[300] flex items-center justify-center p-2 sm:p-4 short-screen:p-2 bg-black/50 backdrop-blur-sm"
+    >
+      <motion.div
+        {...modalAnim(reduce)}
         role="dialog"
         aria-modal="true"
         aria-labelledby="aria-call-tips-title"
@@ -246,8 +256,8 @@ const AriaCallTipsModal = ({ open, onStart, onCancel, settings, onSettingsChange
             </button>
           </div>
         </div>
-      </div>
-    </div>,
+      </motion.div>
+    </motion.div>,
     document.body
   );
 };

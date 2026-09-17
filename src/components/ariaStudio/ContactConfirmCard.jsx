@@ -60,6 +60,12 @@ const TITLE_FIELD = 'currentJobTitle';
 // Confirm the complete CV contact block. Missing fields remain visible so users
 // understand what the CV still needs instead of mistaking an omitted row for a
 // finished section. Essential details block confirmation; optional ones do not.
+// Form fields in here are `bg-white dark:bg-slate-950`, matching the "Your professional
+// title" input on ContactConfirmCard — that one was always styled this way, and next to it
+// every other field looked greyed out, as though it were disabled. The border carries the
+// edge of the field; the fill does not need to as well. Shared by EntryCaptureCard,
+// ContactConfirmCard, CertificationsCard, JobCaptureCard and SkillsBuildCard — change all
+// five or none.
 const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) => {
   const { t } = useTranslation();
   const filled = FIELDS.filter((field) => (personalInfo[field.key] || '').trim());
@@ -146,7 +152,7 @@ const ContactConfirmCard = ({ personalInfo = {}, onConfirm, onChange, saving }) 
                   value={form[field.key] || ''}
                   onChange={(event) => set(field.key, event.target.value)}
                   placeholder={t(field.placeholderKey)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[14px] text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/20"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[14px] text-slate-800 outline-none transition-colors placeholder:text-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder:text-slate-500 dark:focus:border-white dark:focus:ring-white/20"
                 />
               </div>
             ))}

@@ -5237,6 +5237,25 @@
       "outOfMinutes": "Parler à Aria utilise des minutes d'appel Aria, et vous n'en avez pas pour le moment. Obtenez-en pour démarrer un appel — ou continuez à écrire, et Aria construira ceci avec vous ici.",
       "getMinutes": "Obtenir plus de minutes",
       "keepTyping": "Continuer à écrire",
+      "intro": {
+        "eyebrow": "Nouveau",
+        "title": "Vous pouvez aussi en parler de vive voix",
+        "lead": "Aria peut vous appeler et vous interroger sur ce poste à l'oral. Vous parlez, elle écoute et rédige les puces ensuite.",
+        "faster": {
+          "title": "C'est plus rapide qu'écrire",
+          "body": "La plupart des gens en disent plus en trois minutes de parole qu'en vingt minutes de saisie — et en dire plus, c'est ce qui rend les puces bonnes."
+        },
+        "asItComes": {
+          "title": "Dites-le comme cela vous vient",
+          "body": "Dans le désordre, au milieu d'une phrase, en changeant d'avis — tout va bien. Rien de ce que vous dites n'a besoin d'être net."
+        },
+        "sheWrites": {
+          "title": "La formulation, ce n'est pas votre travail",
+          "body": "Oubliez le langage CV et ce qui doit aller où. Parlez du poste à Aria comme à un ami ; en faire un CV, c'est sa moitié du travail."
+        },
+        "getMinutes": "Obtenir des minutes d'appel",
+        "keepTyping": "Continuer à écrire"
+      },
       "tips": {
         "title": "Avant de commencer",
         "lead": "Vous obtiendrez les meilleures puces de cet appel si vous donnez à Aria beaucoup de matière.",

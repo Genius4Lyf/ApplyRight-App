@@ -5,7 +5,7 @@
 // partial update that reset the other three to defaults would quietly undo someone's choices.
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import i18n from '../../i18n';
 import {
@@ -76,8 +76,29 @@ describe('AriaCallSettingsControls', () => {
   });
 
   it('explains what the current choice does', () => {
-    expect(screen.getByText(t(`${base}.depth.thorough.hint`))).toBeTruthy();
-    expect(screen.getByText(t(`${base}.style.friendly.hint`))).toBeTruthy();
+    expect(screen.getByText(t(`${base}.depth.thorough.hint`)).className).toContain('opacity-100');
+    expect(screen.getByText(t(`${base}.style.friendly.hint`)).className).toContain('opacity-100');
+  });
+
+  it('keeps its height when the choice changes, by laying every hint in one cell', () => {
+    // The panel is sized by its contents and is centred, so a hint that wraps to a different
+    // number of lines than the one it replaced moved the whole card — on a phone, out from
+    // under the finger that had just tapped. Every hint is rendered into one grid cell, so the
+    // cell is always as tall as the longest; only the current one shows.
+    const off = screen.getByText(t(`${base}.depth.quick.hint`));
+    expect(off.className).toContain('opacity-0');
+    expect(off.getAttribute('aria-hidden')).toBe('true');
+  });
+
+  it('hides the others with OPACITY, never `visibility`', () => {
+    // These controls also render inside the tips modal, whose mobile tabs hide the WHOLE
+    // settings panel with `invisible`. `visibility` is inherited but re-enablable, so a hint
+    // marked `visible` punched back out through that hidden ancestor and drew itself across
+    // the tips text. Opacity composites down and cannot be undone from inside — which is what
+    // a component that does not own its surroundings has to use.
+    for (const key of ['depth.thorough', 'depth.quick', 'style.coach']) {
+      expect(screen.getByText(t(`${base}.${key}.hint`)).className).not.toContain('visible');
+    }
   });
 
   it('offers slower speech', () => {
@@ -98,13 +119,15 @@ describe('AriaCallSettingsButton', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('opens the controls, and Escape closes them', () => {
+  it('opens the controls, and Escape closes them', async () => {
     render(<AriaCallSettingsButton value={DEFAULT_CALL_SETTINGS} onChange={vi.fn()} />);
     fireEvent.click(screen.getByText(summary('thorough', 'friendly')));
     expect(screen.getByRole('dialog')).toBeTruthy();
 
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(screen.queryByRole('dialog')).toBeNull();
+    // AWAITED, not immediate: the panel animates out, so it is still in the document for the
+    // frames it takes to leave. The assertion is that it goes, not that it vanishes.
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   });
 
   it('passes changes up from inside the popover', () => {

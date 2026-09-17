@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AriaCard from './AriaCard';
 
-const THIS_YEAR = new Date().getFullYear();
-const RECENT_YEARS = Array.from({ length: 8 }, (_, i) => String(THIS_YEAR - i));
-
+// Form fields in here are `bg-white dark:bg-slate-950`, matching the "Your professional
+// title" input on ContactConfirmCard — that one was always styled this way, and next to it
+// every other field looked greyed out, as though it were disabled. The border carries the
+// edge of the field; the fill does not need to as well. Shared by EntryCaptureCard,
+// ContactConfirmCard, CertificationsCard, JobCaptureCard and SkillsBuildCard — change all
+// five or none.
 const inputClass =
-  'mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors';
+  'mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors';
 
 const dateInputClass =
-  'flex-1 min-w-[7rem] rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
+  'flex-1 min-w-[7rem] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3.5 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors disabled:opacity-50';
 
 const labelClass = 'block text-[12px] font-semibold text-slate-600 dark:text-slate-300';
 
@@ -135,18 +138,10 @@ const EntryCaptureCard = ({ section = 'experience', entry, onSubmit, busy }) => 
                     className={dateInputClass}
                   />
                 </div>
-                <div className="mt-1.5 flex flex-wrap gap-1">
-                  {RECENT_YEARS.map((y) => (
-                    <button
-                      key={y}
-                      type="button"
-                      onClick={() => setStartDate(y)}
-                      className="text-[12px] font-semibold px-2 py-1 rounded-full border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-900 hover:text-slate-950 dark:hover:border-white dark:hover:text-white transition-colors"
-                    >
-                      {y}
-                    </button>
-                  ))}
-                </div>
+                {/* No year shortcut row. Eight pills filled the start field with a bare year
+                    for one tap saved, and a form whose longest element is a list of numbers
+                    reads as work before it reads as a shortcut. The placeholder carries the
+                    format. */}
                 <label className="mt-2 flex items-center gap-2 cursor-pointer">
                   <input
                     type="checkbox"

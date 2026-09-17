@@ -5330,6 +5330,10 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               draftId={draftId}
               dockNode={coachDock}
               onGetMinutes={() => onNavigate?.('/credits')}
+              // Announce the voice feature here, and only here: this coach opens the instant
+              // the entry form is submitted, with the first interview question about to be
+              // asked. Once per account, enforced on the account — see SectionCoach.
+              announceCall
               entry={{
                 // 'project' routes coachChatTurn to its project framing (type-aware,
                 // problem → role → tech → outcome → link) instead of the job one.

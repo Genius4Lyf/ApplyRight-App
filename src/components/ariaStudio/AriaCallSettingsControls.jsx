@@ -11,7 +11,27 @@ import { DEPTHS, STYLES, VOICES, PACES, normalizeCallSettings } from '../../lib/
 // once — enough to explain what "Coach" actually does, without turning a settings popover
 // into a page to read. The minute cost is said where it is true: Coach talks more, and Aria
 // speaking is billed at twice the rate of Aria listening.
-const Group = ({ label, options, value, onPick, labelFor, hint }) => (
+//
+// ── WHY EVERY HINT IS RENDERED, NOT JUST THE CURRENT ONE ──
+//
+// Swapping one hint for another changes this fieldset's height whenever the two wrap to a
+// different number of lines — and on a phone, where the column is narrow, almost every pair
+// does. The popover and the tips modal are both sized by their contents and both centred, so
+// a one-line difference moved everything: tapping "Coach" made the whole card jump under the
+// finger that tapped it.
+//
+// So all the hints are laid out in ONE grid cell and the inactive ones are hidden in place.
+// The cell is therefore always as tall as the LONGEST hint, whichever is showing, and the
+// height never changes.
+//
+// HIDDEN WITH OPACITY, not `visibility`. These controls are also rendered inside the tips
+// modal, whose mobile tabs hide the whole settings panel with `invisible` — and `visibility`
+// is inherited but RE-ENABLABLE, so a child marked `visible` punches back through a hidden
+// ancestor. That is not a theory: it put the depth and style hints straight over the top of
+// the tips text on the Tips tab. Opacity composites down and cannot be undone from inside, so
+// it is the safe one to use in a component that does not own its surroundings. `aria-hidden`
+// does the job `visibility: hidden` was doing for screen readers — one description, not four.
+const Group = ({ label, options, value, onPick, labelFor, hintFor }) => (
   <fieldset className="min-w-0">
     <legend className="mb-1.5 font-mono text-[10px] uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
       {label}
@@ -36,8 +56,20 @@ const Group = ({ label, options, value, onPick, labelFor, hint }) => (
         );
       })}
     </div>
-    {hint && (
-      <p className="mt-1.5 text-[12px] leading-snug text-slate-500 dark:text-slate-400">{hint}</p>
+    {hintFor && (
+      <div className="mt-1.5 grid">
+        {options.map((option) => (
+          <p
+            key={option}
+            aria-hidden={option === value ? undefined : 'true'}
+            className={`col-start-1 row-start-1 text-[12px] leading-snug text-slate-500 dark:text-slate-400 ${
+              option === value ? 'opacity-100' : 'pointer-events-none opacity-0'
+            }`}
+          >
+            {hintFor(option)}
+          </p>
+        ))}
+      </div>
     )}
   </fieldset>
 );
@@ -56,7 +88,7 @@ const AriaCallSettingsControls = ({ value, onChange }) => {
         value={current.depth}
         onPick={set('depth')}
         labelFor={(o) => t(`${base}.depth.${o}.label`)}
-        hint={t(`${base}.depth.${current.depth}.hint`)}
+        hintFor={(o) => t(`${base}.depth.${o}.hint`)}
       />
       <Group
         label={t(`${base}.styleLabel`)}
@@ -64,7 +96,7 @@ const AriaCallSettingsControls = ({ value, onChange }) => {
         value={current.style}
         onPick={set('style')}
         labelFor={(o) => t(`${base}.style.${o}.label`)}
-        hint={t(`${base}.style.${current.style}.hint`)}
+        hintFor={(o) => t(`${base}.style.${o}.hint`)}
       />
       <Group
         label={t(`${base}.voiceLabel`)}

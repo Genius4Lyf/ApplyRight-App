@@ -91,6 +91,12 @@ const hostOf = (url) => {
   }
 };
 
+// Form fields in here are `bg-white dark:bg-slate-950`, matching the "Your professional
+// title" input on ContactConfirmCard — that one was always styled this way, and next to it
+// every other field looked greyed out, as though it were disabled. The border carries the
+// edge of the field; the fill does not need to as well. Shared by EntryCaptureCard,
+// ContactConfirmCard, CertificationsCard, JobCaptureCard and SkillsBuildCard — change all
+// five or none.
 const JobCaptureCard = ({
   initialTitle = '',
   initialDescription = '',
@@ -466,7 +472,7 @@ const JobCaptureCard = ({
                   }
                 }}
                 placeholder={t('ariaStudio.jobCapture.linkPlaceholder')}
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-[14px] text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-3 text-[14px] text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20"
               />
             </div>
             <button
@@ -508,7 +514,7 @@ const JobCaptureCard = ({
           setLinkJob(null);
         }}
         placeholder={t('cvBuilder.atsCoach.jobTitlePlaceholder')}
-        className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[14px] text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[14px] text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20"
       />
 
       <label
@@ -537,7 +543,7 @@ const JobCaptureCard = ({
           setLinkJob(null);
         }}
         placeholder={t('cvBuilder.atsCoach.jobDescriptionPlaceholder')}
-        className="min-h-[150px] w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2 text-[14px] leading-relaxed text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20 sm:min-h-[190px] lg:min-h-[230px]"
+        className="min-h-[150px] w-full resize-y rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-[14px] leading-relaxed text-slate-800 outline-none transition-colors placeholder-slate-400 focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:placeholder-slate-500 dark:focus:border-white dark:focus:ring-white/20 sm:min-h-[190px] lg:min-h-[230px]"
       />
 
       {!jdInput.trim() && (

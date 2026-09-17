@@ -14,6 +14,12 @@ import SectionIcon from './SectionIcon';
 //
 // It runs after work history and projects because it READS them: the generation is
 // grounded in what the user has already described, not invented from a job title.
+// Form fields in here are `bg-white dark:bg-slate-950`, matching the "Your professional
+// title" input on ContactConfirmCard — that one was always styled this way, and next to it
+// every other field looked greyed out, as though it were disabled. The border carries the
+// edge of the field; the fill does not need to as well. Shared by EntryCaptureCard,
+// ContactConfirmCard, CertificationsCard, JobCaptureCard and SkillsBuildCard — change all
+// five or none.
 const SkillsBuildCard = ({
   phase, // 'consent' | 'card'
   data, // { suggestions, bestForRole, reviewGroups }
@@ -154,7 +160,7 @@ const SkillsBuildCard = ({
                 onChange={(e) => setNewCategoryName(e.target.value)}
                 placeholder={t('cvBuilder.skills.categoryName')}
                 aria-label={t('cvBuilder.skills.categoryName')}
-                className="sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+                className="sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
               />
             ) : (
               <select
@@ -164,7 +170,7 @@ const SkillsBuildCard = ({
                   else setManualCategory(e.target.value);
                 }}
                 aria-label={t('cvBuilder.skills.categoryName')}
-                className="sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+                className="sm:w-44 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
               >
                 {categories.map((category) => (
                   <option key={category} value={category}>
@@ -185,7 +191,7 @@ const SkillsBuildCard = ({
                 }
               }}
               placeholder={t('cvBuilder.skills.addSkillPlaceholder')}
-              className="min-w-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="min-w-0 flex-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
             <button
               type="button"

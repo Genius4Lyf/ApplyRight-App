@@ -11,6 +11,12 @@ import SectionIcon from './SectionIcon';
 // nothing to coach. Three short fields, add, repeat.
 //
 // FREE. Nothing on this card calls the AI or spends a credit.
+// Form fields in here are `bg-white dark:bg-slate-950`, matching the "Your professional
+// title" input on ContactConfirmCard — that one was always styled this way, and next to it
+// every other field looked greyed out, as though it were disabled. The border carries the
+// edge of the field; the fill does not need to as well. Shared by EntryCaptureCard,
+// ContactConfirmCard, CertificationsCard, JobCaptureCard and SkillsBuildCard — change all
+// five or none.
 const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy }) => {
   const { t } = useTranslation();
   const [name, setName] = useState('');
@@ -83,7 +89,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderCertification')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
@@ -99,7 +105,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setIssuer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderIssuer')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
           <div className="min-w-0">
@@ -115,7 +121,7 @@ const CertificationsCard = ({ certifications = [], onAdd, onRemove, onDone, busy
               onChange={(e) => setDate(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && add()}
               placeholder={t('ariaStudio.certifications.placeholderYear')}
-              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/60 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
+              className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-800 dark:text-slate-100 placeholder-slate-400 px-3 py-2 text-[14px] outline-none focus:border-slate-900 focus:ring-1 focus:ring-slate-900/20 dark:focus:border-white dark:focus:ring-white/20 transition-colors"
             />
           </div>
         </div>
