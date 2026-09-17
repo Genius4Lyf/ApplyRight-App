@@ -33,7 +33,12 @@ import SectionCoach from './SectionCoach';
 const call = vi.hoisted(() => ({ opts: null, controller: null }));
 
 vi.mock('../../lib/ariaLive', () => ({
-  END_REASONS: { ARIA_FINISHED: 'aria_finished', USER_ENDED: 'user_ended', TIME_UP: 'time_up' },
+  END_REASONS: {
+    ARIA_FINISHED: 'aria_finished',
+    USER_ENDED: 'user_ended',
+    TIME_UP: 'time_up',
+    DROPPED: 'dropped',
+  },
   isAriaLiveSupported: () => true,
   createAriaCall: vi.fn((opts) => {
     call.opts = opts;
@@ -459,5 +464,76 @@ describe('Aria Live — the press has to be instant', () => {
 
     expect(await screen.findByText(t('ariaStudio.ariaLive.tips.title'))).toBeTruthy();
     expect(BillingService.getEntitlement).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('Aria Live — when the CONNECTION drops', () => {
+  // THE BUG THIS EXISTS FOR, seen on a real call: a phone lost its connection six minutes into
+  // an interview. The transport error was logged and nothing else happened — the call never
+  // ended, so the orb sat there looking live, the reservation was left to the server's sweep,
+  // and everything that had been said was stranded with no way to ask for bullets. 379 seconds
+  // spent, zero bullets written. A drop has to end the call like any other ending.
+  it('offers the bullets from what was already said, rather than stranding the call', async () => {
+    mount();
+    await pressCall();
+    talk();
+
+    endCall('dropped');
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.ended.droppedTitle'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.ariaLive.ended.writeBullets'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.ariaLive.ended.keepChatting'))).toBeTruthy();
+  });
+
+  it('says the connection went — not that the call is finished', async () => {
+    mount();
+    await pressCall();
+    talk();
+
+    endCall('dropped');
+
+    await screen.findByText(t('ariaStudio.ariaLive.ended.droppedTitle'));
+    // "Call ended" would read as though this was meant to happen.
+    expect(screen.queryByText(t('ariaStudio.ariaLive.ended.title'))).toBeNull();
+  });
+
+  it('banks the transcript when they ask for the bullets, exactly as a hang-up does', async () => {
+    mount();
+    await pressCall();
+    talk();
+    endCall('dropped');
+
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalledTimes(1));
+    expect(CVService.coachChat).toHaveBeenCalledWith(
+      expect.objectContaining({ buildTurns: 10, studioInterview: true })
+    );
+  });
+
+  it('explains a drop that happened before they said anything', async () => {
+    const { toast } = await import('sonner');
+    mount();
+    await pressCall();
+
+    endCall('dropped');
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(t('ariaStudio.ariaLive.ended.droppedEmpty'))
+    );
+    // Nothing to write bullets from, so no card.
+    expect(screen.queryByText(t('ariaStudio.ariaLive.ended.writeBullets'))).toBeNull();
+  });
+
+  it('takes the orb down — a dead call must not keep looking live', async () => {
+    mount();
+    await pressCall();
+    talk();
+
+    endCall('dropped');
+
+    await waitFor(() => expect(screen.queryByText(t('ariaStudio.ariaLive.end'))).toBeNull());
+    // The typed composer is back, so the interview can carry on.
+    expect(screen.getByText(t('ariaStudio.ariaLive.talkInstead'))).toBeTruthy();
   });
 });

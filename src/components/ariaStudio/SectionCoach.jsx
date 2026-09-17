@@ -624,12 +624,19 @@ const SectionCoach = ({
           return;
         }
 
-        // The user (or the clock) ended it: that is not the same as being done. Ask. A call
-        // abandoned before they said anything has nothing to decide about.
+        // The user, the clock, or a lost connection ended it: none of those mean the interview
+        // is done. Ask. A call abandoned before they said anything has nothing to decide about
+        // — except a DROP, where saying nothing at all is itself worth explaining, or the orb
+        // just disappears and the user is left guessing.
         if (turns.some((turn) => turn.role === 'candidate')) {
           setCallEnded({ reason, turns });
+        } else if (reason === END_REASONS.DROPPED) {
+          toast.error(t('ariaStudio.ariaLive.ended.droppedEmpty'));
         }
       },
+      // Logged, not shown. A fatal one already ends the call through onEnded above, which
+      // explains itself far better than a toast; the rest are recoverable and not the user's
+      // problem.
       onError: (err) => console.error('[AriaLive]', err),
     });
 

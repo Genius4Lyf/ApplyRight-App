@@ -23,6 +23,16 @@ import { END_REASONS } from '../../lib/ariaLive';
 const CallEndedCard = ({ reason, busy, onWriteBullets, onKeepChatting }) => {
   const { t } = useTranslation();
   const timeUp = reason === END_REASONS.TIME_UP;
+  // A DROPPED call gets its own words. The choice underneath is the same one — the answers are
+  // in the chat either way — but a connection that went is not a call anyone finished, and
+  // saying "that's the call done" over a drop reads as the app not knowing what happened. It
+  // also has a fact of its own worth stating: nothing is charged for time that was not spent.
+  const dropped = reason === END_REASONS.DROPPED;
+  const titleKey = dropped
+    ? 'ariaStudio.ariaLive.ended.droppedTitle'
+    : timeUp
+      ? 'ariaStudio.ariaLive.ended.timeUpTitle'
+      : 'ariaStudio.ariaLive.ended.title';
 
   return (
     <div
@@ -34,10 +44,10 @@ const CallEndedCard = ({ reason, busy, onWriteBullets, onKeepChatting }) => {
         id="call-ended-title"
         className="text-[13.5px] font-semibold text-slate-800 dark:text-slate-100"
       >
-        {timeUp ? t('ariaStudio.ariaLive.ended.timeUpTitle') : t('ariaStudio.ariaLive.ended.title')}
+        {t(titleKey)}
       </p>
       <p className="mt-0.5 text-[13px] leading-relaxed text-slate-500 dark:text-slate-400">
-        {t('ariaStudio.ariaLive.ended.body')}
+        {t(dropped ? 'ariaStudio.ariaLive.ended.droppedBody' : 'ariaStudio.ariaLive.ended.body')}
       </p>
       <div className="mt-2.5 flex flex-col gap-2 sm:flex-row">
         <button

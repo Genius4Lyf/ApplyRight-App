@@ -5290,6 +5290,9 @@
         "title": "Call ended",
         "timeUpTitle": "That's the time for this call",
         "body": "Everything you said is in the chat above. What would you like to do next?",
+        "droppedTitle": "The call dropped",
+        "droppedBody": "The connection went, so the call stopped there — you're only charged for the time you were actually talking. Everything you said is in the chat above.",
+        "droppedEmpty": "The call dropped before you got started. You haven't been charged for it — try again when your connection is steadier.",
         "writeBullets": "Write my bullets from this call",
         "keepChatting": "Keep going in chat",
         "carryOn": "No problem — let's keep going here. Everything from the call is above, so pick up where we left off, or tell me anything you want to add or change. I'll bring out the bullet options once we've got enough."

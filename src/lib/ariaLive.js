@@ -48,7 +48,15 @@ export const END_REASONS = {
   ARIA_FINISHED: 'aria_finished',
   USER_ENDED: 'user_ended',
   TIME_UP: 'time_up',
+  // The connection went, rather than the call being finished by anyone. Treated like a hang-up
+  // from here on — what was said still counts — but named separately so the user is told the
+  // truth about why their call stopped.
+  DROPPED: 'dropped',
 };
+
+// Transport errors there is no coming back from. A call that hits one of these is over,
+// whatever the UI still shows.
+const FATAL_ERRORS = new Set(['CONNECTION_LOST', 'HANDSHAKE_FAILED', 'MIC_DENIED']);
 
 // When to warn Aria that the clock is running out. Long enough for her to recap, ask if there
 // is anything else, hear the answer and say goodbye — roughly four short turns.
@@ -109,15 +117,26 @@ export function createAriaCall({
     }
 
     const durationSec = startedAt ? Math.round((Date.now() - startedAt) / 1000) : 0;
+
+    // TELL THE UI FIRST, settle in the background.
+    //
+    // This used to await the settle request before reporting the end, which made the whole
+    // ending hostage to one round trip. On a hang-up that is a barely-visible pause; on a
+    // DROPPED call it is the worst possible moment to wait on the network, because the network
+    // is the thing that just failed — the request sits there until it times out, and for all
+    // that time the orb is still up over a call that is already dead.
+    //
+    // Nothing is lost by not waiting: the response is not read, and the server settles the
+    // reservation on its own timer and sweeps a stale one on the next call, so this request is
+    // an optimisation (the balance is right sooner) rather than the mechanism.
+    safely(onEnded, { reason, durationSec });
+
     if (reservationId) {
-      try {
-        await api.post('/aria-live/end', { reservationId, durationSec });
-      } catch {
+      api.post('/aria-live/end', { reservationId, durationSec }).catch(() => {
         // The server's timer settles it regardless; not worth surfacing to someone who has
         // just hung up.
-      }
+      });
     }
-    safely(onEnded, { reason, durationSec });
   };
 
   const start = async () => {
@@ -142,7 +161,24 @@ export function createAriaCall({
       clientSecret: data.clientSecret,
       model: data.model,
       onState: (s) => safely(onState, s),
-      onError: (err) => safely(onError, err),
+      // AN ERROR THAT KILLS THE TRANSPORT IS THE END OF THE CALL, not a note about it.
+      //
+      // This used to only forward the error, and SectionCoach only logged it. So when a phone
+      // lost its connection mid-interview, nothing ended: `finish` never ran, so the orb sat
+      // there looking live, `/aria-live/end` was never posted (the reservation waited for the
+      // server's own sweep), and — worst of it — everything that had been said was stranded.
+      // The user had six minutes of paid conversation in the chat, no bullets, and no way to
+      // ask for any. Observed on a real call: 379 seconds spent, zero bullets written.
+      //
+      // Ending here routes a drop down the same path as hanging up: the reservation settles on
+      // the real duration, and the card comes up offering to write the bullets from what was
+      // already said. REALTIME_EVENT is deliberately not in the list — the server sends those
+      // for recoverable problems mid-session, and ending a good call over one would be worse
+      // than the bug this fixes.
+      onError: (err) => {
+        safely(onError, err);
+        if (FATAL_ERRORS.has(err?.code)) finish(END_REASONS.DROPPED);
+      },
       // Finalised turns only — realtime emits no partial transcript, which is why the
       // in-flight bubble the GPT-Live version drew is gone. Both sides land in the chat.
       onCaption: (turn) => {

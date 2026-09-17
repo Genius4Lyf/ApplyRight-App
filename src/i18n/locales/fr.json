@@ -5286,6 +5286,9 @@
         "title": "Appel terminé",
         "timeUpTitle": "Le temps de cet appel est écoulé",
         "body": "Tout ce que vous avez dit se trouve dans la conversation ci-dessus. Que souhaitez-vous faire ensuite ?",
+        "droppedTitle": "L'appel a été coupé",
+        "droppedBody": "La connexion a été perdue, donc l'appel s'est arrêté là — vous n'êtes facturé que pour le temps où vous parliez réellement. Tout ce que vous avez dit se trouve dans la conversation ci-dessus.",
+        "droppedEmpty": "L'appel a été coupé avant que vous ne commenciez. Il ne vous a pas été facturé — réessayez quand votre connexion sera plus stable.",
         "writeBullets": "Rédiger mes puces à partir de cet appel",
         "keepChatting": "Continuer dans la conversation",
         "carryOn": "Pas de souci — continuons ici. Tout ce qui a été dit pendant l'appel est ci-dessus : reprenez là où nous en étions, ou dites-moi ce que vous voulez ajouter ou modifier. Je proposerai les options de puces dès que nous aurons assez d'éléments."
