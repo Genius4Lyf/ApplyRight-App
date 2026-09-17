@@ -27,6 +27,7 @@ import { AriaStudioProvider } from '../../context/AriaStudioContext';
 import CVService from '../../services/cv.service';
 import UserService from '../../services/user.service';
 import BillingService from '../../services/billing.service';
+import { clearCachedEntitlement, primeEntitlement } from '../../lib/entitlementCache';
 import SectionCoach from './SectionCoach';
 
 const call = vi.hoisted(() => ({ opts: null, controller: null }));
@@ -102,8 +103,13 @@ beforeEach(() => {
   });
   // Default: minutes have been BOUGHT — there is no free taste on Aria calls.
   BillingService.getEntitlement.mockResolvedValue({ ariaCall: { secondsRemaining: 600 } });
-  // Default: the user has NOT turned the tips off.
-  UserService.getProfile.mockResolvedValue({ settings: { hideAriaCallTips: false } });
+  // The balance cache is MODULE-level — it is shared across every surface on a page, which is
+  // the whole point of it. That also means it survives between tests, so a test that primed it
+  // would decide the next one's balance. Cleared here, and each test that cares primes it.
+  clearCachedEntitlement();
+  // Default: the user has NOT turned the tips off. Read from the stored user, not fetched —
+  // the profile request used to sit between the tap and the brief.
+  localStorage.setItem('user', JSON.stringify({ token: 'tok', settings: {} }));
 });
 
 afterEach(() => {
@@ -248,18 +254,25 @@ describe('Aria Live — the brief before the first call', () => {
 
     await waitFor(() => expect(createAriaCall).toHaveBeenCalled());
     expect(screen.queryByText(t('ariaStudio.ariaLive.tips.title'))).toBeNull();
-    // Already known this session — no need to ask the account.
+    // Already known this session. Nothing is asked of the server before the call — not the
+    // profile, and not the balance either: startCall's own 402 is the gate.
     expect(UserService.getProfile).not.toHaveBeenCalled();
+    expect(BillingService.getEntitlement).not.toHaveBeenCalled();
   });
 
   it('respects "don\'t show this again" from the account', async () => {
     const { createAriaCall } = await import('../../lib/ariaLive');
-    UserService.getProfile.mockResolvedValue({ settings: { hideAriaCallTips: true } });
+    localStorage.setItem(
+      'user',
+      JSON.stringify({ token: 'tok', settings: { hideAriaCallTips: true } })
+    );
     mount({ messages: [pin] });
     fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
 
     await waitFor(() => expect(createAriaCall).toHaveBeenCalled());
     expect(screen.queryByText(t('ariaStudio.ariaLive.tips.title'))).toBeNull();
+    // Read from the browser, never fetched: this runs between the tap and the call starting.
+    expect(UserService.getProfile).not.toHaveBeenCalled();
   });
 
   it('records that the tips were seen, and saves the opt-out only when ticked', async () => {
@@ -382,7 +395,7 @@ describe('Aria Live — no free taste: you need minutes to call', () => {
   it('treats a missing Aria balance as zero, not as permission', async () => {
     const { createAriaCall } = await import('../../lib/ariaLive');
     BillingService.getEntitlement.mockResolvedValue({});
-    mount();
+    mount({ messages: [pin] });
 
     fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
 
@@ -401,7 +414,7 @@ describe('Aria Live — no free taste: you need minutes to call', () => {
 
   it('keeps typing available from the out-of-minutes card', async () => {
     BillingService.getEntitlement.mockResolvedValue({ ariaCall: { secondsRemaining: 0 } });
-    mount();
+    mount({ messages: [pin] });
 
     fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
     fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.keepTyping')));
@@ -409,5 +422,42 @@ describe('Aria Live — no free taste: you need minutes to call', () => {
     await waitFor(() =>
       expect(screen.queryByText(t('ariaStudio.ariaLive.outOfMinutes'))).toBeNull()
     );
+  });
+});
+
+describe('Aria Live — the press has to be instant', () => {
+  it('uses the balance the page already fetched, rather than asking again', async () => {
+    // The sidebar's wallet fetches /billing/entitlement on every page load. Awaiting a second
+    // copy of it between the tap and the brief is what made this feel slow — seconds of a tap
+    // doing nothing, on a server that had gone to sleep.
+    primeEntitlement({ ariaCall: { secondsRemaining: 600 } });
+    mount({ messages: [pin] });
+
+    fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
+
+    // Synchronously, in the same tick as the click — no findBy, no waiting.
+    expect(screen.getByText(t('ariaStudio.ariaLive.tips.title'))).toBeTruthy();
+    expect(BillingService.getEntitlement).not.toHaveBeenCalled();
+  });
+
+  it('still refuses a call the cached balance cannot pay for', async () => {
+    primeEntitlement({ ariaCall: { secondsRemaining: 0 } });
+    const { createAriaCall } = await import('../../lib/ariaLive');
+    mount({ messages: [pin] });
+
+    fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
+
+    expect(screen.getByText(t('ariaStudio.ariaLive.outOfMinutes'))).toBeTruthy();
+    expect(screen.queryByText(t('ariaStudio.ariaLive.tips.title'))).toBeNull();
+    expect(createAriaCall).not.toHaveBeenCalled();
+  });
+
+  it('falls back to one request when nothing has primed the cache', async () => {
+    mount({ messages: [pin] });
+
+    fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.talkInstead')));
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.tips.title'))).toBeTruthy();
+    expect(BillingService.getEntitlement).toHaveBeenCalledTimes(1);
   });
 });

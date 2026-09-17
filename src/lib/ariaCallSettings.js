@@ -44,3 +44,23 @@ export const readStoredCallSettings = () => {
     return { ...DEFAULT_CALL_SETTINGS };
   }
 };
+
+// Has this account turned the pre-call brief off? From the same stored blob, for the same
+// reason — and this one replaced a `GET /users/profile` that ran between the tap on "Talk it
+// through instead" and the brief being allowed to open. A whole round trip, on the one path
+// where the user is waiting and watching, to answer a question the browser already knew.
+//
+// Written by the "don't show this again" tick through UserService.updateSettings, which merges
+// the updated user back into localStorage — so this is current straight after the tick.
+//
+// Unreadable, or ticked on another device: they see the brief once more. That was always the
+// accepted failure here — reading it one time too many costs far less than a first call that
+// goes thin for want of it.
+export const readStoredHideCallTips = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+    return !!user?.settings?.hideAriaCallTips;
+  } catch {
+    return false;
+  }
+};

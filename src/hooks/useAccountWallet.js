@@ -1,5 +1,6 @@
 import React from 'react';
 import { billingService } from '../services';
+import { primeEntitlement } from '../lib/entitlementCache';
 
 // Module-level in-flight promises, shared across every mounted instance of the hook.
 // The Studio sidebar now has TWO simultaneous consumers (StudioSidebarNav for the
@@ -119,7 +120,13 @@ export function useAccountWallet(isAuthenticated) {
     if (!isAuthenticated) return;
     const fetchEntitlement = () =>
       fetchEntitlementOnce()
-        .then(setEntitlement)
+        .then((data) => {
+          setEntitlement(data);
+          // Share it. The sidebar fetches this on every page load anyway, so anything else
+          // that needs a balance — the Aria call button, which used to await its own copy
+          // before it was allowed to open — can read it without a second round trip.
+          primeEntitlement(data);
+        })
         .catch(() => {});
     fetchEntitlement();
     window.addEventListener('entitlement_updated', fetchEntitlement);

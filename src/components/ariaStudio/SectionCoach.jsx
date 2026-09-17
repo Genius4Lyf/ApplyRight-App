@@ -22,7 +22,8 @@ import AriaLiveOrb from './AriaLiveOrb';
 import AriaCallTipsModal from './AriaCallTipsModal';
 import AriaCallIntroModal from './AriaCallIntroModal';
 import AriaCallSettingsButton from './AriaCallSettingsButton';
-import { readStoredCallSettings } from '../../lib/ariaCallSettings';
+import { readStoredCallSettings, readStoredHideCallTips } from '../../lib/ariaCallSettings';
+import { readCachedEntitlement, primeEntitlement } from '../../lib/entitlementCache';
 import { callEnterAnim, dockCardAnim, pressable } from '../../lib/ariaMotion';
 import CallEndedCard from './CallEndedCard';
 import UserService from '../../services/user.service';
@@ -251,6 +252,9 @@ const SectionCoach = ({
   // choose bullets. Null when there is nothing to decide.
   const [callEnded, setCallEnded] = useState(null);
   const [callTipsOpen, setCallTipsOpen] = useState(false);
+  // Only ever true on the cold path — no wallet has primed the balance cache, so the brief
+  // genuinely has to wait for one request. The button says so rather than ignoring the press.
+  const [checkingBalance, setCheckingBalance] = useState(false);
   // How they like their calls. Seeded synchronously from the stored user so the chip shows
   // the real choice on first paint; saved to the account on every change so it follows them.
   const [callSettings, setCallSettings] = useState(readStoredCallSettings);
@@ -653,33 +657,57 @@ const SectionCoach = ({
   // "Should" = the user has not turned the tips off on their account, AND this build session
   // has not shown them yet. The session half is a transcript marker rather than component
   // state, so a refresh does not bring the tips back after someone has already read them.
-  // The account setting is read only now, at the click: most people never press this button,
-  // and fetching a profile on every coach mount to answer a question nobody asked is waste.
+  //
+  // ── THE PRESS HAS TO BE INSTANT ──
+  //
+  // This used to `await` TWO requests before it was allowed to do anything visible: the
+  // entitlement, for the balance, and the profile, for the tips preference. On a warm server
+  // that is a few hundred milliseconds of a tap doing nothing; on a Render dyno that has gone
+  // to sleep it is seconds, and it read — correctly — as the feature being slow. Neither
+  // request was necessary:
+  //
+  //   · the tips preference is in the stored user blob, so the browser already knew it;
+  //   · the balance was already fetched on page load by the sidebar's wallet, and is shared
+  //     through entitlementCache.
+  //
+  // Both are now read synchronously, and the fetch below runs only in the case where nothing
+  // has primed the cache at all — a surface with no wallet mounted. `checkingBalance` covers
+  // that path so a slow press is never a dead one.
   const tipsSeenThisSession = messages.some((m) => m?.who === 'calltips');
-  const requestCall = async () => {
-    if (callStarting || call) return;
 
-    // BALANCE FIRST. Aria calls have no free taste, so a user who has never bought minutes
-    // would otherwise read a whole brief, press Start, and only then be told they cannot
-    // call. Checked at the click (not on mount), and best-effort: if the check itself fails
-    // we carry on, because the server refuses a call without minutes regardless.
-    try {
-      const entitlement = await BillingService.getEntitlement();
-      if ((entitlement?.ariaCall?.secondsRemaining ?? 0) <= 0) {
-        setCallOutOfMinutes(true);
-        return undefined;
-      }
-    } catch {
-      /* the session endpoint's 402 is the real gate */
+  // Aria calls have no free taste, so someone who has never bought minutes must not be handed
+  // a whole brief to read and a Start button that cannot work. Returns true when the call is
+  // refused, having already shown the out-of-minutes card.
+  const refusedForNoMinutes = (entitlement) => {
+    if (!entitlement) return false; // nothing known — the session endpoint's 402 is the gate
+    if ((entitlement?.ariaCall?.secondsRemaining ?? 0) > 0) return false;
+    setCallOutOfMinutes(true);
+    return true;
+  };
+
+  const requestCall = async () => {
+    if (callStarting || call || checkingBalance) return;
+
+    // Going straight to the call needs no pre-check at all: startCall's own NO_ARIA_MINUTES
+    // 402 shows the same card, and the button reads "Connecting…" the whole time.
+    const showTips = !tipsSeenThisSession && !readStoredHideCallTips();
+    if (!showTips) return startCall();
+
+    const cached = readCachedEntitlement();
+    if (cached) {
+      if (!refusedForNoMinutes(cached)) setCallTipsOpen(true);
+      return undefined;
     }
 
-    if (tipsSeenThisSession) return startCall();
+    setCheckingBalance(true);
     try {
-      const profile = await UserService.getProfile();
-      if (profile?.settings?.hideAriaCallTips) return startCall();
+      const entitlement = await BillingService.getEntitlement();
+      primeEntitlement(entitlement);
+      if (refusedForNoMinutes(entitlement)) return undefined;
     } catch {
-      // Could not read the setting — show the tips. Seeing them once too often is a far
-      // smaller cost than a first call that goes thin for want of them.
+      /* the session endpoint's 402 is the real gate */
+    } finally {
+      setCheckingBalance(false);
     }
     setCallTipsOpen(true);
     return undefined;
@@ -893,12 +921,12 @@ const SectionCoach = ({
           <motion.button
             type="button"
             onClick={requestCall}
-            disabled={thinking || callStarting}
+            disabled={thinking || callStarting || checkingBalance}
             {...pressable(reduce)}
             className="flex items-center gap-1.5 rounded-full border border-slate-300 px-3 py-1 text-[11px] font-semibold text-slate-500 transition-colors hover:border-slate-900 hover:text-slate-900 disabled:opacity-50 dark:border-slate-600 dark:text-slate-400 dark:hover:border-white dark:hover:text-white"
           >
             <Phone className="h-3 w-3" aria-hidden="true" />
-            {callStarting
+            {callStarting || checkingBalance
               ? t('ariaStudio.ariaLive.connecting')
               : t('ariaStudio.ariaLive.talkInstead')}
           </motion.button>
