@@ -49,6 +49,8 @@ const WorkspaceSidebar = ({
   onBuildWithBuilder,
   onInterview,
   inline = false,
+  // Passed straight through to the account block so it names the right minute balance.
+  surface = 'prep',
 }) => {
   const { t } = useTranslation();
   const orbitSize = useOrbitSize(44);
@@ -89,7 +91,7 @@ const WorkspaceSidebar = ({
         />
       </div>
 
-      <StudioSidebarNav />
+      <StudioSidebarNav surface={surface} />
 
       {/* An account surface has no list — see the 'account' scope in useWorkspaceSidebar.
         The spacer is what keeps the profile block pinned to the bottom in its absence,

@@ -561,7 +561,7 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
       className={`h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 ${
         // Edge to edge in the sheet: card chrome at the screen edge reads as a rendering
         // fault, and the rounded corners would show the scrim through four notches.
-        isSheet ? '' : 'rounded-xl border border-slate-200 dark:border-slate-800'
+        isSheet ? '' : 'border-l border-slate-200 dark:border-slate-800'
       }`}
     >
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2 bg-white dark:bg-slate-900">

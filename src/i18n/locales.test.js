@@ -248,6 +248,11 @@ describe('locale files', () => {
       'cvStudio.designPanel.sectionGapOpt.normal',
       // Aria's offer to remember a contact detail: the row label is the network's own name.
       'ariaStudio.contactSave.fields.linkedin', // "LinkedIn" — a brand, not a word
+      'ariaStudio.ariaLive.settings.style.direct.label', // "Direct" is the French word too
+      'ariaStudio.ariaLive.settings.style.coach.label', // "Coach" is used as-is in French
+      'ariaStudio.ariaLive.settings.pace.normal', // "Normal" is the French word too
+      'ariaStudio.ariaLive.settings.voice.marin', // a voice's name, not a word
+      'ariaStudio.ariaLive.settings.voice.cedar', // a voice's name, not a word
     ]);
     const same = Object.keys(EN).filter((k) => EN[k] === FR[k] && !ALLOWED_IDENTICAL.has(k));
     expect(same).toEqual([]);

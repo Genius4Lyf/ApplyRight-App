@@ -1767,3 +1767,48 @@ describe('sessionRow — an analysis', () => {
     expect(sessionRow({ _id: 'd2', kind: 'tailor' }).isApplication).toBe(false);
   });
 });
+
+// A scan is PAID FOR, and derivePhase used to forget that on reload: runScan does
+// setPhase('results') in session, but a refresh of a finished build re-derived to
+// 'build:done' — which hides the ScoreCard and re-offers "See how it matches" at full
+// price. Reloading the page bought the same scan a second time.
+describe('derivePhase — a scanned build resumes on its result, not on a second charge', () => {
+  const FINISHED = {
+    studioKind: 'build',
+    personalInfo: { fullName: 'Ernest Akibor' },
+    professionalSummary: 'Field operator with six years offshore.',
+    experience: [{ _sortId: 'r1', title: 'Operator', description: '• Ran pressure tests' }],
+    education: [{ _sortId: 'e1', degree: 'BSc', school: 'UNIBEN' }],
+    skills: [{ name: 'Pressure control' }],
+  };
+  const built = [{ who: 'buildintro' }, { who: 'buildstart' }, { who: 'summarydone' }];
+
+  it('lands on the verdict once a scan exists', () => {
+    expect(derivePhase([...built, { who: 'scan' }], FINISHED)).toBe('results');
+  });
+
+  it('still lands on the finish card when nothing has been scanned', () => {
+    expect(derivePhase(built, FINISHED)).toBe('build:done');
+  });
+
+  it('does NOT hijack a build that went back to add more after scanning', () => {
+    // Not finishable any more (no summary, no skills), so the scan marker must not drag
+    // the user off the section hub they were actually working through.
+    const midBuild = [
+      { who: 'buildintro' },
+      { who: 'buildstart' },
+      { who: 'scan' },
+      { who: 'experiencedone' },
+    ];
+    expect(derivePhase(midBuild, { studioKind: 'build' })).toBe('build:sections');
+  });
+
+  it('a live interview still outranks the scan', () => {
+    const pinned = [
+      ...built,
+      { who: 'scan' },
+      { who: 'pinrole', sortId: 'r2', section: 'experience' },
+    ];
+    expect(derivePhase(pinned, FINISHED)).toBe('build:experience');
+  });
+});

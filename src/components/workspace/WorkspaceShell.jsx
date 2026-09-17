@@ -13,8 +13,7 @@ import React from 'react';
 // chrome. The sidebar became the nav instead, the way Aria Studio's rail is.
 //
 // `fixed inset-0` rather than a scrolling document, so the panel stays put while the
-// content moves under it. Transparent, so the app's own ground (body's `bg-background`)
-// shows behind the two cards rather than being painted over.
+// content moves under it.
 //
 // The loading and error states render through here too. If they didn't, the panel would
 // pop in and the whole page would jump from document scroll to a fixed shell the moment
@@ -24,12 +23,12 @@ const WorkspaceShell = ({ sidebar, inlineSidebar, header, scrollRef, children, o
     {/* Portaled to the body — position in this tree is immaterial. */}
     {sidebar}
 
-    <div className="flex-1 min-h-0 w-full max-w-[1600px] mx-auto flex gap-0 xl:gap-4 xl:p-4 min-w-0">
+    {/* Flush to the viewport, same as Aria Studio: the sidebar's own right hairline is
+        the only line between it and the content — no card frame, gap or padding. */}
+    <div className="flex-1 min-h-0 w-full flex min-w-0">
       {inlineSidebar}
 
-      {/* `overflow-hidden` so the header's bottom border can't square off the rounded
-          corners at xl. */}
-      <div className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden xl:rounded-xl xl:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="min-w-0 min-h-0 flex-1 flex flex-col overflow-hidden bg-white dark:bg-slate-900">
         {header}
         {/* THE scroll container. `overflow-y-auto` rather than `chat-scroll`, because this
             holds a long document and a document that scrolls should say so with a

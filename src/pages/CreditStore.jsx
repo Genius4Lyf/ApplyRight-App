@@ -8,6 +8,7 @@ import { billingService } from '../services';
 import api from '../services/api'; // Import API for config
 import {
   TOPUPS,
+  ARIA_CALL_PACKS,
   CREDIT_PACKS,
   FREE_TASTE_MIN,
   formatNgn,
@@ -247,19 +248,13 @@ const CreditStore = () => {
       }
     >
       <div className="min-h-full py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-        {/* Back Button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 p-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors z-10"
-          title={t('common.back')}
-        >
-          <X className="w-5 h-5" />
-        </button>
-
         <div className="max-w-5xl mx-auto space-y-12 relative z-10">
           {/* Header */}
-          <div className="text-center space-y-3 pt-14 sm:pt-2">
-            <div className="inline-flex items-center justify-center p-3 bg-slate-100 dark:bg-slate-800 rounded-2xl">
+          {/* No close button above this any more: the page sits inside the account shell,
+              whose sidebar is the way out, so an X here closed nothing — it only stepped
+              back one history entry. The pt-14 that cleared it on a phone went with it. */}
+          <div className="text-center space-y-3 pt-2">
+            <div className="flex justify-center">
               <AriaOrbit size={28} />
             </div>
             <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 dark:text-slate-100 tracking-tight">
@@ -549,6 +544,76 @@ const CreditStore = () => {
                 </button>
               </div>
             )}
+          </section>
+
+          {/* ══ ZONE 2c — Aria call minutes ══════════════════════════════
+              The spoken CV build. A SEPARATE balance from the interview minutes above,
+              because they are separate products bought by different people: minutes spent
+              describing a job you had are not minutes spent rehearsing an interview.
+
+              Deliberately NOT behind the isPaid gate the interview top-ups sit behind. The
+              buyer here is precisely the free student who has just used their two-minute
+              taste getting their first role out of their head — telling them to subscribe
+              first would close the door at the moment it opened. */}
+          <section>
+            <SectionHeading
+              eyebrow={t('billing.creditStore.ariaCallEyebrow')}
+              title={t('billing.creditStore.ariaCallTitle')}
+              subtitle={t('billing.creditStore.ariaCallSubtitle')}
+            />
+            <div className="grid sm:grid-cols-2 gap-4">
+              {ARIA_CALL_PACKS.map((p) => {
+                const best = !!p.best;
+                const perMin = !currency
+                  ? null
+                  : currency === 'USD'
+                    ? t('billing.upgrade.perMinUsd', { n: (p.priceUsd / p.minutes).toFixed(2) })
+                    : t('billing.upgrade.perMinNgn', {
+                        n: Math.round(p.priceNgn / p.minutes).toLocaleString(),
+                      });
+                const { value, unit } = formatMinutesLabel(p.minutes, t);
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => buyCredits(p.id)}
+                    disabled={!!buyingPack || !currency}
+                    className={`relative flex items-center justify-between rounded-2xl border p-5 text-left transition-colors disabled:opacity-60 ${
+                      best
+                        ? 'border-slate-900 dark:border-white bg-slate-50 dark:bg-slate-800/50'
+                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-slate-400 dark:hover:border-slate-600'
+                    }`}
+                  >
+                    {best && (
+                      <span className="absolute -top-2.5 left-5 rounded-full bg-slate-900 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide text-white">
+                        {t('billing.common.bestValue')}
+                      </span>
+                    )}
+                    <div>
+                      <p className="text-2xl font-extrabold text-slate-900 dark:text-slate-100">
+                        {value} <span className="text-base font-semibold">{unit}</span>
+                      </p>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                        {perMin ?? (
+                          <span className="inline-block h-3.5 w-20 rounded bg-slate-100 dark:bg-slate-800 animate-pulse align-middle" />
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-bold text-white">
+                      {!currency ? (
+                        <span className="inline-block h-4 w-14 rounded bg-white/20 animate-pulse" />
+                      ) : buyingPack === p.id ? (
+                        t('billing.common.starting')
+                      ) : currency === 'USD' ? (
+                        formatUsd(p.priceUsd)
+                      ) : (
+                        formatNgn(p.priceNgn)
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </section>
 
           <p className="text-center text-xs text-slate-400 dark:text-slate-500 max-w-lg mx-auto leading-relaxed">

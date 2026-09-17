@@ -183,6 +183,7 @@
       "creditsLeft_one": "{{count}} left",
       "creditsLeft_other": "{{count}} left",
       "interviewMinutes": "Interview minutes",
+      "ariaCallMinutes": "Aria call minutes",
       "minutesShort": "{{n}} min",
       "topUpCredits": "Top up credits",
       "topUpAction": "Get",
@@ -984,6 +985,9 @@
     },
     "creditStore": {
       "title": "Credits & Plans",
+      "ariaCallEyebrow": "Aria call minutes",
+      "ariaCallTitle": "Talk your CV out loud",
+      "ariaCallSubtitle": "For roles and projects you can describe but can't quite write. A separate balance from interview minutes.",
       "subtitle": "Earn credits for free, top up instantly, or get a plan for live interview minutes. Credits power AI CV writing, cover letters, role analysis and premium templates.",
       "yourCredits": "Your A.I credits",
       "fromPlanWallet": "{{plan}} from plan · {{wallet}} in wallet",
@@ -2419,7 +2423,8 @@
       "loadFailed": "Failed to load your CVs",
       "retry": "Try again"
     },
-    "toasts": {      "deleteFailed": "Failed to delete CV"
+    "toasts": {
+      "deleteFailed": "Failed to delete CV"
     }
   },
   "jobHistory": {
@@ -4775,6 +4780,7 @@
       "allClear": "all clear",
       "toFix": "{{n}} need work",
       "fix": "Fix",
+      "reopen": "Go back in with Aria",
       "rescoring": "Re-scoring…",
       "rescoreFree": "Re-score · free",
       "rechecking": "Re-checking…",
@@ -5222,6 +5228,94 @@
       },
       "replyUnreadable": "That answer came back garbled — ask me that again and I'll retry."
     },
+    "ariaLive": {
+      "talkInstead": "Talk it through instead",
+      "spokenLabel": "Spoken",
+      "connecting": "Connecting…",
+      "listening": "Listening",
+      "speaking": "Aria is speaking",
+      "justTalk": "Just talk — I'll shape it into bullet points after.",
+      "end": "End call",
+      "couldntStart": "Couldn't start the call. You can keep typing.",
+      "couldntFinish": "I couldn't turn that call into bullet points — everything you said is still in the chat, so we can carry on from there.",
+      "outOfMinutes": "Talking to Aria uses Aria call minutes, and you have none right now. Get some to start a call — or carry on typing, and Aria will build this with you here.",
+      "getMinutes": "Get more minutes",
+      "keepTyping": "Keep typing",
+      "tips": {
+        "title": "Before you start",
+        "lead": "You'll get the best bullet points out of this call if you give Aria plenty to work with.",
+        "likeAFriend": {
+          "title": "Talk like you're telling a friend",
+          "body": "No need for CV language. Say it the way you'd explain your job to someone — Aria turns it into bullet points afterwards."
+        },
+        "smallThings": {
+          "title": "Mention the small things",
+          "body": "Being trusted with the keys, training someone new, sorting out a complaint. The details that feel too small to count are often what make a CV stand out."
+        },
+        "whatChanged": {
+          "title": "Say what changed because of you",
+          "body": "Faster, fewer mistakes, happier customers. A rough number helps if you have one — never make one up."
+        },
+        "ariaWrapsUp": {
+          "title": "Aria will wrap up for you",
+          "body": "When she has enough, she'll recap what you said and check with you before ending the call, so you don't spend minutes on silence. You can end it any time."
+        },
+        "dontShowAgain": "Don't show this again",
+        "notNow": "Not now",
+        "start": "Start the call",
+        "tabTips": "Tips",
+        "tabSettings": "Call settings",
+        "settingsLead": "You can change these any time from the button beside the call."
+      },
+      "ended": {
+        "title": "Call ended",
+        "timeUpTitle": "That's the time for this call",
+        "body": "Everything you said is in the chat above. What would you like to do next?",
+        "writeBullets": "Write my bullets from this call",
+        "keepChatting": "Keep going in chat",
+        "carryOn": "No problem — let's keep going here. Everything from the call is above, so pick up where we left off, or tell me anything you want to add or change. I'll bring out the bullet options once we've got enough."
+      },
+      "settings": {
+        "title": "How should this call go?",
+        "open": "Call settings: {{summary}}",
+        "depthLabel": "How deep",
+        "styleLabel": "Aria's style",
+        "voiceLabel": "Voice",
+        "paceLabel": "Pace",
+        "depth": {
+          "thorough": {
+            "label": "Thorough",
+            "hint": "Goes through everything you mention and asks about the small things people forget — the best bullets."
+          },
+          "quick": {
+            "label": "Quick",
+            "hint": "The main points and what came of them. Shorter calls, fewer minutes."
+          }
+        },
+        "style": {
+          "friendly": {
+            "label": "Friendly",
+            "hint": "Warm and encouraging. Take your time."
+          },
+          "direct": {
+            "label": "Direct",
+            "hint": "Brief and straight to the next question. Uses the fewest minutes."
+          },
+          "coach": {
+            "label": "Coach",
+            "hint": "Explains why she asks and what makes an answer strong. Uses more minutes, because she talks more."
+          }
+        },
+        "voice": {
+          "marin": "Marin",
+          "cedar": "Cedar"
+        },
+        "pace": {
+          "normal": "Normal",
+          "slower": "A bit slower"
+        }
+      }
+    },
     "sectionCoach": {
       "rerollWasFree": "That re-roll was free.",
       "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
@@ -5331,7 +5425,8 @@
       "toast": {
         "agentPlanRequired": "An active agent plan is required to create CVs.",
         "removedFromStudio": "Removed from the Studio — the CV is still in My CVs.",
-        "removeFailed": "Couldn't remove that — try again.",        "deleteFailed": "Couldn't delete that — try again.",
+        "removeFailed": "Couldn't remove that — try again.",
+        "deleteFailed": "Couldn't delete that — try again.",
         "duplicated": "Copied. You’re in the copy — the original is untouched.",
         "duplicateFailed": "Could not duplicate this CV.",
         "duplicateNotEnoughCredits": "Not enough credits to duplicate this CV.",

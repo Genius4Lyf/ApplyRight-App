@@ -7,6 +7,16 @@
    src/utils/theme.js and the RootLayout effect in App.jsx. */
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* Viewport-HEIGHT variants. Width breakpoints cannot see that a laptop browser window is only
+   ~580px tall — a 1366×768 screen at 100% zoom loses ~180px to the browser's own chrome — so a
+   dialog that fits "desktop" by width can still overflow there. These let a layout tighten by
+   height instead. Used by the Aria call brief (AriaCallTipsModal). */
+@custom-variant short-screen (@media (max-height: 760px));
+@custom-variant shorter-screen (@media (max-height: 620px));
+/* Tiny windows only — a split screen or a laptop at high zoom. Things that can go without
+   losing meaning (an intro line that the content below repeats) go here, and only here. */
+@custom-variant shortest-screen (@media (max-height: 560px));
+
 /* Theme Configuration using CSS Variables */
 @theme {
   --color-primary: var(--color-primary);

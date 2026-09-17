@@ -80,28 +80,32 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     });
   });
 
-  it('hides My CVs wherever the panel beside it is ALREADY a list of CVs', () => {
-    // The rule above, applied to the LIST rather than the route. "My CVs" sitting
-    // directly over a list of the user's CVs does not read as a destination — it reads as
-    // a mislabelled version of what they are already looking at. Reported from the CV
-    // Studio, where it was the most misleading.
-    //
-    // Three surfaces, three slightly different lists: the builder's drafts, the studio's
-    // finished CVs, and Aria's Recents.
-    ['/cv-builder/abc/history', '/cv-studio', '/resume/abc', '/aria-studio'].forEach((path) => {
+  it('offers no My CVs row on any surface', () => {
+    // It pointed at /cv-builder, the older of two CV homes, and was already hidden
+    // wherever the panel beside it listed CVs. Its last two homes — the account pages and
+    // interview prep — were retired in turn, so the row is gone rather than conditional.
+    [
+      '/aria-studio',
+      '/cv-builder/abc/history',
+      '/cv-studio',
+      '/resume/abc',
+      '/interview-prep/app-1',
+      '/credits',
+      '/profile',
+      '/upgrade',
+    ].forEach((path) => {
       mountAt(path);
       expect(row('My CVs')).toBeNull();
       cleanup();
     });
   });
 
-  it('keeps My CVs where the panel lists something else, or nothing', () => {
-    // Interview prep lists APPLICATIONS and the account pages list nothing at all, so on
-    // those it is a real door — and, since the dashboard went, one of the few left to the
-    // CV list. Deleting the row outright would strand /cv-builder.
-    ['/interview-prep/app-1', '/profile'].forEach((path) => {
+  it('still offers the other doors from interview prep and the account pages', () => {
+    // Removing a row, not thinning the nav down to the wallet.
+    ['/interview-prep/app-1', '/credits'].forEach((path) => {
       mountAt(path);
-      expect(row('My CVs')).toBeTruthy();
+      expect(row('Aria Studio')).toBeTruthy();
+      expect(row('CV Studio')).toBeTruthy();
       cleanup();
     });
   });
@@ -167,5 +171,67 @@ describe('StudioSidebarNav — the wallet at empty', () => {
     walletState.value = { displayCredits: 12, minutesLeft: null, freeTasteMin: 0 };
     mountAt('/aria-studio');
     expect(getMinutes()).toBeTruthy();
+  });
+});
+
+// TWO PRODUCTS, TWO BALANCES.
+//
+// This component is mounted twice — by SessionRail in Aria Studio and by WorkspaceSidebar
+// for Interview Prep — and it used to show the interview balance in both, so the Studio
+// advertised minutes it has no way to spend. `surface` is what tells them apart, and these
+// pin that a mount which does NOT pass it keeps the old behaviour exactly.
+describe('StudioSidebarNav — which minutes this rail is about', () => {
+  const mountSurface = (surface) => {
+    localStorage.setItem('token', 't');
+    localStorage.setItem('user', JSON.stringify({}));
+    return render(
+      <MemoryRouter initialEntries={['/aria-studio']}>
+        <StudioSidebarNav surface={surface} />
+      </MemoryRouter>
+    );
+  };
+
+  beforeEach(() => {
+    walletState.value = {
+      displayCredits: 32,
+      minutesLeft: 20,
+      freeTasteMin: 5,
+      ariaMinutesLeft: 7,
+    };
+  });
+
+  it('shows Aria call minutes in the Studio', () => {
+    mountSurface('studio');
+    expect(screen.getByText(/aria call minutes/i)).toBeTruthy();
+    expect(screen.getByText(/7 min/i)).toBeTruthy();
+    // The interview balance must not leak in — 20 is the number that used to show here.
+    expect(screen.queryByText(/20 min/i)).toBeNull();
+  });
+
+  it('keeps interview minutes in Interview Prep', () => {
+    mountSurface('prep');
+    expect(screen.getByText(/interview minutes/i)).toBeTruthy();
+    expect(screen.getByText(/20 min/i)).toBeTruthy();
+    expect(screen.queryByText(/7 min/i)).toBeNull();
+  });
+
+  it('defaults to the interview balance when no surface is given', () => {
+    // Every mount that predates the split passes nothing, and none of them should change.
+    mountSurface(undefined);
+    expect(screen.getByText(/interview minutes/i)).toBeTruthy();
+    expect(screen.getByText(/20 min/i)).toBeTruthy();
+  });
+
+  it('offers a way to buy when the Aria balance is spent, even with interview minutes left', () => {
+    // The failure this prevents: a user with 20 interview minutes and no Aria minutes being
+    // shown "20 min" in the Studio and then told there is nothing to spend when they call.
+    walletState.value = {
+      displayCredits: 3,
+      minutesLeft: 20,
+      freeTasteMin: 5,
+      ariaMinutesLeft: 0,
+    };
+    mountSurface('studio');
+    expect(screen.queryByRole('button', { name: /get minutes/i })).toBeTruthy();
   });
 });

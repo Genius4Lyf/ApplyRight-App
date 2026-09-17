@@ -257,9 +257,7 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
   return (
     <aside
       className={`h-full min-h-0 overflow-hidden flex flex-col ${
-        bare
-          ? ''
-          : 'rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
+        bare ? '' : 'border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900'
       }`}
     >
       <div className="shrink-0 px-4 py-3 border-b border-slate-200 dark:border-slate-800 flex items-start gap-2">

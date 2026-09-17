@@ -716,6 +716,17 @@ export function derivePhase(msgs = [], cvData = {}) {
     if (STUDIO_PROJECT_IDEAS_ENABLED && cvData?.studioPending?.kind === 'projectideas')
       return 'build:project-ideas';
 
+    // A scan the user PAID FOR outranks the finish card, and for the same reason every
+    // pending above outranks its picker: `runScan` already does setPhase('results') in
+    // session, but derivePhase disagreed — a reload of a finished, scanned build landed
+    // back on 'build:done', which dropped the ScoreCard and re-offered
+    // "See how it matches" at full price. Refreshing the page bought the same scan twice.
+    //
+    // Deliberately placed HERE rather than at the top of the branch. 'build:done' is the
+    // only rule this needs to beat: a session that scanned and then went back to add
+    // another role is not finishable, falls past both, and still resumes on the section
+    // hub where it belongs. A live pin outranks it too, being further up.
+    if (has('scan') && (has('summarydone') || finishableNow(cvData))) return 'results';
     if (has('summarydone') || finishableNow(cvData)) return 'build:done';
     if (has('skillsdone')) return 'build:sections';
     if (has('certsdone')) return 'build:sections';

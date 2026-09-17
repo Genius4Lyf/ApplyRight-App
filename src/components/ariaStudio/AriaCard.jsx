@@ -37,8 +37,9 @@ export const CardCollapseProvider = CardCollapseContext.Provider;
 // Usage (Phase 1+), inside StudioChat's <AnimatePresence>:
 //   {phase === 'plan' && <AriaCard cardKey="plan"><TailorPlan …/></AriaCard>}
 //
-// Every card fills the chat column's full width. The chat column's own padding still
-// bounds it, so nothing can overflow horizontally.
+// Full width on a phone. From `sm` up a card caps at a reading width, left-aligned under
+// the orbit like a message — at the column's full width a one-line prompt became a banner.
+// `wide` is for cards whose CONTENT needs the room (results, before/after rewrite rows).
 //
 // CARDS DO NOT CAST A SHADOW. They used to — `shadow-md dark:shadow-black/20` on every
 // card's own root — and the effect was that every one of them lifted off the page as a
@@ -54,7 +55,7 @@ export const CardCollapseProvider = CardCollapseContext.Provider;
 // What still casts a shadow, deliberately: modals, dropdowns, the mobile sheets and the
 // transient "applied" receipt. Those genuinely ARE above the page, and one of them
 // arriving should feel like it.
-const AriaCard = React.forwardRef(({ cardKey, children }, ref) => {
+const AriaCard = React.forwardRef(({ cardKey, wide = false, children }, ref) => {
   const reduce = useReducedMotion();
   const collapse = useContext(CardCollapseContext);
   const collapsed = !!collapse?.collapsed && !!collapse?.label;
@@ -63,7 +64,9 @@ const AriaCard = React.forwardRef(({ cardKey, children }, ref) => {
     <motion.div
       ref={ref}
       key={cardKey}
-      className="aria-row aria-response-card self-start flex flex-col items-start gap-1.5 w-full max-w-none"
+      className={`aria-row aria-response-card self-start flex flex-col items-start gap-1.5 w-full ${
+        wide ? 'max-w-none' : 'sm:max-w-[600px]'
+      }`}
       {...portalCard(reduce)}
     >
       {collapsed ? (

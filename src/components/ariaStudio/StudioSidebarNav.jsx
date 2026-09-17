@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, ClipboardCheck, Plus, FileText, LayoutTemplate } from 'lucide-react';
+import { Home, ClipboardCheck, Plus, LayoutTemplate } from 'lucide-react';
 import AriaOrbit from '../cv/AriaOrbit';
 import { useTranslation } from 'react-i18next';
 import { useAccountWallet } from '../../hooks/useAccountWallet';
@@ -16,15 +16,19 @@ import { homePathFor } from '../../lib/home';
 //
 // THIS IS THE WHOLE NAV NOW. It used to be three rows, because a dashboard sat behind
 // Home holding cards for everywhere else. The dashboard is gone (see lib/home.js), which
-// makes this list the only index of the app there is — so the two rows that were removed
-// on the grounds that "the dashboard carries them" are back:
+// makes this list the only index of the app there is — so the row that was removed on
+// the grounds that "the dashboard carries it" is back:
 //
-//   My CVs    — otherwise reachable only by leaving the wizard or an old /my-cvs link.
-//               But NOT everywhere: see panelAlreadyListsCvs below. A row to a list of
-//               CVs, sitting above a list of CVs, is not a destination.
 //   CV Studio — otherwise reachable from NOTHING. Its own address is /resume/:id, a
 //               document rather than a place, so /cv-studio had exactly one inbound
 //               link in the app and it was on the page being deleted.
+//
+// There is NO "My CVs" row, anywhere. It pointed at /cv-builder — the older of two CV
+// homes — and it was already hidden on every surface whose panel lists CVs (the builder,
+// CV Studio, Aria Studio). What was left of it was a row on the account pages and on
+// interview prep, which is where it was retired: Aria Studio is where CVs are made now.
+// Its cost is real and accepted: the builder's in-progress drafts are listed only inside
+// the builder, so they are reachable by an old /my-cvs link or /cv-builder directly.
 //
 // For a job seeker there is no separate Home row: home IS Aria Studio, and two rows to
 // one address is the thing the rule above exists to prevent. Agents keep Home, because
@@ -38,7 +42,10 @@ import { homePathFor } from '../../lib/home';
 // useAccountWallet hook the navbar uses so there is only ever one wallet fetch/
 // localStorage-writer active on a page, and the shared homePathFor (lib/home.js) the
 // navbar also uses, rather than re-deriving it.
-const StudioSidebarNav = ({ onBeforeNavigate }) => {
+// `surface` says which room this rail is standing in: 'studio' shows Aria call minutes,
+// anything else shows interview minutes. Defaulted rather than required so no existing
+// mount changes behaviour by accident.
+const StudioSidebarNav = ({ onBeforeNavigate, surface = 'prep' }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -53,29 +60,34 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
   const isAgent = user?.role === 'agent';
   const homePath = homePathFor(user);
 
-  const { displayCredits, minutesLeft, freeTasteMin } = useAccountWallet(isAuthenticated);
-  // Paid minutes if there are any, otherwise whatever is left of the free 5-minute taste.
-  const interviewMinutes = minutesLeft ?? freeTasteMin ?? 0;
+  const { displayCredits, minutesLeft, freeTasteMin, ariaMinutesLeft } =
+    useAccountWallet(isAuthenticated);
+
+  // WHICH MINUTES THIS RAIL IS ABOUT.
+  //
+  // This component is mounted twice — by SessionRail in Aria Studio and by
+  // WorkspaceSidebar for Interview Prep — and until now both showed the interview balance,
+  // so the Studio advertised minutes it has no way to spend. They are two products with
+  // two balances, so the rail names the one belonging to the room you are standing in.
+  //
+  // Defaults to the interview for any caller that doesn't say, which keeps every existing
+  // mount (and its tests) reading exactly as before.
+  const isStudioSurface = surface === 'studio';
+  // Paid minutes if there are any, otherwise whatever is left of the free taste.
+  const minutes = isStudioSurface
+    ? (ariaMinutesLeft ?? 0) // purchased only — Aria calls have no free taste
+    : (minutesLeft ?? freeTasteMin ?? 0);
+  const minutesLabel = isStudioSurface
+    ? t('nav.account.ariaCallMinutes')
+    : t('nav.account.interviewMinutes');
 
   const at = (prefix) => location.pathname === prefix || location.pathname.startsWith(`${prefix}/`);
   const inAriaStudio = at('/aria-studio');
   const inPrep = at('/interview-prep');
-  const inBuilder = at('/cv-builder');
   // Two addresses, one workspace: /cv-studio is the list frame, /resume/:id is the studio
   // itself. Standing in either one, a row pointing at the other reads as a door back into
   // the room you are in.
   const inCvStudio = at('/cv-studio') || at('/resume');
-
-  // "MY CVS" HIDES WHEREVER THE PANEL BESIDE IT IS ALREADY A LIST OF CVs — which is the
-  // rule above applied to the LIST rather than to the route. A row labelled "My CVs"
-  // sitting directly above a list of the user's CVs does not read as a destination; it
-  // reads as a mislabelled version of what they are already looking at.
-  //
-  // That covers three surfaces for three slightly different reasons: the builder's
-  // sidebar lists its drafts, the CV Studio's lists the finished ones, and Aria Studio's
-  // Recents lists the CVs it has written. Interview prep lists APPLICATIONS and the
-  // account pages list nothing, so on those it is a real door and stays.
-  const panelAlreadyListsCvs = inBuilder || inCvStudio || inAriaStudio;
 
   const rowClass =
     'w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-[17px] sm:text-[13px] font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100 transition-colors text-left';
@@ -122,12 +134,6 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
             {t('nav.interviewPrep')}
           </button>
         )}
-        {!panelAlreadyListsCvs && (
-          <button type="button" onClick={() => navigate('/cv-builder')} className={rowClass}>
-            <FileText className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
-            {t('nav.myCvs')}
-          </button>
-        )}
         {!inCvStudio && (
           <button type="button" onClick={() => navigate('/cv-studio')} className={rowClass}>
             <LayoutTemplate className="w-4 h-4 text-slate-400 dark:text-slate-500 shrink-0" />
@@ -146,17 +152,15 @@ const StudioSidebarNav = ({ onBeforeNavigate }) => {
           </span>
         </div>
         <div className="flex items-center justify-between text-[17px] sm:text-[12.5px]">
-          <span className="text-slate-500 dark:text-slate-400">
-            {t('nav.account.interviewMinutes')}
-          </span>
+          <span className="text-slate-500 dark:text-slate-400">{minutesLabel}</span>
           {/* At zero this said "0 min" and stopped there — a number with no next step,
               in the one place a user looks precisely BECAUSE they have run out. The slot
               becomes the way out instead. /credits is the right door for both cases: it
               sells minute top-ups to paid users and shows free users the plan that
               includes them, so this needs no tier check of its own. */}
-          {interviewMinutes > 0 ? (
+          {minutes > 0 ? (
             <span className="font-semibold text-amber-600 dark:text-amber-400">
-              {t('nav.account.minutesShort', { n: interviewMinutes })}
+              {t('nav.account.minutesShort', { n: minutes })}
             </span>
           ) : (
             <button

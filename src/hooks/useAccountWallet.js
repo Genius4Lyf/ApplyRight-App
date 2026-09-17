@@ -49,6 +49,11 @@ export function useAccountWallet(isAuthenticated) {
   const freeTasteMin = entitlement
     ? Math.ceil((entitlement.freeTasteRemainingSec || 0) / 60)
     : null;
+  // Aria CALL minutes — the spoken CV build. A SECOND balance, not a relabelling of the
+  // interview one above: minutes bought to practise interviews must not be spent writing
+  // bullet points, and the two cost us different amounts per minute. Each surface shows
+  // the balance it actually spends.
+  const ariaMinutesLeft = entitlement?.ariaCall?.minutesRemaining ?? null;
 
   React.useEffect(() => {
     if (!isAuthenticated) return;
@@ -112,7 +117,10 @@ export function useAccountWallet(isAuthenticated) {
   // MockInterviewPage), so the wallet pill stays current without polling.
   React.useEffect(() => {
     if (!isAuthenticated) return;
-    const fetchEntitlement = () => fetchEntitlementOnce().then(setEntitlement).catch(() => {});
+    const fetchEntitlement = () =>
+      fetchEntitlementOnce()
+        .then(setEntitlement)
+        .catch(() => {});
     fetchEntitlement();
     window.addEventListener('entitlement_updated', fetchEntitlement);
     return () => window.removeEventListener('entitlement_updated', fetchEntitlement);
@@ -126,5 +134,6 @@ export function useAccountWallet(isAuthenticated) {
     displayCredits,
     minutesLeft,
     freeTasteMin,
+    ariaMinutesLeft,
   };
 }

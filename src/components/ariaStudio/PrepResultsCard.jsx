@@ -92,7 +92,7 @@ const PrepResultsCard = ({
   const showEmployer = !!employer && !namesEmployer;
 
   return (
-    <AriaCard cardKey="prepresults">
+    <AriaCard wide cardKey="prepresults">
       <div className="w-full min-w-0 space-y-3">
         <FitScoreCard
           fitScore={application?.fitScore}

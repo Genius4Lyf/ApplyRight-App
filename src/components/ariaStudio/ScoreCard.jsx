@@ -93,7 +93,7 @@ const ScoreCard = ({ scan, cost, isDrafted = false }) => {
   ].filter((d) => d.score != null);
 
   return (
-    <AriaCard cardKey="score">
+    <AriaCard wide cardKey="score">
       <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         <div className="p-5">
           <div className="flex items-start justify-between gap-3">

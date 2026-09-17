@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { RotateCw } from 'lucide-react';
+import { Mic, RotateCw } from 'lucide-react';
 import { bubbleAnim } from '../../lib/ariaMotion';
 import { FAILURE_TEXT, failureReason } from '../../lib/ariaFailure';
 import AriaMessageText from '../cv/AriaMessageText';
@@ -2751,8 +2751,42 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
   // section-level edits (skills/summary) do not own one.
   const returnToCompletedBuild = ({ unpin = false } = {}) => {
     if (unpin) push({ who: 'unpinrole' });
-    setPhase('build:done');
+    // Back to the VERDICT when there is one, not to the finish card. A session that has
+    // scanned and then reopened a weak section is mid-loop: dropping it on 'build:done'
+    // hid the breakdown it was working through and put "See how it matches" back in front
+    // of someone who had already paid for that answer. The free recompute has already
+    // re-banded the sections by the time they land, so the rows they come back to are
+    // current. Mirrors the same rule in derivePhase.
+    setPhase(cvData?.studioScan ? 'results' : 'build:done');
     ariaSays(t('ariaStudio.chat.editUpdated'));
+  };
+
+  // THE WAY BACK IN from a section verdict.
+  //
+  // Scoring a section amber and offering no way to act on it is the worst half of both
+  // features: the per-section Fix button belongs to the parked tailoring loop
+  // (STUDIO_TAILORING_ENABLED), so with tailoring off the only control on a weak row was
+  // "Not applicable" — an invitation to opt OUT of being measured on the thing you were
+  // just told to improve.
+  //
+  // This is deliberately NOT the fix loop. It reuses the ordinary build entries the hub
+  // already uses, so a reopened section is the same interview the user has met before,
+  // and finishing it runs back through finishSection → returnToCompletedBuild above.
+  // forceCancellable because the user chose to come back here and must be able to leave.
+  const reopenSection = (section) => {
+    const key = section?.key;
+    if (key === 'experience')
+      return advance(
+        () => enterSection('experience', { forceCancellable: true }),
+        t('ariaStudio.chat.thinking.openingWorkHistory')
+      );
+    // The scan calls it 'projects'; the build flow's entry token is singular.
+    if (key === 'projects') return enterSection('project', { forceCancellable: true });
+    if (key === 'education') return enterSection('education', { forceCancellable: true });
+    if (key === 'skills') return setPhase('build:skills');
+    if (key === 'summary') return setPhase('build:summary');
+    if (key === 'contact') return setPhase('build:contact');
+    return undefined;
   };
 
   const finishSection = () => {
@@ -3976,7 +4010,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
     !transitionLabel;
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col px-4 pb-4 pt-0 bg-white dark:bg-slate-900">
+    <div className="flex-1 min-h-0 w-full max-w-[760px] mx-auto flex flex-col px-4 pb-4 pt-0 bg-white dark:bg-slate-900">
       <div className="flex-1 min-h-0 relative">
         <AnimatePresence>
           {studioTransition && (
@@ -4172,6 +4206,17 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                     >
                       {m.text}
                     </motion.div>
+                    {/* Said out loud, not typed. A quiet marker rather than a different
+                        bubble: the words ARE the transcript either way, and a returning
+                        user should be able to tell which parts of their CV came out of a
+                        conversation — a spoken answer that reads oddly is usually a
+                        transcription, not a change of mind. */}
+                    {m.spoken && (
+                      <span className="flex items-center gap-1 pr-2 font-mono text-[9px] uppercase tracking-wide text-slate-400 dark:text-slate-500">
+                        <Mic className="h-2.5 w-2.5" aria-hidden="true" />
+                        {t('ariaStudio.ariaLive.spokenLabel')}
+                      </span>
+                    )}
                     <CopyMessageButton text={m.text} />
                   </div>
                   {/* Didn't get through. Sits UNDER their own message so it is obvious
@@ -4730,13 +4775,27 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                 />
               )}
 
-              {/* Yes → the SAME capture form the tailor track uses. */}
+              {/* Yes → the SAME capture form the tailor track uses.
+
+                  `allowLink` is passed here for the same reason the prep card gets it: the
+                  job people are aiming at almost always arrives as a URL, and without this
+                  the only way to target a CV at a LinkedIn posting was to select the whole
+                  advert by hand and paste it. The card owns the whole ladder already
+                  (JSON-LD → DOM selectors → og:description, with a blocked read dropping
+                  back to the form rather than passing a blurb off as the job), so this is a
+                  prop, not a feature.
+
+                  buildCaptureJob takes only { jobTitle, jobDescription }; the extra
+                  jdSource/jobId the link path emits are ignored here on purpose. The Job
+                  doc matters to the prep track, which analyses against it — the build track
+                  wants the TEXT, and stores it on the draft. */}
               {ready && phase === 'build:job' && buildJobOpen && (
                 <JobCaptureCard
                   key="buildjob"
                   initialTitle={editingJob ? latestJob?.jobTitle || '' : ''}
                   initialDescription={editingJob ? latestJob?.jobDescription || '' : ''}
                   model={genModelId}
+                  allowLink
                   onSubmit={(job) => {
                     setBuildJobOpen(false);
                     buildCaptureJob(job);
@@ -5108,6 +5167,9 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
                   rescanCost={scanCost}
                   onDismissSection={dismissSection}
                   onRestoreSection={restoreSection}
+                  // Always on, unlike onFix — see reopenSection. A verdict with no door is
+                  // the reason this exists.
+                  onReopen={reopenSection}
                   busy={applyingFix || scanning}
                 />
               )}
@@ -5267,6 +5329,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               key={`rolecoach-${pinnedEntry._sortId}-${buildRoundNonce}`}
               draftId={draftId}
               dockNode={coachDock}
+              onGetMinutes={() => onNavigate?.('/credits')}
               entry={{
                 // 'project' routes coachChatTurn to its project framing (type-aware,
                 // problem → role → tech → outcome → link) instead of the job one.
@@ -5399,6 +5462,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               onPush={push}
               // A turn that didn't get through is marked on THEIR message, with the Retry
               // routed back into this interview rather than into the general chat — see retryFailed.
+              onGetMinutes={() => onNavigate?.('/credits')}
               onFailed={(reason) => markLastUserFailed(reason, 'coach')}
               onRegisterSend={(api) => {
                 coachSendRef.current = api;
