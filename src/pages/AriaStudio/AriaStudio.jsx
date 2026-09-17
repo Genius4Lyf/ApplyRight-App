@@ -561,7 +561,7 @@ const StudioDesk = () => {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-white dark:bg-slate-950">
       <main
-        className="studio-main flex-1 min-h-0 w-full max-w-[1600px] mx-auto px-0 sm:px-4 sm:py-4 flex gap-4 min-w-0"
+        className="studio-main flex-1 min-h-0 w-full flex min-w-0"
         {...studioMainAttrs({
           panelView,
           panelInline: layout.panelInline,
@@ -570,7 +570,7 @@ const StudioDesk = () => {
       >
         {/* Sessions — inline only when there's room and the user hasn't collapsed it. */}
         {layout.railInline && (
-          <div className="w-[248px] shrink-0 min-h-0 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+          <div className="w-[248px] shrink-0 min-h-0 border-r border-slate-200 dark:border-slate-800">
             <SessionRail {...railProps} />
           </div>
         )}
@@ -578,11 +578,11 @@ const StudioDesk = () => {
         {/* Conversation — full-bleed on a phone, so the chat owns the screen. On desktop
             it's a flex column whose grow ratio is negotiated with the preview via the
             main row's data-attrs (see .studio-col rules in index.css). */}
-        <div className="studio-col-chat min-w-0 min-h-0 flex flex-col sm:rounded-xl sm:border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+        <div className="studio-col-chat min-w-0 min-h-0 flex flex-col bg-white dark:bg-slate-900">
           {/* `relative z-10` keeps the header above the transcript that scrolls beneath
               it. The old `studio-mobile-header` hook is gone with the blurred fade it
               existed to position. */}
-          <div className="relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2.5 sm:border-b border-slate-200 dark:border-slate-800">
+          <div className="relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2.5">
             <button
               type="button"
               onClick={() =>

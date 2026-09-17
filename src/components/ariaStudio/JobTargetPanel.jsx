@@ -144,7 +144,7 @@ const JobTargetPanel = ({ coverage, keywords = [], onClose, bare = false }) => {
     <div
       className={`h-full flex flex-col bg-white dark:bg-slate-900 ${
         // See StudioArtifactPanel's `bare`: no card chrome when this IS the surface.
-        bare ? '' : 'rounded-xl border border-slate-200 dark:border-slate-800'
+        bare ? '' : 'border-l border-slate-200 dark:border-slate-800'
       }`}
     >
       <div className="shrink-0 flex items-start gap-2 px-4 py-3 border-b border-slate-200 dark:border-slate-800">

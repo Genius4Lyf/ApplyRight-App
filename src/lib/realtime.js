@@ -101,6 +101,10 @@ export function createRealtimeSession({
   onReady,
   onHandoff,
   onSpeakerChange,
+  // Aria Live: fired when Aria calls finish_interview AND her goodbye has finished playing —
+  // the same "wait for the audio to drain" dispatch as onHandoff, so she is never cut off
+  // mid-sentence. The interview never passes this and is unaffected.
+  onFinish,
 }) {
   let pc = null;
   let localStream = null;
@@ -134,6 +138,8 @@ export function createRealtimeSession({
   let ready = false; // peer connection established
   let pendingHandoff = false; // tool called; waiting for the spoken line to finish
   let handoffFired = false; // onHandoff dispatched (once)
+  let pendingFinish = false; // finish_interview called; waiting for the goodbye to finish
+  let finishFired = false; // onFinish dispatched (once)
   let volTimer = null;
 
   const fail = (code, message) => onError && onError({ code, message });
@@ -255,6 +261,9 @@ export function createRealtimeSession({
           msg.type === 'response.function_call_arguments.done' ? msg.call_id : msg.item?.call_id;
 
         if (fnName === 'hand_off_to_next') pendingHandoff = true;
+        // Idempotent on purpose: OpenAI reports one call through two events, and a flag that
+        // is merely set twice does no harm, where acting twice would end the call twice.
+        if (fnName === 'finish_interview') pendingFinish = true;
         if (fnName === 'set_active_speaker') {
           let speaker = '';
           try {
@@ -288,6 +297,10 @@ export function createRealtimeSession({
           if (pendingHandoff && !handoffFired && onHandoff) {
             handoffFired = true;
             onHandoff();
+          }
+          if (pendingFinish && !finishFired && onFinish) {
+            finishFired = true;
+            onFinish();
           }
         };
 

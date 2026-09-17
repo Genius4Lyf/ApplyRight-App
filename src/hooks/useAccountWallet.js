@@ -54,9 +54,6 @@ export function useAccountWallet(isAuthenticated) {
   // bullet points, and the two cost us different amounts per minute. Each surface shows
   // the balance it actually spends.
   const ariaMinutesLeft = entitlement?.ariaCall?.minutesRemaining ?? null;
-  const ariaFreeTasteMin = entitlement
-    ? Math.ceil((entitlement.ariaCall?.freeTasteRemainingSec || 0) / 60)
-    : null;
 
   React.useEffect(() => {
     if (!isAuthenticated) return;
@@ -138,6 +135,5 @@ export function useAccountWallet(isAuthenticated) {
     minutesLeft,
     freeTasteMin,
     ariaMinutesLeft,
-    ariaFreeTasteMin,
   };
 }

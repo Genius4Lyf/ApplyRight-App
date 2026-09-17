@@ -99,8 +99,7 @@ const PLACEHOLDER_SEATS = [
 // full-bleed navbar above it for one to sit under. `relative z-10` keeps it above the
 // content scrolling beneath; the inner row carries the same `max-w-5xl` measure as the
 // body, so the title stays aligned with the cards under it.
-const HEADER_BAR =
-  'relative z-10 shrink-0 border-b border-slate-200 dark:border-slate-700 xl:rounded-t-xl';
+const HEADER_BAR = 'relative z-10 shrink-0';
 const HEADER_ROW =
   'max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-3';
 

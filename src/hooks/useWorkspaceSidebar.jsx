@@ -209,14 +209,11 @@ export function useWorkspaceSidebar({ scope, activeId, persistent = false }) {
   // `role="complementary"` rather than <aside>: the prep page already renders an <aside>
   // for its own rail, and two unlabelled complementary landmarks read worse than one
   // labelled pair. The label reuses the title copy — no new key.
-  //
-  // `overflow-hidden` is load-bearing: the list's full-bleed row dividers would otherwise
-  // square off the rounded corners.
   const inlineSidebar = railInline ? (
     <div
       role="complementary"
       aria-label={t(`workspace.${copy}.title`)}
-      className="w-[248px] shrink-0 min-h-0 overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+      className="w-[248px] shrink-0 min-h-0 overflow-hidden border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"
     >
       <WorkspaceSidebar {...railProps} inline />
     </div>

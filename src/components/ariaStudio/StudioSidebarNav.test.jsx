@@ -80,28 +80,32 @@ describe('StudioSidebarNav — which doors a surface offers', () => {
     });
   });
 
-  it('hides My CVs wherever the panel beside it is ALREADY a list of CVs', () => {
-    // The rule above, applied to the LIST rather than the route. "My CVs" sitting
-    // directly over a list of the user's CVs does not read as a destination — it reads as
-    // a mislabelled version of what they are already looking at. Reported from the CV
-    // Studio, where it was the most misleading.
-    //
-    // Three surfaces, three slightly different lists: the builder's drafts, the studio's
-    // finished CVs, and Aria's Recents.
-    ['/cv-builder/abc/history', '/cv-studio', '/resume/abc', '/aria-studio'].forEach((path) => {
+  it('offers no My CVs row on any surface', () => {
+    // It pointed at /cv-builder, the older of two CV homes, and was already hidden
+    // wherever the panel beside it listed CVs. Its last two homes — the account pages and
+    // interview prep — were retired in turn, so the row is gone rather than conditional.
+    [
+      '/aria-studio',
+      '/cv-builder/abc/history',
+      '/cv-studio',
+      '/resume/abc',
+      '/interview-prep/app-1',
+      '/credits',
+      '/profile',
+      '/upgrade',
+    ].forEach((path) => {
       mountAt(path);
       expect(row('My CVs')).toBeNull();
       cleanup();
     });
   });
 
-  it('keeps My CVs where the panel lists something else, or nothing', () => {
-    // Interview prep lists APPLICATIONS and the account pages list nothing at all, so on
-    // those it is a real door — and, since the dashboard went, one of the few left to the
-    // CV list. Deleting the row outright would strand /cv-builder.
-    ['/interview-prep/app-1', '/profile'].forEach((path) => {
+  it('still offers the other doors from interview prep and the account pages', () => {
+    // Removing a row, not thinning the nav down to the wallet.
+    ['/interview-prep/app-1', '/credits'].forEach((path) => {
       mountAt(path);
-      expect(row('My CVs')).toBeTruthy();
+      expect(row('Aria Studio')).toBeTruthy();
+      expect(row('CV Studio')).toBeTruthy();
       cleanup();
     });
   });
@@ -193,7 +197,6 @@ describe('StudioSidebarNav — which minutes this rail is about', () => {
       minutesLeft: 20,
       freeTasteMin: 5,
       ariaMinutesLeft: 7,
-      ariaFreeTasteMin: 2,
     };
   });
 
@@ -227,7 +230,6 @@ describe('StudioSidebarNav — which minutes this rail is about', () => {
       minutesLeft: 20,
       freeTasteMin: 5,
       ariaMinutesLeft: 0,
-      ariaFreeTasteMin: 0,
     };
     mountSurface('studio');
     expect(screen.queryByRole('button', { name: /get minutes/i })).toBeTruthy();

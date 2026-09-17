@@ -5233,9 +5233,84 @@
       "justTalk": "Parlez simplement — j'en ferai des puces ensuite.",
       "end": "Terminer l'appel",
       "couldntStart": "Impossible de démarrer l'appel. Vous pouvez continuer à écrire.",
-      "outOfMinutes": "Vos minutes d'appel Aria sont épuisées. Vous pouvez en racheter, ou simplement continuer à écrire — les questions sont exactement les mêmes.",
+      "couldntFinish": "Je n'ai pas pu transformer cet appel en puces — tout ce que vous avez dit est toujours dans la conversation, nous pouvons continuer à partir de là.",
+      "outOfMinutes": "Parler à Aria utilise des minutes d'appel Aria, et vous n'en avez pas pour le moment. Obtenez-en pour démarrer un appel — ou continuez à écrire, et Aria construira ceci avec vous ici.",
       "getMinutes": "Obtenir plus de minutes",
-      "keepTyping": "Continuer à écrire"
+      "keepTyping": "Continuer à écrire",
+      "tips": {
+        "title": "Avant de commencer",
+        "lead": "Vous obtiendrez les meilleures puces de cet appel si vous donnez à Aria beaucoup de matière.",
+        "likeAFriend": {
+          "title": "Parlez comme à un ami",
+          "body": "Pas besoin du langage des CV. Dites-le comme vous expliqueriez votre travail à quelqu'un — Aria en fera des puces ensuite."
+        },
+        "smallThings": {
+          "title": "Mentionnez les petites choses",
+          "body": "Avoir les clés, former un nouveau collègue, régler une réclamation. Les détails qui semblent trop petits pour compter sont souvent ce qui fait ressortir un CV."
+        },
+        "whatChanged": {
+          "title": "Dites ce qui a changé grâce à vous",
+          "body": "Plus rapide, moins d'erreurs, des clients plus satisfaits. Un chiffre approximatif aide si vous en avez un — n'en inventez jamais."
+        },
+        "ariaWrapsUp": {
+          "title": "Aria conclura pour vous",
+          "body": "Quand elle aura assez d'éléments, elle récapitulera ce que vous avez dit et vérifiera avec vous avant de terminer l'appel, pour ne pas dépenser de minutes dans le silence. Vous pouvez y mettre fin à tout moment."
+        },
+        "dontShowAgain": "Ne plus afficher",
+        "notNow": "Pas maintenant",
+        "start": "Démarrer l'appel",
+        "tabTips": "Conseils",
+        "tabSettings": "Réglages de l'appel",
+        "settingsLead": "Vous pouvez les modifier à tout moment depuis le bouton à côté de l'appel."
+      },
+      "ended": {
+        "title": "Appel terminé",
+        "timeUpTitle": "Le temps de cet appel est écoulé",
+        "body": "Tout ce que vous avez dit se trouve dans la conversation ci-dessus. Que souhaitez-vous faire ensuite ?",
+        "writeBullets": "Rédiger mes puces à partir de cet appel",
+        "keepChatting": "Continuer dans la conversation",
+        "carryOn": "Pas de souci — continuons ici. Tout ce qui a été dit pendant l'appel est ci-dessus : reprenez là où nous en étions, ou dites-moi ce que vous voulez ajouter ou modifier. Je proposerai les options de puces dès que nous aurons assez d'éléments."
+      },
+      "settings": {
+        "title": "Comment doit se dérouler cet appel ?",
+        "open": "Réglages de l'appel : {{summary}}",
+        "depthLabel": "Profondeur",
+        "styleLabel": "Style d'Aria",
+        "voiceLabel": "Voix",
+        "paceLabel": "Débit",
+        "depth": {
+          "thorough": {
+            "label": "Approfondi",
+            "hint": "Passe en revue tout ce que vous mentionnez et pose des questions sur les petites choses qu'on oublie — les meilleures puces."
+          },
+          "quick": {
+            "label": "Rapide",
+            "hint": "L'essentiel et ce qui en a résulté. Des appels plus courts, moins de minutes."
+          }
+        },
+        "style": {
+          "friendly": {
+            "label": "Chaleureux",
+            "hint": "Bienveillante et encourageante. Prenez votre temps."
+          },
+          "direct": {
+            "label": "Direct",
+            "hint": "Brève et droit à la question suivante. Utilise le moins de minutes."
+          },
+          "coach": {
+            "label": "Coach",
+            "hint": "Explique pourquoi elle pose la question et ce qui rend une réponse forte. Utilise plus de minutes, car elle parle davantage."
+          }
+        },
+        "voice": {
+          "marin": "Marin",
+          "cedar": "Cedar"
+        },
+        "pace": {
+          "normal": "Normal",
+          "slower": "Un peu plus lent"
+        }
+      }
     },
     "sectionCoach": {
       "rerollWasFree": "Cette relance était gratuite.",

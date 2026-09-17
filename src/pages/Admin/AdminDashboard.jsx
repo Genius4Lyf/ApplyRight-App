@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import DashboardStats from '../../components/Admin/DashboardStats';
-import { Coins, FileText, TrendingUp, Users, Banknote, CreditCard, Clock } from 'lucide-react';
+import { Coins, FileText, TrendingUp, Users, Banknote, CreditCard, Clock, Mic } from 'lucide-react';
 import api from '../../services/api';
 import {
   AreaChart,
@@ -147,12 +147,23 @@ const AdminDashboard = () => {
                   trend="up"
                   icon={CreditCard}
                 />
+                {/* Two minute economies, two tiles. Interview minutes and Aria call minutes
+                    are separate balances bought by different people for different reasons —
+                    merging them into one number would misreport both, and hide whether a
+                    brand-new product line is actually selling. */}
                 <DashboardStats
-                  title="Minute Top-ups"
+                  title="Interview Minute Top-ups"
                   value={revenue.topupStats?.count || 0}
                   change={`${revenue.topupStats?.buyers || 0} buyers · ${ngn(revenue.topupStats?.revenue)}`}
                   trend="up"
                   icon={Clock}
+                />
+                <DashboardStats
+                  title="Aria Call Minutes"
+                  value={revenue.ariaTopupStats?.count || 0}
+                  change={`${revenue.ariaTopupStats?.buyers || 0} buyers · ${ngn(revenue.ariaTopupStats?.revenue)}`}
+                  trend="up"
+                  icon={Mic}
                 />
                 <DashboardStats
                   title="Expiring in 7 days"

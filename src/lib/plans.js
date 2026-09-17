@@ -180,16 +180,15 @@ export const TOPUPS = [
   { id: 'topup_300', priceNgn: 34000, priceUsd: 42, minutes: 300, best: true },
 ];
 
-// Aria CALL minute packs — the spoken CV build. A SEPARATE balance from the interview
-// packs above, and priced differently because it costs differently: GPT-Live bills a flat
-// $0.05/min (~₦78) for the voice layer whoever is talking, where a realtime interview is
-// mostly Aria listening and measured nearer ₦45/min. True cost lands around ₦85/min, so
-// this ladder runs ₦150 → ₦117 — thinner margins than the interview packs, which is the
-// honest consequence of a pricier voice layer. Must match the backend catalog.
+// Aria CALL minute packs — the spoken CV build. A SEPARATE balance from the interview packs
+// above (minutes bought to describe a job you had are not minutes bought to rehearse an
+// interview), but the SAME engine underneath, so the same ~₦50/min cost basis. Priced
+// ₦100 → ₦83/min, strictly descending so `best` on the last row is literally true.
+// Must match the backend catalog.
 export const ARIA_CALL_PACKS = [
-  { id: 'aria_10', priceNgn: 1500, priceUsd: 2, minutes: 10 },
-  { id: 'aria_30', priceNgn: 3900, priceUsd: 5, minutes: 30 },
-  { id: 'aria_60', priceNgn: 7000, priceUsd: 9, minutes: 60, best: true },
+  { id: 'aria_10', priceNgn: 1000, priceUsd: 1.5, minutes: 10 },
+  { id: 'aria_30', priceNgn: 2700, priceUsd: 3.5, minutes: 30 },
+  { id: 'aria_60', priceNgn: 5000, priceUsd: 6, minutes: 60, best: true },
 ];
 
 // Credit packs — buyable any time; added to the persistent wallet (never reset).
