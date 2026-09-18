@@ -26,6 +26,9 @@ import { readStoredCallSettings, readStoredHideCallTips } from '../../lib/ariaCa
 import { bankFailureReason, callRecapLines, callRecapMessage } from '../../lib/callRecovery';
 import CallRecoveryCard from './CallRecoveryCard';
 import CallWrapUpConfirm from './CallWrapUpConfirm';
+import RequirementBar from './RequirementBar';
+import { buildRequirementRows, askableRows } from '../../lib/requirementRows';
+import CardEyebrow from './CardEyebrow';
 import { readCachedEntitlement, primeEntitlement } from '../../lib/entitlementCache';
 import { callEnterAnim, dockCardAnim, pressable } from '../../lib/ariaMotion';
 import CallEndedCard from './CallEndedCard';
@@ -63,6 +66,12 @@ const SectionCoach = ({
   // not entry-specific, and claiming to "aim at" terms the entry may already cover is the
   // kind of small invented progress that teaches people to distrust the rest of the read.
   missingKeywords = [],
+  // What this job asks for, and where it stands. Computed ONCE on the page
+  // (useJobCoverage) and handed down, so the interview and the target panel can never
+  // disagree about the same word — and so the debounced endpoint is not called twice.
+  // Absent on the fix track, which has its own measured `missingKeywords`.
+  jobCoverage = null,
+  jobKeywords = [],
   messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
@@ -114,6 +123,34 @@ const SectionCoach = ({
     entry?.section === 'experience' && !!entry?.entryType && entry.entryType !== 'job';
   const isGradCareer = careerStage === 'grad' || entryLevelType;
   const { cvData, updateCvData } = useAriaStudio();
+
+  // Where every requirement of this job stands, joined once. The verdict itself is the
+  // server's (useJobCoverage → the shared normalizer); this only puts it next to the
+  // evidence ledger and the refusals the user has already voiced.
+  const requirementRows = React.useMemo(
+    () => buildRequirementRows({ cvData, coverage: jobCoverage, keywords: jobKeywords }),
+    [cvData, jobCoverage, jobKeywords]
+  );
+  // The requirement a tap has steered toward but that Aria has not reached yet. On a call
+  // nothing audible happens for several seconds, so without this people tap again.
+  const [pendingRequirementId, setPendingRequirementId] = useState(null);
+  // The three the pre-flight card offers. Same cap the server applies when it ranks
+  // candidates — a long posting must never turn a role into an interrogation.
+  const preflightRows = React.useMemo(() => askableRows(requirementRows, 3), [requirementRows]);
+
+  // Mirror a decline into the draft we hold. The server has already persisted it; this is
+  // so the row stops asking immediately rather than at the next reload.
+  const recordDecline = ({ requirementId, name, level }) => {
+    const existing = Array.isArray(cvData?.skillDeclines) ? cvData.skillDeclines : [];
+    const key = String(name || '').toLowerCase();
+    if (existing.some((row) => String(row?.name || '').toLowerCase() === key)) return;
+    updateCvData({
+      skillDeclines: [
+        ...existing,
+        { requirementId: requirementId || '', name, level: level || 'never', source: 'interview' },
+      ],
+    });
+  };
   // The charged generation still waiting on THIS entry, or null. One pending card is
   // shared by the whole Studio session, so it's matched on section + sortId.
   const pendingGeneration = cvData?.studioPending;
@@ -302,14 +339,20 @@ const SectionCoach = ({
     );
   }, [introOpen]);
 
-  const send = async (text) => {
+  // `opts.probe` runs this turn through the requirement HUNT rather than as a plain
+  // message: the server then asks about that one requirement, verifies the answer against
+  // what was actually said, banks the evidence on a yes and writes a DURABLE decline on a
+  // no. Tapping a requirement is exactly that question, so it reuses that path instead of
+  // growing a second, shallower one that would forget the answer.
+  const send = async (text, opts = {}) => {
     const val = (text ?? input).trim();
     if (!val || thinking) return;
 
     // Typing instead of choosing IS a choice — carry on in chat — so the card steps aside.
     setCallEnded(null);
     const next = [...coachMessages, { who: 'user', text: val }];
-    onPush({ who: 'user', text: val });
+    // `selected` renders the quieter chosen-answer bubble: this was a tap, not typing.
+    onPush({ who: 'user', text: val, ...(opts.selected ? { selected: true } : {}) });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setExampleAnswers([]);
@@ -329,6 +372,7 @@ const SectionCoach = ({
         model: modelId,
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
+        ...(opts.probe ? { probe: opts.probe } : {}),
       });
 
       // The selected career stage must win even if the provider slips back into its
@@ -377,6 +421,13 @@ const SectionCoach = ({
       // returns the post-charge balance — keep the wallet pill live without a refresh.
       if (r.remainingCredits != null) {
         window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+
+      // A "no" the server has just written to the draft. Mirrored into local state so the
+      // checklist shows it at once — otherwise the row the user just answered would sit
+      // there still asking, which reads as not having been heard.
+      if (r.probeResult?.status === 'declined' && r.probeResult?.name) {
+        recordDecline(r.probeResult);
       }
 
       if (r.readyToDraft) {
@@ -553,6 +604,50 @@ const SectionCoach = ({
     setCallStream(null);
     setCallSecondsLeft(null);
     setCallState('connecting');
+  };
+
+  // ── TAPPING A REQUIREMENT ───────────────────────────────────────────────────
+  //
+  // In chat this is an ordinary turn carrying `probe`, so it runs through the hunt the
+  // server already owns: it asks, it verifies the answer against what was really said, it
+  // banks evidence on a yes and writes a durable "no" on a no.
+  //
+  // On a call there is nothing to type into, so it becomes a steering note instead —
+  // injected as a SYSTEM item, which the model picks up at its NEXT turn. She is never cut
+  // off mid-sentence, and the note reaches neither the graded transcript nor the one banked
+  // to /coach/chat. The trade is that a call cannot verify the answer the way a typed turn
+  // does; the transcript is banked at the end and judged there, as it already is.
+  const askRequirement = (row) => {
+    if (!row?.requirementId) return;
+    if (call) {
+      setPendingRequirementId(row.requirementId);
+      call.steer?.(
+        `The candidate has asked you to cover "${row.name}" next. At your next turn, ask ONE neutral question about whether they did it in THIS role. Do not claim they have it, and make clear that "no" is completely fine.`
+      );
+      return;
+    }
+    if (thinking) return;
+    setPendingRequirementId(row.requirementId);
+    send(t('ariaStudio.sectionCoach.checklist.askMe') + `: ${row.name}`, {
+      probe: { requirementId: row.requirementId },
+      selected: true,
+    }).finally(() => setPendingRequirementId(null));
+  };
+
+  const undoDecline = (row) => {
+    // Optimistic: the row must stop reading "you said no" the moment it is tapped. A
+    // failure here costs nothing that a reload will not restore, and blocking on the
+    // network to un-say something is worse than the rare stale row.
+    updateCvData({
+      skillDeclines: (cvData?.skillDeclines || []).filter(
+        (item) => String(item?.name || '').toLowerCase() !== String(row.name || '').toLowerCase()
+      ),
+    });
+    if (draftId) {
+      CVService.undeclineSkills(draftId, [row.name]).catch((err) =>
+        console.error('Failed to take back a decline', err)
+      );
+    }
   };
 
   // What the call was FOR. One coachChatTurn over the spoken transcript, forced to wrap by
@@ -905,6 +1000,19 @@ const SectionCoach = ({
       {...callEnterAnim(reduce)}
       className="relative shrink-0 pb-[env(safe-area-inset-bottom)]"
     >
+      {/* The ONLY thing on screen during a call used to be the orb and its End button.
+          Gated twice: the data channel may still be opening while `callState` is
+          'connecting' (a steer sent then is silently dropped and reports nothing back),
+          and inside the last 75 seconds Aria is already being told to wrap up — a steer
+          landing in that window would fight it. */}
+      <RequirementBar
+        rows={requirementRows}
+        onAsk={askRequirement}
+        onUndo={undoDecline}
+        pendingId={pendingRequirementId}
+        canAsk={callState !== 'connecting' && !(callSecondsLeft != null && callSecondsLeft <= 75)}
+        onCall
+      />
       <AriaLiveOrb
         state={callState}
         stream={callStream}
@@ -972,6 +1080,15 @@ const SectionCoach = ({
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Sits directly above the input, collapsed, and renders nothing at all when this CV
+          has no job to aim at. Ignoring it must stay a complete way to use the interview. */}
+      <RequirementBar
+        rows={requirementRows}
+        onAsk={askRequirement}
+        onUndo={undoDecline}
+        pendingId={pendingRequirementId}
+        canAsk={!thinking}
+      />
       <AriaComposer
         className=""
         inputRef={inputRef}
@@ -1068,6 +1185,43 @@ const SectionCoach = ({
       {/* A sent answer is already in the stream; make the model round-trip visible so
           the composer never looks stalled while Aria is preparing her follow-up. */}
       {phase === 'chat' && thinking && <AriaThinking variant="chat" />}
+
+      {/* THE PRE-FLIGHT. What she will be listening for in this role, said once, before
+          the first answer — so the list is something the user agrees to rather than
+          something that happens to them. Three at most, which is the same cap the server
+          already applies when it ranks candidates.
+
+          Doing nothing is a complete answer: it disappears after the first turn either
+          way, and the interview is identical if it is ignored. */}
+      {phase === 'chat' && !thinking && !call && !turnsTaken && preflightRows.length > 0 && (
+        <AriaCard cardKey="preflight">
+          <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 bg-white p-4 sm:p-5 dark:border-slate-800 dark:bg-slate-900">
+            <CardEyebrow>{t('ariaStudio.chat.preflight.eyebrow')}</CardEyebrow>
+            <p className="mt-2 text-[13px] text-slate-600 dark:text-slate-300">
+              {t('ariaStudio.chat.preflight.lead', { count: preflightRows.length })}
+            </p>
+            <div className="mt-3 flex flex-col gap-1.5">
+              {preflightRows.map((row) => (
+                <button
+                  key={row.requirementId}
+                  type="button"
+                  onClick={() => askRequirement(row)}
+                  className="flex w-full items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-left text-[13px] font-semibold text-slate-700 transition-colors hover:border-slate-900 dark:border-slate-800 dark:text-slate-200 dark:hover:border-slate-500"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="h-4 w-4 shrink-0 rounded-full border border-slate-300 dark:border-slate-700"
+                  />
+                  <span className="min-w-0 flex-1 truncate">{row.name}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-3 text-[12px] text-slate-400 dark:text-slate-500">
+              {t('ariaStudio.chat.preflight.orJustTalk')}
+            </p>
+          </div>
+        </AriaCard>
+      )}
 
       {/* Career stage, offered inline when the session never captured one. A TAILOR
           session skips StudioChat's CareerStageAskCard entirely, and 'changer' is the one

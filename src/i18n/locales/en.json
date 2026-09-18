@@ -5018,6 +5018,12 @@
       "hunt": {
         "askedAbout": "asked about: {{name}}"
       },
+      "preflight": {
+        "eyebrow": "Before we start",
+        "lead_one": "One thing this job asks for that I'll listen out for here:",
+        "lead_other": "{{count}} things this job asks for that I'll listen out for here:",
+        "orJustTalk": "Tap one to start there — or just tell me what you did."
+      },
       "cardCollapsed": {
         "thisEntry": "this one",
         "form": "{{title}} — tap to finish the details",
@@ -5408,7 +5414,15 @@
       "gradFollowUp": "That sounds like useful hands-on experience. What were you personally responsible for, and what did it help the team complete safely or reliably?",
       "stageNudge": "Where are you in your career? It changes how I ask.",
       "supportedBy": "From your interview: {{evidence}}",
-      "matchesRequirements": "Supports: {{requirements}}"
+      "matchesRequirements": "Supports: {{requirements}}",
+      "checklist": {
+        "count": "{{done}} of {{total}}",
+        "askMe": "Ask me about this",
+        "askOnCall": "Ask me about this next",
+        "nextUp": "next up…",
+        "declined": "you said no",
+        "undo": "Ask about this again after all"
+      }
     },
     "livePreview": {
       "heading": "Live preview",

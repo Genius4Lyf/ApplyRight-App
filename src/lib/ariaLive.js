@@ -15,8 +15,9 @@ import { createRealtimeSession, isRealtimeSupported } from './realtime';
 // speaking/listening state machine, mic handling — and this file is:
 //
 //   1. our session endpoint (reserve the minutes, mint through the server), and
-//   2. an adapter that presents the SIX-METHOD interface SectionCoach already talks to:
-//      { start, stop, secondsLeft, getRemoteStream, getLocalStream, isClosed }.
+//   2. an adapter that presents the interface SectionCoach already talks to:
+//      { start, stop, secondsLeft, getRemoteStream, getLocalStream, getTranscript, steer,
+//        isClosed }.
 //
 // Nothing above this file changed when the engine did, which is the whole point of that
 // boundary existing.
@@ -247,6 +248,26 @@ export function createAriaCall({
     getLocalStream: () => session?.getLocalStream() || null,
     /** Every finalised turn, in order — the material the bullets get built from. */
     getTranscript: () => session?.getTranscript() || [],
+    /**
+     * Steer the live call without interrupting it.
+     *
+     * The note goes in as a SYSTEM conversation item, so the model picks it up at its NEXT
+     * turn rather than being forced to answer now — she is never cut off mid-sentence. It
+     * reaches neither the graded transcript (collectTranscript records only audio
+     * transcription events) nor the turns banked to /coach/chat (those come from onCaption),
+     * so a steer can never end up as evidence on someone's CV.
+     *
+     * Silent when the call is over or the data channel has not opened yet; the caller gates
+     * on callState for that, because nothing is reported back from here.
+     */
+    steer: (text) => {
+      if (closed || !text) return;
+      try {
+        session?.sendInstruction?.(text);
+      } catch (err) {
+        console.error('Aria call steer failed', err);
+      }
+    },
     isClosed: () => closed,
   };
 }

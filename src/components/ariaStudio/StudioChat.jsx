@@ -160,7 +160,7 @@ const loadSession = () => {
 // been generated, but it does not know how this app moves between pages — and reaching
 // for a router hook in here would put a Router requirement on a component that is
 // otherwise pure conversation.
-const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
+const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywords }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
   const {
@@ -5330,6 +5330,8 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel }) => {
               draftId={draftId}
               dockNode={coachDock}
               onGetMinutes={() => onNavigate?.('/credits')}
+              jobCoverage={jobCoverage}
+              jobKeywords={jobKeywords}
               // Announce the voice feature here, and only here: this coach opens the instant
               // the entry form is submitted, with the first interview question about to be
               // asked. Once per account, enforced on the account — see SectionCoach.

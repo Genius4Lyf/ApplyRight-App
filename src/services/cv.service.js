@@ -123,6 +123,14 @@ const CVService = {
     return response.data; // { declined }
   },
 
+  // Take a "no" back. A decline is otherwise permanent everywhere — the hunt refuses to
+  // ask again and every entry drops it — which is right while it is hidden, but the
+  // interview checklist shows it, and a visible dead end needs a way out.
+  undeclineSkills: async (draftId, names) => {
+    const response = await api.post('/ai/skill-declines', { draftId, undecline: names });
+    return response.data; // { declined: 0, undeclined }
+  },
+
   // Suggest ATS keywords for the target job. Baseline is free; pass
   // { mode: 'rich', draftId } for the paid AI extraction (charged once per JD).
   getJobKeywords: async (targetJob, opts = {}) => {

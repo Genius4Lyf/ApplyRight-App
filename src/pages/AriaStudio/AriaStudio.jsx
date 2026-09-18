@@ -743,6 +743,11 @@ const StudioDesk = () => {
             onPaywall={handlePaywall}
             onNavigate={navigate}
             onOpenPanel={openPreviewPanel}
+            /* Passed DOWN rather than re-read inside the coach: useJobCoverage debounces
+               800 ms and calls the endpoint, so a second caller would double the traffic
+               and could disagree with the panel about the same word on the same screen. */
+            jobCoverage={jobCoverage}
+            jobKeywords={jobKeywords}
           />
         </div>
 

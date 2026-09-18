@@ -5014,6 +5014,12 @@
       "hunt": {
         "askedAbout": "à propos de : {{name}}"
       },
+      "preflight": {
+        "eyebrow": "Avant de commencer",
+        "lead_one": "Un élément demandé par ce poste que je vais guetter ici :",
+        "lead_other": "{{count}} éléments demandés par ce poste que je vais guetter ici :",
+        "orJustTalk": "Touchez-en un pour commencer par là — ou dites-moi simplement ce que vous avez fait."
+      },
       "cardCollapsed": {
         "thisEntry": "cet élément",
         "form": "{{title}} — appuyez pour compléter les détails",
@@ -5404,7 +5410,15 @@
       "gradFollowUp": "Cela ressemble à une expérience pratique utile. De quoi étiez-vous personnellement responsable, et qu'est-ce que cela a aidé l'équipe à accomplir de façon sûre ou fiable ?",
       "stageNudge": "Où en êtes-vous dans votre carrière ? Cela change ma façon de questionner.",
       "supportedBy": "D’après votre entretien : {{evidence}}",
-      "matchesRequirements": "Correspond à : {{requirements}}"
+      "matchesRequirements": "Correspond à : {{requirements}}",
+      "checklist": {
+        "count": "{{done}} sur {{total}}",
+        "askMe": "Interroge-moi là-dessus",
+        "askOnCall": "Pose-moi la question ensuite",
+        "nextUp": "juste après…",
+        "declined": "vous avez répondu non",
+        "undo": "Reposer la question finalement"
+      }
     },
     "livePreview": {
       "heading": "Aperçu en direct",
