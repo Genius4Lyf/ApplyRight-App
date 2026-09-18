@@ -5,6 +5,7 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 // exactly how three templates ended up rendering as ATS Clean everywhere except these
 // thumbnails. One list now.
 import { TEMPLATE_COMPONENTS } from '../lib/templateComponents';
+import { paperColor, sidebarFill } from '../data/templates';
 
 // A4 width in px at 96dpi (210mm). The inner page renders at this width and is
 // scaled down to fit the thumbnail; overflow is clipped so only the top of the
@@ -86,9 +87,39 @@ const SAMPLE_USER_PROFILE = {
 // `ATSCleanTemplate`, which stopped being imported when the map moved to
 // lib/templateComponents. An unknown id would have thrown a ReferenceError here — a crash
 // instead of the fallback it was written to be.
+//
+// A FULL SHEET, not just the content. The sample CV is shorter than A4, and a bare
+// template ends where its content does — which on a sidebar template left the coloured
+// column stopping partway down with white paper beneath it, in a picker whose whole job is
+// judging how a template looks. CV Studio and the Studio preview both already fix this the
+// same way (the page keeps its paper colour, and an out-of-flow band carries the sidebar to
+// the bottom edge, from the shared `sidebarFill` registry). This is that treatment, third
+// surface, same source.
 const Inner = ({ templateId }) => {
   const Comp = TEMPLATE_COMPONENTS[templateId] || TEMPLATE_COMPONENTS['ats-clean'];
-  return <Comp markdown={SAMPLE_MARKDOWN} userProfile={SAMPLE_USER_PROFILE} />;
+  const sidebar = sidebarFill(templateId);
+
+  return (
+    <div
+      className={`relative ${sidebar ? 'cv-continuous-sidebar' : ''}`}
+      style={{
+        width: A4_WIDTH_PX,
+        minHeight: A4_HEIGHT_PX,
+        backgroundColor: paperColor(templateId),
+      }}
+    >
+      {sidebar && (
+        <div
+          aria-hidden="true"
+          className={`absolute inset-y-0 ${sidebar.className}`}
+          style={{ [sidebar.side]: 0, width: sidebar.width, zIndex: 0 }}
+        />
+      )}
+      <div className="relative">
+        <Comp markdown={SAMPLE_MARKDOWN} userProfile={SAMPLE_USER_PROFILE} />
+      </div>
+    </div>
+  );
 };
 
 // Live, scaled, non-interactive mini-render of one template with fixed sample

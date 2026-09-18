@@ -575,6 +575,39 @@ const StudioDesignRail = ({
                           }}
                           className={`${isDanglingLast ? 'sm:col-span-2' : ''} group block w-full cursor-pointer text-left`}
                         >
+                          {/* Name, then the tier as quiet text on the SAME line. The tier
+                              used to be a coloured pill (emerald/amber) sitting on the
+                              artwork — loud, and covering the very thing being judged.
+                              Free carries no tag at all: free is what a template is
+                              assumed to be, so saying it on most of them is noise.
+
+                              ABOVE the page, not under it: these previews are a whole
+                              sheet tall, so a caption underneath named a template you had
+                              already scrolled past, and the name you were reading sat
+                              against the NEXT template's artwork. A heading comes before
+                              the thing it heads. */}
+                          <div className="mb-1.5 flex items-baseline gap-1.5">
+                            <span
+                              className={`min-w-0 truncate text-xs ${
+                                templateId === t.id
+                                  ? 'font-semibold text-slate-900 dark:text-white'
+                                  : 'font-medium text-slate-700 dark:text-slate-300'
+                              }`}
+                            >
+                              {t.name}
+                            </span>
+                            {t.cost > 0 && (
+                              <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                                {locked ? `${t.cost} cr` : 'Pro'}
+                              </span>
+                            )}
+                            {templateId === t.id && (
+                              <Check
+                                size={12}
+                                className="ml-auto shrink-0 self-center text-slate-900 dark:text-white"
+                              />
+                            )}
+                          </div>
                           {/* NO CARD AROUND THE PAGE. A thumbnail is already a picture of
                               a sheet of paper; a bordered box around it framed a frame,
                               and the frame was the thing that had to shrink to fit. What
@@ -603,33 +636,6 @@ const StudioDesignRail = ({
                               <div className="absolute top-1 right-1 p-0.5 bg-slate-800/90 rounded">
                                 <Lock size={10} className="text-white" />
                               </div>
-                            )}
-                          </div>
-                          {/* Name, then the tier as quiet text on the SAME line. The tier
-                              used to be a coloured pill (emerald/amber) sitting on the
-                              artwork — loud, and covering the very thing being judged.
-                              Free carries no tag at all: free is what a template is
-                              assumed to be, so saying it on most of them is noise. */}
-                          <div className="mt-1.5 flex items-baseline gap-1.5">
-                            <span
-                              className={`min-w-0 truncate text-xs ${
-                                templateId === t.id
-                                  ? 'font-semibold text-slate-900 dark:text-white'
-                                  : 'font-medium text-slate-700 dark:text-slate-300'
-                              }`}
-                            >
-                              {t.name}
-                            </span>
-                            {t.cost > 0 && (
-                              <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
-                                {locked ? `${t.cost} cr` : 'Pro'}
-                              </span>
-                            )}
-                            {templateId === t.id && (
-                              <Check
-                                size={12}
-                                className="ml-auto shrink-0 self-center text-slate-900 dark:text-white"
-                              />
                             )}
                           </div>
                         </button>
