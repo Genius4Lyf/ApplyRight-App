@@ -78,6 +78,10 @@ const WRAP_UP_WARNING_SEC = 75;
 export function createAriaCall({
   draftId,
   section,
+  // Which entry this call is about. The server needs it for two things: to describe the right
+  // role in the prompt, and to find what has already been said about it — a second call must
+  // not open by asking someone to repeat an interview they have already given.
+  sortId,
   lang = 'en',
   callSettings,
   onTurn,
@@ -151,6 +155,7 @@ export function createAriaCall({
     const { data } = await api.post('/aria-live/session', {
       section,
       draftId,
+      sortId,
       lang,
       callSettings,
     });

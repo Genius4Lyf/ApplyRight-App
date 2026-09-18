@@ -23,6 +23,9 @@ import AriaCallTipsModal from './AriaCallTipsModal';
 import AriaCallIntroModal from './AriaCallIntroModal';
 import AriaCallSettingsButton from './AriaCallSettingsButton';
 import { readStoredCallSettings, readStoredHideCallTips } from '../../lib/ariaCallSettings';
+import { bankFailureReason, callRecapLines, callRecapMessage } from '../../lib/callRecovery';
+import CallRecoveryCard from './CallRecoveryCard';
+import CallWrapUpConfirm from './CallWrapUpConfirm';
 import { readCachedEntitlement, primeEntitlement } from '../../lib/entitlementCache';
 import { callEnterAnim, dockCardAnim, pressable } from '../../lib/ariaMotion';
 import CallEndedCard from './CallEndedCard';
@@ -252,6 +255,9 @@ const SectionCoach = ({
   // choose bullets. Null when there is nothing to decide.
   const [callEnded, setCallEnded] = useState(null);
   const [callTipsOpen, setCallTipsOpen] = useState(false);
+  // A wrap-up the server refused: { reason, turns }. Held rather than toasted so the call has a
+  // visible way forward — see bankCallTranscript.
+  const [bankFailed, setBankFailed] = useState(null);
   // Only ever true on the cold path — no wallet has primed the balance cache, so the brief
   // genuinely has to wait for one request. The button says so rather than ignoring the press.
   const [checkingBalance, setCheckingBalance] = useState(false);
@@ -545,15 +551,36 @@ const SectionCoach = ({
   //
   // Two turns is the floor. A call someone abandoned after "hello" has nothing in it, and
   // sending that would spend a turn to be told so.
-  const bankCallTranscript = async (turns) => {
+  //
+  // `force` decides which of the two wrap-ups this is:
+  //   true  — WRITE THEM NOW. buildTurns at the cap makes the server's `mustFinish` fire, which
+  //           forces a description out of whatever is there. Right when the user says they are
+  //           done; wrong as a default, because most calls that reach the card were interrupted.
+  //   false — ASK ARIA FIRST. An ordinary build turn over the transcript, so she answers the
+  //           way she would in chat: readyToDraft if the call covered enough (and the bullet
+  //           picker opens anyway), otherwise the one question still missing, free, in the chat.
+  const bankCallTranscript = async (turns, { force = true } = {}) => {
     const messages = (turns || [])
       .map((turn) => ({
         who: turn.role === 'candidate' ? 'user' : 'aria',
         text: String(turn.text || '').trim(),
       }))
       .filter((m) => m.text);
+    // END ON THE CANDIDATE'S WORD.
+    //
+    // /coach/chat's contract is that the last message is the user's new turn — true by
+    // construction when typing, and false for almost every call, because Aria asks the
+    // questions and so speaks last. That mismatch 400'd the wrap-up before anything else ran,
+    // and the user was told "couldn't generate bullets" having already spent the minutes.
+    //
+    // The server now accepts a wrap-up ending on Aria, but this trim stays: it is what makes
+    // the fix work on a frontend deployed ahead of the backend, and a trailing question nobody
+    // answered is not part of the evidence anyway. Her earlier turns are all still here — they
+    // are the questions the answers belong to.
+    while (messages.length && messages[messages.length - 1].who === 'aria') messages.pop();
     if (messages.filter((m) => m.who === 'user').length < 1 || messages.length < 2) return;
 
+    setBankFailed(null);
     setThinking(true);
     try {
       const r = await CVService.coachChat({
@@ -561,11 +588,23 @@ const SectionCoach = ({
         currentStepId: STEP_FOR_SECTION[entry.section] || 'history',
         messages,
         focus: { section: entry.section, sortId: entry.sortId },
-        buildTurns: TURN_CAP,
+        buildTurns: force ? TURN_CAP : Math.max(1, turnsTaken + 1),
         studioInterview: true,
         model: modelId,
         stage: careerStage,
       });
+
+      if (r.remainingCredits != null) {
+        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
+      }
+
+      // She read the call and is NOT done: her question goes into the chat and the typed
+      // interview carries on from there. Only reachable from "ask Aria first" — a forced
+      // wrap-up always comes back ready.
+      if (!force && !r.readyToDraft) {
+        onPush({ who: 'aria', text: r.reply, feedbackId: r.feedbackId });
+        return;
+      }
 
       const desc =
         (r.description || '').trim() ||
@@ -575,15 +614,16 @@ const SectionCoach = ({
           .join('. ');
       setDescription(desc);
       setHuntOffers(Array.isArray(r.huntOffers) ? r.huntOffers : []);
-      if (r.remainingCredits != null) {
-        window.dispatchEvent(new CustomEvent('credit_updated', { detail: r.remainingCredits }));
-      }
       setPhase('picking');
     } catch (err) {
       console.error('[AriaLive] could not bank the call', err);
-      // The words are not lost — every turn is already in the chat, and the composer is
-      // back, so the user can carry on typing from where the call left off.
-      toast.error(t('ariaStudio.ariaLive.couldntFinish'));
+      // NOT A TOAST. This is the moment someone has just spent paid minutes, and a red line
+      // that says "couldn't generate bullets" for four unrelated reasons — and disappears
+      // before they look up — leaves a paid call with no visible way forward. The card names
+      // what actually happened and offers only the doors that lead somewhere from here.
+      //
+      // The turns are kept so every one of those doors still has the call to work from.
+      setBankFailed({ reason: bankFailureReason(err), turns });
     } finally {
       setThinking(false);
     }
@@ -595,9 +635,14 @@ const SectionCoach = ({
     setCallStarting(true);
     setCallOutOfMinutes(false);
     let spokenTurns = [];
+    setBankFailed(null);
     const controller = createAriaCall({
       draftId,
       section: entry.section,
+      // WHICH entry. Without it the server falls back to "the newest one in the list", which is
+      // right during a build and wrong the moment someone reopens an earlier role — and it is
+      // also how the call finds the conversation it should already remember.
+      sortId: entry.sortId,
       lang: i18n.language?.slice(0, 2) || 'en',
       callSettings,
       // Both sides into the chat as they are said — the transcript IS the record, and a
@@ -740,10 +785,45 @@ const SectionCoach = ({
     startCall();
   };
 
+  // The card's "write my bullets" does not write anything yet — it opens the choice between
+  // writing them now and letting Aria say whether the call actually covered enough. The calls
+  // that reach this card are the interrupted ones, so that question is worth asking before
+  // credits are spent on them.
+  const [wrapUpTurns, setWrapUpTurns] = useState(null);
   const writeBulletsFromCall = () => {
-    const turns = callEnded?.turns || [];
+    setWrapUpTurns(callEnded?.turns || []);
     setCallEnded(null);
-    bankCallTranscript(turns);
+  };
+
+  const finishWrapUp = (force) => {
+    const turns = wrapUpTurns || [];
+    setWrapUpTurns(null);
+    bankCallTranscript(turns, { force });
+  };
+
+  // CARRY ON IN CHAT, WITH ARIA SHOWING SHE WAS LISTENING.
+  //
+  // Built entirely on the client, out of their own sentences. That is not a shortcut — this is
+  // reached when the wrap-up was REFUSED, most often for want of credits, so asking the model
+  // to write a summary is the one thing that cannot work here. Their words are already in the
+  // browser; reading them back costs nothing and cannot be refused.
+  //
+  // The typed interview then continues for real: every spoken turn is in the chat window that
+  // goes to the server on the next message, so she answers knowing the whole call.
+  const continueInChatFrom = (turns, reason) => {
+    setBankFailed(null);
+    setCallEnded(null);
+    const lines = callRecapLines(turns);
+    onPush({
+      who: 'aria',
+      text: callRecapMessage({
+        lines,
+        lead: t(`ariaStudio.ariaLive.recap.lead.${reason === 'credits' ? 'credits' : 'generic'}`),
+        heard: t('ariaStudio.ariaLive.recap.heard'),
+        tail: t('ariaStudio.ariaLive.recap.tail'),
+        nothing: t('ariaStudio.ariaLive.recap.nothing'),
+      }),
+    });
   };
 
   const keepChattingAfterCall = () => {
@@ -826,6 +906,18 @@ const SectionCoach = ({
               busy={thinking}
               onWriteBullets={writeBulletsFromCall}
               onKeepChatting={keepChattingAfterCall}
+            />
+          </motion.div>
+        )}
+        {/* The wrap-up was refused. Named, with the doors that still lead somewhere. */}
+        {bankFailed && (
+          <motion.div key="bankfailed" {...dockCardAnim(reduce)}>
+            <CallRecoveryCard
+              reason={bankFailed.reason}
+              busy={thinking}
+              onGetCredits={() => onGetMinutes?.()}
+              onRetry={() => bankCallTranscript(bankFailed.turns, { force: true })}
+              onContinueChat={() => continueInChatFrom(bankFailed.turns, bankFailed.reason)}
             />
           </motion.div>
         )}
@@ -1181,6 +1273,14 @@ const SectionCoach = ({
 
           The announcement can never coincide with the tips: it closes before the call button
           it talks about is reachable. */}
+      {/* Write them now, or let Aria say whether the call covered enough first. */}
+      <CallWrapUpConfirm
+        open={!!wrapUpTurns}
+        busy={thinking}
+        onWriteNow={() => finishWrapUp(true)}
+        onAskAria={() => finishWrapUp(false)}
+        onCancel={() => setWrapUpTurns(null)}
+      />
       <AnimatePresence>
         {introOpen && (
           <AriaCallIntroModal

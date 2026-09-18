@@ -5282,6 +5282,44 @@
         "tabSettings": "Réglages de l'appel",
         "settingsLead": "Vous pouvez les modifier à tout moment depuis le bouton à côté de l'appel."
       },
+      "recovery": {
+        "credits": {
+          "title": "Pas assez de crédits pour les rédiger",
+          "body": "Rédiger des puces coûte des crédits, et vous n'en avez plus. Rien de l'appel n'est perdu — tout est dans la conversation ci-dessus, et continuer ici est gratuit."
+        },
+        "limit": {
+          "title": "Cela fait beaucoup de construction pour une journée",
+          "body": "Vous avez atteint la limite quotidienne de construction avec Aria, elle ne peut donc pas les rédiger maintenant. Tout l'appel est enregistré ci-dessus et sera encore là demain."
+        },
+        "network": {
+          "title": "Cela n'est pas passé",
+          "body": "La connexion a été perdue en chemin, les puces n'ont donc pas été rédigées. Rien n'est perdu — tout ce que vous avez dit est dans la conversation ci-dessus."
+        },
+        "gone": {
+          "title": "Ce poste ne figure plus sur votre CV",
+          "body": "Il semble avoir été supprimé pendant votre appel, il n'y a donc nulle part où ajouter les puces."
+        },
+        "getCredits": "Obtenir des crédits",
+        "tryAgain": "Réessayer",
+        "continueChat": "Continuer par écrit"
+      },
+      "recap": {
+        "lead": {
+          "credits": "Pas de souci — on continue ici, et cette partie est gratuite. Je vous ai écouté du début à la fin, donc rien n'est perdu.",
+          "generic": "Pas de souci — on continue ici. Quelque chose s'est mis en travers à l'instant, mais je vous ai écouté du début à la fin, donc rien n'est perdu."
+        },
+        "heard": "Voici ce que j'ai retenu de vous jusqu'ici :",
+        "tail": "Est-ce bien cela ? Ajoutez ce que j'ai oublié, ou dites-moi ce que vous avez fait d'autre et nous continuerons à partir d'ici.",
+        "nothing": "Nous ne sommes pas allés assez loin pour que je note quoi que ce soit — alors dites-moi, avec vos mots, ce que vous avez réellement fait dans ce poste."
+      },
+      "wrapUp": {
+        "title": "Prêt pour vos puces ?",
+        "body": "L'appel s'est terminé avant qu'Aria ne conclue, elle n'a donc peut-être pas encore tout.",
+        "ask": "Vérifier d'abord avec Aria",
+        "askHint": "Elle relira l'appel et vous posera la seule question manquante, ou vous dira qu'elle est prête. Gratuit.",
+        "write": "Les rédiger maintenant",
+        "writeHint": "Aller directement aux puces à partir de ce que vous avez dit pendant l'appel. Coûte des crédits."
+      },
       "ended": {
         "title": "Appel terminé",
         "timeUpTitle": "Le temps de cet appel est écoulé",

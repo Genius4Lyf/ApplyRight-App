@@ -153,6 +153,13 @@ const talk = () =>
 
 const endCall = (reason) => act(() => call.opts.onEnded({ reason, durationSec: 90 }));
 
+// "Write my bullets from this call" no longer writes anything on its own — it asks whether to
+// write them now or let Aria check the call over first. Most existing tests want the former.
+const writeNow = async () => {
+  fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+  fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.wrapUp.write')));
+};
+
 describe('Aria Live — when ARIA ends the call', () => {
   it('goes straight to the bullets, forcing the wrap exactly as a finished typed interview does', async () => {
     mount();
@@ -188,7 +195,7 @@ describe('Aria Live — when the USER ends the call', () => {
     talk();
     endCall('user_ended');
 
-    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+    await writeNow();
 
     await waitFor(() => expect(CVService.coachChat).toHaveBeenCalledTimes(1));
     const sent = CVService.coachChat.mock.calls[0][0];
@@ -503,7 +510,7 @@ describe('Aria Live — when the CONNECTION drops', () => {
     talk();
     endCall('dropped');
 
-    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+    await writeNow();
 
     await waitFor(() => expect(CVService.coachChat).toHaveBeenCalledTimes(1));
     expect(CVService.coachChat).toHaveBeenCalledWith(
@@ -535,5 +542,238 @@ describe('Aria Live — when the CONNECTION drops', () => {
     await waitFor(() => expect(screen.queryByText(t('ariaStudio.ariaLive.end'))).toBeNull());
     // The typed composer is back, so the interview can carry on.
     expect(screen.getByText(t('ariaStudio.ariaLive.talkInstead'))).toBeTruthy();
+  });
+});
+
+describe('Aria Live — the wrap-up ends on the candidate', () => {
+  // /coach/chat's contract is that the last message is the user's new turn. That is true by
+  // construction when typing and false for almost every call, because Aria asks the questions
+  // and so speaks last — always when the clock stops mid-question, always on a drop. The
+  // mismatch 400'd the wrap-up before anything else ran, and the user was told "couldn't
+  // generate bullets" having already spent the minutes on the call.
+  const endOnAria = () =>
+    act(() => {
+      call.opts.onTurn({ who: 'aria', text: 'Tell me what you did day to day.' });
+      call.opts.onTurn({ who: 'user', text: 'I kept the unit running through the operation.' });
+      call.opts.onTurn({ who: 'aria', text: 'Did you ever spot something before anyone else?' });
+    });
+
+  it('trims the question nobody answered, so the transcript ends on their words', async () => {
+    mount();
+    await pressCall();
+    endOnAria();
+    endCall('aria_finished');
+
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalled());
+    const { messages } = CVService.coachChat.mock.calls[0][0];
+    expect(messages[messages.length - 1].who).toBe('user');
+    // Her earlier turns stay — they are the questions the answers belong to.
+    expect(messages.filter((m) => m.who === 'aria').length).toBe(1);
+    expect(messages.filter((m) => m.who === 'user').length).toBe(1);
+  });
+
+  it('banks a call the CLOCK ended mid-question, which is the common case', async () => {
+    mount();
+    await pressCall();
+    endOnAria();
+    endCall('time_up');
+
+    await writeNow();
+
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalledTimes(1));
+    const { messages } = CVService.coachChat.mock.calls[0][0];
+    expect(messages[messages.length - 1].who).toBe('user');
+  });
+
+  it('sends nothing at all when only Aria spoke', async () => {
+    mount();
+    await pressCall();
+    act(() => {
+      call.opts.onTurn({ who: 'aria', text: 'Hello? Can you hear me?' });
+    });
+    endCall('aria_finished');
+
+    await waitFor(() => expect(call.controller.stop).toHaveBeenCalled());
+    expect(CVService.coachChat).not.toHaveBeenCalled();
+  });
+});
+
+describe('Aria Live — before spending credits on an unfinished call', () => {
+  // Every call that reaches this card was INTERRUPTED — hung up, timed out, or dropped — so
+  // Aria was usually mid-question. Writing bullets from that is a one-way, paid door, and
+  // pressing it used to go straight through.
+  it('asks whether to write now or let Aria check the call over first', async () => {
+    mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.wrapUp.title'))).toBeTruthy();
+    // Nothing spent yet.
+    expect(CVService.coachChat).not.toHaveBeenCalled();
+  });
+
+  it('"write them now" forces the wrap-up, exactly as before', async () => {
+    mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+    await writeNow();
+
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalled());
+    expect(CVService.coachChat).toHaveBeenCalledWith(expect.objectContaining({ buildTurns: 10 }));
+  });
+
+  it('"check with Aria" asks an ordinary turn instead of forcing a draft', async () => {
+    CVService.coachChat.mockResolvedValue({
+      reply: 'One more thing — what changed because you did that?',
+      readyToDraft: false,
+    });
+    const { onPush } = mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.wrapUp.ask')));
+
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalled());
+    const sent = CVService.coachChat.mock.calls[0][0];
+    // NOT the turn cap — that is what forces a draft out of half an interview.
+    expect(sent.buildTurns).toBeLessThan(10);
+    // Her question lands in the chat and the typed interview carries on.
+    expect(onPush).toHaveBeenCalledWith(
+      expect.objectContaining({
+        who: 'aria',
+        text: 'One more thing — what changed because you did that?',
+      })
+    );
+  });
+
+  it('goes to the bullets anyway when Aria says the call covered enough', async () => {
+    const { onPush } = mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.ended.writeBullets')));
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.wrapUp.ask')));
+
+    // The default mock answers readyToDraft: true.
+    await waitFor(() =>
+      expect(screen.getByText(t('cvBuilder.askAria.howManyBullets'))).toBeTruthy()
+    );
+    expect(onPush).not.toHaveBeenCalledWith(expect.objectContaining({ who: 'aria', text: 'ok' }));
+  });
+});
+
+describe('Aria Live — when the wrap-up is refused', () => {
+  const failWith = (status, code) => {
+    const err = new Error('nope');
+    err.response = { status, data: code ? { code } : {} };
+    CVService.coachChat.mockRejectedValue(err);
+  };
+
+  const failedWrapUp = async () => {
+    mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+    await writeNow();
+  };
+
+  it('names a credit problem and offers to fix it, instead of one red toast', async () => {
+    failWith(403, 'INSUFFICIENT_CREDITS');
+    await failedWrapUp();
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.recovery.credits.title'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.ariaLive.recovery.getCredits'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.ariaLive.recovery.continueChat'))).toBeTruthy();
+  });
+
+  it('does NOT try to sell anything when the problem is the daily limit', async () => {
+    failWith(402, 'BUILD_LIMIT_REACHED');
+    await failedWrapUp();
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.recovery.limit.title'))).toBeTruthy();
+    // Buying credits would not help today, so it is not offered.
+    expect(screen.queryByText(t('ariaStudio.ariaLive.recovery.getCredits'))).toBeNull();
+    expect(screen.getByText(t('ariaStudio.ariaLive.recovery.continueChat'))).toBeTruthy();
+  });
+
+  it('offers a retry for a network failure, because a second press may well work', async () => {
+    failWith(500);
+    await failedWrapUp();
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.recovery.network.title'))).toBeTruthy();
+    fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.recovery.tryAgain')));
+    await waitFor(() => expect(CVService.coachChat).toHaveBeenCalledTimes(2));
+  });
+
+  it('takes them to credits from the card', async () => {
+    failWith(403, 'INSUFFICIENT_CREDITS');
+    const onGetMinutes = vi.fn();
+    render(
+      <AriaStudioProvider>
+        <SectionCoach
+          draftId="d1"
+          entry={entry}
+          messages={[pin, { who: 'calltips' }]}
+          onPush={vi.fn()}
+          onApply={vi.fn()}
+          onDone={vi.fn()}
+          careerStage="experienced"
+          onGetMinutes={onGetMinutes}
+        />
+      </AriaStudioProvider>
+    );
+    await pressCall();
+    talk();
+    endCall('user_ended');
+    await writeNow();
+
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.recovery.getCredits')));
+    expect(onGetMinutes).toHaveBeenCalled();
+  });
+
+  it('reads their own words back when they carry on in chat — with no model call', async () => {
+    failWith(403, 'INSUFFICIENT_CREDITS');
+    const { onPush } = mount();
+    await pressCall();
+    talk();
+    endCall('user_ended');
+    await writeNow();
+
+    CVService.coachChat.mockClear();
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.recovery.continueChat')));
+
+    // The LAST Aria message — the spoken turns are in there too, and they came first.
+    const recap = onPush.mock.calls
+      .map((c) => c[0])
+      .filter((m) => m?.who === 'aria' && m.text)
+      .at(-1);
+    expect(recap.text).toContain(t('ariaStudio.ariaLive.recap.heard'));
+    // Their sentence, quoted back.
+    expect(recap.text).toContain('I ran the till and trained two new starters');
+    // THE POINT: this is the moment they have no credits, so it cannot need the model.
+    expect(CVService.coachChat).not.toHaveBeenCalled();
+    // And the card steps aside so the composer is usable again (it animates out).
+    await waitFor(() =>
+      expect(screen.queryByText(t('ariaStudio.ariaLive.recovery.credits.title'))).toBeNull()
+    );
+  });
+});
+
+describe('Aria Live — the call knows which entry it is about', () => {
+  it('sends the sortId, so the server can find what was already said', async () => {
+    const { createAriaCall } = await import('../../lib/ariaLive');
+    mount();
+    await pressCall();
+
+    expect(createAriaCall).toHaveBeenCalledWith(
+      expect.objectContaining({ sortId: 'role-1', section: 'experience' })
+    );
   });
 });

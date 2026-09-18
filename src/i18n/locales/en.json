@@ -5286,6 +5286,44 @@
         "tabSettings": "Call settings",
         "settingsLead": "You can change these any time from the button beside the call."
       },
+      "recovery": {
+        "credits": {
+          "title": "Not enough credits to write them",
+          "body": "Writing bullet points costs credits, and you've run out. Nothing from the call is lost — it's all in the chat above, and carrying on here is free."
+        },
+        "limit": {
+          "title": "That's a lot of building for one day",
+          "body": "You've hit today's limit for building with Aria, so she can't write these up right now. Everything from the call is saved above and will still be here tomorrow."
+        },
+        "network": {
+          "title": "That didn't get through",
+          "body": "The connection dropped on the way, so the bullet points weren't written. Nothing was lost — everything you said is in the chat above."
+        },
+        "gone": {
+          "title": "This role isn't on your CV any more",
+          "body": "It looks like it was removed while you were on the call, so there's nothing to add the bullet points to."
+        },
+        "getCredits": "Get credits",
+        "tryAgain": "Try again",
+        "continueChat": "Continue in chat"
+      },
+      "recap": {
+        "lead": {
+          "credits": "No problem — we'll keep going here, and this part is free. I was listening the whole way through, so nothing's lost.",
+          "generic": "No problem — we'll keep going here. Something got in the way just then, but I was listening the whole way through, so nothing's lost."
+        },
+        "heard": "Here's what I've got from you so far:",
+        "tail": "Have I got that right? Add anything I've missed, or tell me what else you did and we'll carry on from here.",
+        "nothing": "We didn't get far enough for me to write anything down yet — so tell me, in your own words, what you actually did in this role."
+      },
+      "wrapUp": {
+        "title": "Ready for your bullet points?",
+        "body": "The call ended before Aria wrapped up, so she may not have everything yet.",
+        "ask": "Check with Aria first",
+        "askHint": "She'll read the call back and either ask the one thing that's missing, or tell you she's ready. Free.",
+        "write": "Write them now",
+        "writeHint": "Go straight to the bullet points from what you said on the call. Costs credits."
+      },
       "ended": {
         "title": "Call ended",
         "timeUpTitle": "That's the time for this call",
