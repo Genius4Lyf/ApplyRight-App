@@ -1,6 +1,6 @@
-import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FolderPlus, GripVertical, Plus, X } from 'lucide-react';
+import { ChevronDown, FolderPlus, GripVertical, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import {
@@ -116,13 +116,11 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false, locked = fals
   const [pendingGroup, setPendingGroup] = useState(null); // { index } after a "new group" drop
   const [newGroupName, setNewGroupName] = useState('');
   const [menuFor, setMenuFor] = useState(null); // index of the pill whose menu is open
+  const [categoryMenu, setCategoryMenu] = useState(false); // the add-form's category picker
   const [dragging, setDragging] = useState(null); // { index, name } while a drag is live
   const nameRef = useRef(null);
   const renameRef = useRef(null);
   const newGroupRef = useRef(null);
-  // The datalist has to be addressed by id, and this component can be mounted more than
-  // once on a page (the desktop panel + the mobile sheet), so the id can't be a constant.
-  const listId = `${useId()}-skill-categories`;
 
   // Distance/delay thresholds copied from the CV builder's reorder (History.jsx): without
   // them a drag starts on every tap and fights the panel's own scrolling on touch.
@@ -172,8 +170,20 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false, locked = fals
     return () => document.removeEventListener('click', close);
   }, [menuFor]);
 
+  // Same for the category picker — a click anywhere outside its field closes it.
+  useEffect(() => {
+    if (!categoryMenu) return undefined;
+    const close = (event) => {
+      if (event.target?.closest?.('[data-category-menu]')) return;
+      setCategoryMenu(false);
+    };
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [categoryMenu]);
+
   const closeAdd = () => {
     setAdding(false);
+    setCategoryMenu(false);
     setForm({ name: '', category: '' });
   };
 
@@ -592,25 +602,67 @@ const PreviewSkillsBlock = ({ onSuggestWithAria, readOnly = false, locked = fals
             placeholder={t('ariaStudio.livePreview.skillNamePlaceholder')}
             className={`${field} basis-[8rem]`}
           />
-          {/* A text input WITH a datalist, not a <select>: the categories on a CV are
-              free-form (Aria generates them, the user invents them), so the field has to
-              accept a new one while still offering the ones already in use. */}
-          <input
-            type="text"
-            list={listId}
-            value={form.category}
-            onChange={set('category')}
-            onKeyDown={keyDown}
-            disabled={busy}
-            aria-label={t('ariaStudio.livePreview.skillCategoryPlaceholder')}
-            placeholder={t('ariaStudio.livePreview.skillCategoryPlaceholder')}
-            className={`${field} basis-[8rem]`}
-          />
-          <datalist id={listId}>
-            {knownCategories.map((category) => (
-              <option key={category} value={category} />
-            ))}
-          </datalist>
+          {/* Type a new category OR pick one already on the CV. This was a native
+              <datalist>, which is why nobody found it: it renders no affordance at all and
+              most browsers only surface it once the typed text already matches an entry,
+              so the categories on the document were effectively invisible. An explicit
+              chevron + menu (the same one the pills' "Move to…" uses) says out loud that
+              there is something to choose from, while the input still takes a new name —
+              which a <select> could not. */}
+          <span className="relative inline-flex basis-[8rem] items-center" data-category-menu="">
+            <input
+              type="text"
+              value={form.category}
+              onChange={set('category')}
+              onKeyDown={keyDown}
+              disabled={busy}
+              aria-label={t('ariaStudio.livePreview.skillCategoryPlaceholder')}
+              placeholder={t('ariaStudio.livePreview.skillCategoryPlaceholder')}
+              className={`${field} w-full ${knownCategories.length ? 'pr-6' : ''}`}
+            />
+            {knownCategories.length > 0 && (
+              <>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setCategoryMenu((open) => !open);
+                  }}
+                  disabled={busy}
+                  aria-haspopup="listbox"
+                  aria-expanded={categoryMenu}
+                  aria-label={t('ariaStudio.livePreview.pickSkillCategory')}
+                  title={t('ariaStudio.livePreview.pickSkillCategory')}
+                  className="absolute right-1 flex h-4 w-4 items-center justify-center rounded text-slate-400 transition-colors hover:text-slate-800 disabled:opacity-40 dark:text-slate-500 dark:hover:text-slate-100"
+                >
+                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                </button>
+                {categoryMenu && (
+                  <span
+                    role="listbox"
+                    className="absolute left-0 top-[calc(100%+4px)] z-30 flex max-h-40 min-w-full flex-col overflow-y-auto rounded-lg border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-800 dark:bg-slate-900"
+                  >
+                    {knownCategories.map((category) => (
+                      <button
+                        key={category}
+                        type="button"
+                        role="option"
+                        aria-selected={lower(category) === lower(form.category)}
+                        onClick={() => {
+                          setForm((prev) => ({ ...prev, category }));
+                          setCategoryMenu(false);
+                          nameRef.current?.focus();
+                        }}
+                        className="rounded px-2 py-1 text-left text-[11.5px] text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                      >
+                        {category}
+                      </button>
+                    ))}
+                  </span>
+                )}
+              </>
+            )}
+          </span>
           <button
             type="button"
             onClick={submit}

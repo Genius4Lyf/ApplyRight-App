@@ -258,6 +258,9 @@ const SectionCoach = ({
   // A wrap-up the server refused: { reason, turns }. Held rather than toasted so the call has a
   // visible way forward — see bankCallTranscript.
   const [bankFailed, setBankFailed] = useState(null);
+  // A bullet GENERATION the server refused, by the same four reasons. Rendered in the count
+  // picker rather than the dock, because that is where the user is standing when it happens.
+  const [generateFailed, setGenerateFailed] = useState(null);
   // Only ever true on the cold path — no wallet has primed the balance cache, so the brief
   // genuinely has to wait for one request. The button says so rather than ignoring the press.
   const [checkingBalance, setCheckingBalance] = useState(false);
@@ -434,6 +437,7 @@ const SectionCoach = ({
   });
 
   const generate = async (reroll = false) => {
+    setGenerateFailed(null);
     setPhase('generating');
     try {
       const res = await CVService.coachGenerateBullets({
@@ -464,13 +468,20 @@ const SectionCoach = ({
       }
       setPhase('results');
     } catch (e) {
-      const code = e?.response?.data?.code;
-      toast.error(
-        code === 'INSUFFICIENT_CREDITS'
-          ? t('cvBuilder.askAria.notEnoughCredits')
-          : e?.response?.data?.message || t('cvBuilder.askAria.couldntGenerate')
-      );
+      // Named, and given somewhere to go. This is the second place a paid interview can dead-end
+      // — the first being the wrap-up — and it used to end in a toast that said the same thing
+      // whether they were out of credits, over the day's limit, or simply offline. A toast is
+      // also gone by the time anyone looks up, leaving the picker sitting there as though the
+      // press had not registered.
+      //
+      // Same four reasons and the same doors as the wrap-up card, so the two failures a person
+      // is most likely to meet behave identically.
+      const reason = bankFailureReason(e);
+      setGenerateFailed(reason);
+      // A re-roll still has the previous bullets on screen and must go back to them; a first
+      // attempt goes back to the count, which is where the card renders.
       setPhase(reroll ? 'results' : 'picking');
+      if (reroll) toast.error(t(`ariaStudio.ariaLive.recovery.${reason}.title`));
     }
   };
 
@@ -696,7 +707,17 @@ const SectionCoach = ({
         // than a red toast that vanishes.
         setCallOutOfMinutes(true);
       } else {
-        toast.error(t('ariaStudio.ariaLive.couldntStart'));
+        // A call that would not start has three causes a user can act on, and they need
+        // different actions: a refused microphone is a browser permission, a voice feature
+        // that is down is worth waiting out, and everything else is worth pressing again.
+        // One line for all three told nobody what to do next.
+        const failure =
+          err?.code === 'MIC_DENIED'
+            ? 'micDenied'
+            : err?.response?.status === 503
+              ? 'unavailable'
+              : 'couldntStart';
+        toast.error(t(`ariaStudio.ariaLive.start.${failure}`));
       }
       controller.stop();
     } finally {
@@ -1101,6 +1122,22 @@ const SectionCoach = ({
         {phase === 'picking' && (
           <AriaCard cardKey="picking" key="picking">
             <div className="w-full min-w-0 rounded-2xl rounded-tl-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5">
+              {/* A refused generation, named, above the picker it came from. The count controls
+                  stay usable underneath — a smaller number may well be affordable. */}
+              {generateFailed && (
+                <div className="mb-4">
+                  <CallRecoveryCard
+                    reason={generateFailed}
+                    busy={thinking}
+                    onGetCredits={() => onGetMinutes?.()}
+                    onRetry={() => generate(false)}
+                    onContinueChat={() => {
+                      setGenerateFailed(null);
+                      setPhase('chat');
+                    }}
+                  />
+                </div>
+              )}
               <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
                 {t('cvBuilder.askAria.howManyBullets')}
               </p>

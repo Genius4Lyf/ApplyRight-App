@@ -65,6 +65,9 @@ vi.mock('../../services/cv.service', () => ({
     saveDraft: vi.fn().mockResolvedValue({ _id: 'd1' }),
     getDraftById: vi.fn(),
     generateBullets: vi.fn(),
+    // The name the coach actually calls. Absent from this mock until the bullet-generation
+    // failure paths got tests — so it was undefined, and nothing noticed.
+    coachGenerateBullets: vi.fn(),
     studioRecompute: vi.fn(),
   },
 }));
@@ -774,6 +777,73 @@ describe('Aria Live — the call knows which entry it is about', () => {
 
     expect(createAriaCall).toHaveBeenCalledWith(
       expect.objectContaining({ sortId: 'role-1', section: 'experience' })
+    );
+  });
+});
+
+describe('Aria Live — when writing the bullets is refused', () => {
+  // The SECOND place a paid interview can dead-end. The wrap-up got a card; this one still
+  // ended in a toast that read the same whether they were out of credits, over the day's
+  // limit, or offline — and was gone by the time anyone looked up, leaving the picker sitting
+  // there as though the press had not registered.
+  const reachPicker = async () => {
+    mount();
+    await pressCall();
+    talk();
+    endCall('aria_finished');
+    await screen.findByText(t('cvBuilder.askAria.howManyBullets'));
+  };
+
+  const failGenerate = (status, code) => {
+    const err = new Error('nope');
+    err.response = { status, data: code ? { code } : {} };
+    CVService.coachGenerateBullets.mockRejectedValue(err);
+  };
+
+  it('names a credit problem at the picker, and offers to fix it', async () => {
+    failGenerate(403, 'INSUFFICIENT_CREDITS');
+    await reachPicker();
+
+    fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.draftCount', { n: 6, cr: 6 })));
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.recovery.credits.title'))).toBeTruthy();
+    expect(screen.getByText(t('ariaStudio.ariaLive.recovery.getCredits'))).toBeTruthy();
+    // The count controls stay usable — a smaller number may well be affordable.
+    expect(screen.getByText(t('cvBuilder.askAria.howManyBullets'))).toBeTruthy();
+  });
+
+  it('does not try to sell anything when it is the daily limit', async () => {
+    failGenerate(402, 'BUILD_LIMIT_REACHED');
+    await reachPicker();
+
+    fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.draftCount', { n: 6, cr: 6 })));
+
+    expect(await screen.findByText(t('ariaStudio.ariaLive.recovery.limit.title'))).toBeTruthy();
+    expect(screen.queryByText(t('ariaStudio.ariaLive.recovery.getCredits'))).toBeNull();
+  });
+
+  it('hands them back to the chat with the interview intact', async () => {
+    failGenerate(500);
+    await reachPicker();
+
+    fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.draftCount', { n: 6, cr: 6 })));
+    fireEvent.click(await screen.findByText(t('ariaStudio.ariaLive.recovery.continueChat')));
+
+    // Back in the interview, able to type — nothing that was said is lost.
+    expect(await screen.findByText(t('ariaStudio.ariaLive.talkInstead'))).toBeTruthy();
+  });
+
+  it('clears the card on a second, successful attempt', async () => {
+    failGenerate(500);
+    await reachPicker();
+    fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.draftCount', { n: 6, cr: 6 })));
+    await screen.findByText(t('ariaStudio.ariaLive.recovery.network.title'));
+
+    CVService.coachGenerateBullets.mockResolvedValue({ bullets: ['Ran the till.'] });
+    fireEvent.click(screen.getByText(t('ariaStudio.ariaLive.recovery.tryAgain')));
+
+    await waitFor(() =>
+      expect(screen.queryByText(t('ariaStudio.ariaLive.recovery.network.title'))).toBeNull()
     );
   });
 });

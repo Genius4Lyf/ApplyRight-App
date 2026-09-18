@@ -5282,6 +5282,11 @@
         "tabSettings": "Réglages de l'appel",
         "settingsLead": "Vous pouvez les modifier à tout moment depuis le bouton à côté de l'appel."
       },
+      "start": {
+        "couldntStart": "Aria n'a pas réussi à démarrer l'appel. Réessayez dans un instant — rien n'a été facturé.",
+        "micDenied": "Votre navigateur bloque le microphone. Autorisez-le pour ce site, puis relancez l'appel.",
+        "unavailable": "Les appels sont indisponibles pour le moment. Rien n'a été facturé — continuez à écrire et Aria construira ceci avec vous ici."
+      },
       "recovery": {
         "credits": {
           "title": "Pas assez de crédits pour les rédiger",
@@ -5436,6 +5441,7 @@
       "categoriesMerged": "Fusionné dans {{category}}.",
       "skillNamePlaceholder": "Nom de la compétence",
       "skillCategoryPlaceholder": "Catégorie (facultatif)",
+      "pickSkillCategory": "Choisir une catégorie déjà présente sur ce CV",
       "suggestSkillsWithAria": "Proposer des compétences avec Aria",
       "draftSummaryWithAria": "Rédiger avec Aria",
       "summaryPlaceholder": "Un court résumé professionnel — 2 à 4 phrases.",

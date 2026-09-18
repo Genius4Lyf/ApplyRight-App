@@ -5286,6 +5286,11 @@
         "tabSettings": "Call settings",
         "settingsLead": "You can change these any time from the button beside the call."
       },
+      "start": {
+        "couldntStart": "Aria couldn't get the call going. Give it another go in a moment — nothing has been charged.",
+        "micDenied": "Your browser is blocking the microphone. Allow it for this site, then tap the call again.",
+        "unavailable": "Calls are unavailable right now. Nothing has been charged — carry on typing and Aria will build this with you here."
+      },
       "recovery": {
         "credits": {
           "title": "Not enough credits to write them",
@@ -5440,6 +5445,7 @@
       "categoriesMerged": "Merged into {{category}}.",
       "skillNamePlaceholder": "Skill name",
       "skillCategoryPlaceholder": "Category (optional)",
+      "pickSkillCategory": "Pick a category already on this CV",
       "suggestSkillsWithAria": "Suggest skills with Aria",
       "draftSummaryWithAria": "Draft with Aria",
       "summaryPlaceholder": "A short professional summary — 2–4 sentences.",

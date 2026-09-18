@@ -267,16 +267,31 @@ describe('StudioLivePreview — add a skill', () => {
     );
   });
 
-  it('offers the categories already on the CV as a datalist, once each', () => {
+  // Was a <datalist>, which rendered no affordance and stayed invisible until the typed
+  // text already matched one — so the categories on the CV could not be found at all.
+  it('offers the categories already on the CV in the picker, once each', () => {
     mockCvData = skillsCv;
-    const { container } = render(<StudioLivePreview />);
+    render(<StudioLivePreview />);
     openAdd();
 
-    const options = [...container.querySelectorAll('datalist option')].map((o) => o.value);
+    fireEvent.click(screen.getByRole('button', { name: /Pick a category/i }));
+
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
     // Frontend appears on two skills but is offered once; 'Uncategorized' is the stored
     // fallback for a BLANK field, so offering it would only invite a localized spelling
     // of it to be stored instead.
     expect(options).toEqual(['Frontend', 'Backend']);
+  });
+
+  it('fills the category field with the one picked', () => {
+    mockCvData = skillsCv;
+    render(<StudioLivePreview />);
+    openAdd();
+
+    fireEvent.click(screen.getByRole('button', { name: /Pick a category/i }));
+    fireEvent.click(screen.getByRole('option', { name: 'Backend' }));
+
+    expect(screen.getByPlaceholderText('Category (optional)').value).toBe('Backend');
   });
 
   it('submits on Enter from the name field', async () => {
