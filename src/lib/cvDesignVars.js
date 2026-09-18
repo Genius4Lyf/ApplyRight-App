@@ -1,4 +1,4 @@
-import { supportsGround, sidebarFill } from '../data/templates';
+import { supportsGround, sidebarOf } from '../data/templates';
 
 // THE DESIGN, AS CSS.
 //
@@ -39,8 +39,10 @@ export const GAP_CLASS = Object.freeze({ tight: 'cv-gap-tight', normal: '', airy
 /**
  * Can this template take a text-size scale?
  *
- * Derived from `sidebarFill` rather than kept as a hand-written list, so a new sidebar
- * template is excluded the day it is added instead of the day someone notices.
+ * Derived from `sidebarOf` rather than kept as a hand-written list, so a new sidebar
+ * template is excluded the day it is added instead of the day someone notices. `sidebarOf`
+ * and not `sidebarFill`: what disqualifies a template here is HAVING a fixed-position rail
+ * in the print clone, which is true of ApplyRight Band's uncoloured one too.
  *
  * WHY sidebar templates are excluded: `buildPrintHtml` switches the sidebar to
  * `position: fixed` so Chrome repeats it on every printed page. A fixed element inside a
@@ -48,7 +50,7 @@ export const GAP_CLASS = Object.freeze({ tight: 'cv-gap-tight', normal: '', airy
  * preview and the print engine — and it would fail SILENTLY, in the paid PDF only, which
  * is the worst place in this product to be clever.
  */
-export const supportsTypeScale = (templateId) => !sidebarFill(templateId);
+export const supportsTypeScale = (templateId) => !sidebarOf(templateId);
 
 /**
  * The element whose height actually flows onto pages.
@@ -64,11 +66,16 @@ export const supportsTypeScale = (templateId) => !sidebarFill(templateId);
  */
 export function flowElementFor(root, templateId) {
   if (!root) return null;
-  if (!sidebarFill(templateId)) return root;
+  const spec = sidebarOf(templateId);
+  if (!spec) return root;
   const sidebar = root.querySelector('[data-cv-sidebar]');
-  // `nextElementSibling` is the same handle buildPrintHtml uses to push the main column
-  // clear of the fixed sidebar — same element, same reason.
-  return sidebar?.nextElementSibling || root;
+  // The sibling on the other side of the rail — the same handle buildPrintHtml uses to
+  // push the main column clear of the fixed sidebar, same element, same reason. A RIGHT
+  // rail is last in DOM order, so its main column is the PREVIOUS sibling; asking for the
+  // next one there found nothing and silently measured the whole node instead.
+  const main =
+    spec.side === 'right' ? sidebar?.previousElementSibling : sidebar?.nextElementSibling;
+  return main || root;
 }
 
 /**

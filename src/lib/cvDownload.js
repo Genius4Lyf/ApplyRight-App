@@ -129,17 +129,24 @@ export function buildPrintHtml(
     // of sync with the template and needs no per-template registration.
     const widthMatch = sidebar.className.match(/\bw-\[([^\]]+)\]/);
     const sidebarWidth = widthMatch ? widthMatch[1] : null;
+    // Which EDGE the rail belongs to, declared by the template itself:
+    // `data-cv-sidebar="right"`. Read off the DOM rather than the template registry, so
+    // this stays the self-describing mechanism the width already is. Anything else (the
+    // bare attribute every left rail carries) is a left rail.
+    const onRight = sidebar.getAttribute('data-cv-sidebar') === 'right';
     if (sidebarWidth) {
       sidebar.style.position = 'fixed';
       sidebar.style.top = '0';
-      sidebar.style.left = '0';
       sidebar.style.bottom = '0';
+      sidebar.style[onRight ? 'right' : 'left'] = '0';
       sidebar.style.width = sidebarWidth;
       // The sidebar no longer takes up space in flow once fixed, so its sibling (the
       // main content column) needs the same inset pushed back in, or it would expand
-      // to the full page width and sit underneath the fixed sidebar.
-      const mainCol = sidebar.nextElementSibling;
-      if (mainCol) mainCol.style.marginLeft = sidebarWidth;
+      // to the full page width and sit underneath the fixed sidebar. A right rail is
+      // last in DOM order, so its main column is the PREVIOUS sibling — pinning that one
+      // with a left margin pushed the text the wrong way, under the rail.
+      const mainCol = onRight ? sidebar.previousElementSibling : sidebar.nextElementSibling;
+      if (mainCol) mainCol.style[onRight ? 'marginRight' : 'marginLeft'] = sidebarWidth;
     }
   }
   // Strip the on-screen preview watermark + any screenshot-guard blur so the

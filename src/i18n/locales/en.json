@@ -4097,6 +4097,15 @@
       "trimRoles": "Trim your oldest roles",
       "guideGreatCv": "What makes a great CV?",
       "guideWhyPages": "Why 1–2 pages?"
+    },
+    "sidebarFit": {
+      "eyebrow": "Layout check",
+      "title": "This one works best on a single page",
+      "body": "{{templateName}} has a sidebar, and it repeats on every page — so at {{pages}} pages the same column prints twice.",
+      "fitPartial": "Layout alone could not get there — it still runs to {{pages}} pages. The content is what needs to come down:",
+      "fit": "Trim it to one page",
+      "pickAnother": "Choose another template",
+      "continue": "Use it anyway"
     }
   },
   "preLaunch": {

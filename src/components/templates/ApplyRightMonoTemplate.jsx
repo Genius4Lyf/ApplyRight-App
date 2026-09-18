@@ -1,13 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
-import { CV_LABELS } from '../../lib/cvLabels';
-
-const headingForms = (canonicalKey) => {
-  const entry = CV_LABELS[canonicalKey];
-  const forms = entry ? Array.from(new Set(Object.values(entry).filter(Boolean))) : [canonicalKey];
-  return forms.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-};
+import { planSidebar } from '../../lib/cvSidebarSections';
 
 const elementProps = (props) => {
   const clean = { ...props };
@@ -55,16 +49,64 @@ const ApplyRightMonoTemplate = ({ markdown, userProfile }) => {
       value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
     },
   ].filter(Boolean);
-  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
-  const skillsPattern = new RegExp(
-    `^##\\s+(?:${headingForms('skills')})\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|(?![\\s\\S]))`,
-    'm'
+  // What the rail can hold, decided before anything renders — see lib/cvSidebarSections.
+  // This replaces a skills-only scrape that also hunted a legacy `- **Languages:**` bullet
+  // INSIDE Skills; markdownUtils has emitted a standalone `## Languages` section for a
+  // while now, so that block had been silently empty and Languages rendered in the main
+  // column instead.
+  const {
+    sidebar: rail,
+    headings: railHeadings,
+    mainMarkdown,
+  } = planSidebar(markdown, 'applyright-mono', {
+    hasPhoto: Boolean(userProfile?.photoUrl),
+    contactCount: contactItems.length,
+  });
+
+  const railHeading = (text) => (
+    <h2 className="mb-3 flex items-center gap-2 text-[8.4pt] font-bold uppercase tracking-[0.18em] text-[#111318] before:h-2 before:w-2 before:bg-[#111318] before:content-['']">
+      {text}
+    </h2>
   );
-  const skillsRaw = bodyMarkdown.match(skillsPattern)?.[1]?.trim() || '';
-  const languageMatch = skillsRaw.match(/^-\s+\*\*Languages:\*\*\s*(.+)$/m);
-  const languagesLine = languageMatch?.[1]?.trim() || '';
-  const skillsMarkdown = languageMatch ? skillsRaw.replace(languageMatch[0], '').trim() : skillsRaw;
-  const mainMarkdown = bodyMarkdown.replace(skillsPattern, '').trim();
+
+  const railSection = (key) =>
+    rail[key] ? (
+      <section className="mb-7">
+        {railHeading(railHeadings[key])}
+        <ReactMarkdown
+          components={{
+            p: (props) => (
+              <p className="mb-2 text-[8.7pt] text-[#50545a]" {...elementProps(props)}>
+                {props.children}
+              </p>
+            ),
+            ul: (props) => (
+              <ul className="space-y-1.5 text-[8.7pt] text-[#50545a]" {...elementProps(props)}>
+                {props.children}
+              </ul>
+            ),
+            li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+            h3: (props) => (
+              <h3 className="text-[8.9pt] font-semibold text-[#111318]" {...elementProps(props)}>
+                {props.children}
+              </h3>
+            ),
+            h4: (props) => (
+              <h4 className="mb-1 text-[8.2pt] text-[#777c83]" {...elementProps(props)}>
+                {props.children}
+              </h4>
+            ),
+            strong: (props) => (
+              <strong className="font-semibold text-[#111318]" {...elementProps(props)}>
+                {props.children}
+              </strong>
+            ),
+          }}
+        >
+          {rail[key]}
+        </ReactMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -98,9 +140,7 @@ const ApplyRightMonoTemplate = ({ markdown, userProfile }) => {
 
         {contactItems.length > 0 && (
           <section className="mb-7">
-            <h2 className="mb-3 flex items-center gap-2 text-[8.4pt] font-bold uppercase tracking-[0.18em] text-[#111318] before:h-2 before:w-2 before:bg-[#111318] before:content-['']">
-              Details
-            </h2>
+            {railHeading('Details')}
             <div className="space-y-2 text-[8.7pt] text-[#50545a]">
               {contactItems.map((item) => (
                 <div key={item.value} className="flex items-start gap-2 break-all">
@@ -112,44 +152,10 @@ const ApplyRightMonoTemplate = ({ markdown, userProfile }) => {
           </section>
         )}
 
-        {skillsMarkdown && (
-          <section className="mb-7">
-            <h2 className="mb-3 flex items-center gap-2 text-[8.4pt] font-bold uppercase tracking-[0.18em] text-[#111318] before:h-2 before:w-2 before:bg-[#111318] before:content-['']">
-              Skills
-            </h2>
-            <ReactMarkdown
-              components={{
-                p: (props) => (
-                  <p className="mb-2 text-[8.7pt] text-[#50545a]" {...elementProps(props)}>
-                    {props.children}
-                  </p>
-                ),
-                ul: (props) => (
-                  <ul className="space-y-1.5 text-[8.7pt] text-[#50545a]" {...elementProps(props)}>
-                    {props.children}
-                  </ul>
-                ),
-                li: (props) => <li {...elementProps(props)}>{props.children}</li>,
-                strong: (props) => (
-                  <strong className="font-semibold text-[#111318]" {...elementProps(props)}>
-                    {props.children}
-                  </strong>
-                ),
-              }}
-            >
-              {skillsMarkdown}
-            </ReactMarkdown>
-          </section>
-        )}
-
-        {languagesLine && (
-          <section>
-            <h2 className="mb-3 flex items-center gap-2 text-[8.4pt] font-bold uppercase tracking-[0.18em] text-[#111318] before:h-2 before:w-2 before:bg-[#111318] before:content-['']">
-              Languages
-            </h2>
-            <p className="text-[8.7pt] text-[#50545a]">{languagesLine}</p>
-          </section>
-        )}
+        {railSection('skills')}
+        {railSection('languages')}
+        {railSection('certifications')}
+        {railSection('education')}
       </aside>
 
       <main className="w-[68%]" style={{ padding: 'var(--cv-margin, 2.5rem)' }}>

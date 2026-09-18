@@ -97,6 +97,34 @@ describe('buildPrintHtml', () => {
     expect(html).toContain('cdn.tailwindcss.com');
     expect(html).toContain('fonts.googleapis.com');
   });
+
+  // A sidebar is pinned with position:fixed so Chrome's print engine repeats it on every
+  // page. Which EDGE it pins to comes from the template's own attribute, and the main
+  // column has to be pushed clear on the matching side — a left margin on a right rail
+  // drives the text UNDER the rail.
+  const mountSidebarCv = (side) => {
+    document.body.innerHTML = `
+      <div id="resume-content">
+        ${side === 'right' ? '<main class="w-[68%]">MAIN</main>' : ''}
+        <aside data-cv-sidebar="${side === 'right' ? 'right' : ''}" class="w-[32%]">RAIL</aside>
+        ${side === 'right' ? '' : '<main class="w-[68%]">MAIN</main>'}
+      </div>`;
+    return document.getElementById('resume-content');
+  };
+
+  it('pins a LEFT rail to the left and insets the main column after it', () => {
+    const html = buildPrintHtml(mountSidebarCv('left'), PAPER);
+    expect(html).toContain('position: fixed');
+    expect(html).toContain('left: 0');
+    expect(html).toContain('margin-left: 32%');
+  });
+
+  it('pins a RIGHT rail to the right and insets the main column before it', () => {
+    const html = buildPrintHtml(mountSidebarCv('right'), PAPER);
+    expect(html).toContain('right: 0');
+    expect(html).toContain('margin-right: 32%');
+    expect(html).not.toContain('margin-left: 32%');
+  });
 });
 
 describe('buildDownloadFilename', () => {

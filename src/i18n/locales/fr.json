@@ -4093,6 +4093,15 @@
       "trimRoles": "Élaguer vos postes les plus anciens",
       "guideGreatCv": "Qu’est-ce qu’un bon CV ?",
       "guideWhyPages": "Pourquoi 1–2 pages ?"
+    },
+    "sidebarFit": {
+      "eyebrow": "Vérification de la mise en page",
+      "title": "Ce modèle rend mieux sur une seule page",
+      "body": "{{templateName}} comporte une colonne latérale, et elle se répète sur chaque page — sur {{pages}} pages, la même colonne s’imprime donc deux fois.",
+      "fitPartial": "La mise en page seule n’y suffit pas — le CV tient encore sur {{pages}} pages. C’est le contenu qu’il faut réduire :",
+      "fit": "Faire tenir sur une page",
+      "pickAnother": "Choisir un autre modèle",
+      "continue": "Le garder quand même"
     }
   },
   "preLaunch": {

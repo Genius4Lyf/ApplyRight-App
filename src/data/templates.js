@@ -35,6 +35,9 @@ export const TEMPLATES = [
   {
     id: 'applyright-band',
     rendersPhoto: true,
+    // No `className`: this rail is a hairline rule on the page's own paper, not a colour
+    // block, so it needs no full-page band — see sidebarFill vs sidebarOf below.
+    sidebar: { side: 'right', width: '32%' },
     name: 'ApplyRight Band',
     group: 'ApplyRight',
     isPro: true,
@@ -45,6 +48,7 @@ export const TEMPLATES = [
   },
   {
     id: 'applyright-band-twin',
+    sidebar: { side: 'right', width: '32%' },
     name: 'ApplyRight Band Twin',
     group: 'ApplyRight',
     isPro: true,
@@ -292,7 +296,32 @@ export const paperColor = (templateId) =>
  * @param {string} templateId
  * @returns {{side: string, width: string, className: string}|null}
  */
-export const sidebarFill = (templateId) =>
+export const sidebarFill = (templateId) => {
+  const spec = sidebarOf(templateId);
+  // A spec with no `className` is a rail with no colour of its own (ApplyRight Band's
+  // hairline on bare paper). There is nothing to continue down the page, and painting a
+  // band for it would invent a block the template never had.
+  return spec?.className ? spec : null;
+};
+
+/**
+ * The STRUCTURAL fact about a template's side column — `{ side, width }` — or `null`.
+ *
+ * Distinct from `sidebarFill` above, which answers a narrower question: does this rail
+ * need a full-page colour band painted behind it? Band's does not, but it is still a
+ * two-column template, and three things must know that regardless of colour:
+ *
+ *   · the ATS check, which cautions about two-column parsing (lib/cvDesignAts)
+ *   · `supportsTypeScale`, off for two-column layouts (lib/cvDesignVars)
+ *   · `flowElementFor`, which measures the MAIN column rather than the whole node
+ *
+ * Conflating the two is why ApplyRight Band — a two-column template by any reading —
+ * was treated as single-column everywhere: it has a `data-cv-sidebar` rail and no fill.
+ *
+ * @param {string} templateId
+ * @returns {{side: 'left'|'right', width: string, className?: string}|null}
+ */
+export const sidebarOf = (templateId) =>
   TEMPLATES.find((template) => template.id === templateId)?.sidebar || null;
 
 /**

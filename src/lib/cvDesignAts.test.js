@@ -5,7 +5,7 @@
 // produces no warning, because neither has ever stopped a parser reading a CV.
 import { describe, it, expect } from 'vitest';
 import { designAtsVerdict } from './cvDesignAts';
-import { TEMPLATES, sidebarFill } from '../data/templates';
+import { TEMPLATES, sidebarOf } from '../data/templates';
 
 const ids = (v) => v.notes.map((n) => n.id);
 const singleColumnNoPhoto = TEMPLATES.find((t) => !t.sidebar && !t.rendersPhoto).id;
@@ -101,12 +101,14 @@ describe('the verdict names what it looked at', () => {
 });
 
 describe('the data it rests on', () => {
-  it('agrees with sidebarFill about which templates are two-column', () => {
-    // The check reads `sidebar` through sidebarFill rather than keeping its own list, so
-    // adding a sidebar template cannot leave the checker behind.
+  it('agrees with sidebarOf about which templates are two-column', () => {
+    // The check reads `sidebar` through sidebarOf rather than keeping its own list, so
+    // adding a sidebar template cannot leave the checker behind. sidebarOf and not
+    // sidebarFill: the ATS risk is the two-column ORDER, which an uncoloured rail
+    // (ApplyRight Band) carries exactly as much as a painted one.
     TEMPLATES.forEach((t) => {
       const flagged = ids(designAtsVerdict(t.id, {}, {})).includes('columns');
-      expect(flagged).toBe(Boolean(sidebarFill(t.id)));
+      expect(flagged).toBe(Boolean(sidebarOf(t.id)));
     });
   });
 

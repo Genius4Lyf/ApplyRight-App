@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Mail, Phone, MapPin, Globe, Linkedin } from 'lucide-react';
+import { planSidebar } from '../../lib/cvSidebarSections';
 
 const elementProps = (props) => {
   const clean = { ...props };
@@ -54,8 +55,60 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
       value: userProfile.linkedinUrl.replace(/^https?:\/\//, ''),
     });
 
-  // Remove first H1
-  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '');
+  // What the rail can hold — see lib/cvSidebarSections. This rail used to carry nothing
+  // from the markdown at all (photo, name, role and contact only), so its 30% column ran
+  // blank down the page while Skills sat in the main one. It is the NARROWEST of the
+  // seven, so in practice the budget admits Skills and little else, which is the honest
+  // answer rather than a special case.
+  const {
+    sidebar: rail,
+    headings: railHeadings,
+    mainMarkdown: bodyMarkdown,
+  } = planSidebar(markdown, 'minimal-grid', {
+    hasPhoto: Boolean(userProfile?.photoUrl),
+    contactCount: contactItems.length,
+  });
+
+  const railSection = (key) =>
+    rail[key] ? (
+      <section className="mt-6 border-t border-[#cfcdc6] pt-5">
+        <h2 className="mb-2 font-mono text-[7pt] font-semibold uppercase tracking-[0.14em] text-[#96958f]">
+          {railHeadings[key]}
+        </h2>
+        <ReactMarkdown
+          components={{
+            p: (props) => (
+              <p className="mb-2 text-[8pt] text-[#555650]" {...elementProps(props)}>
+                {props.children}
+              </p>
+            ),
+            ul: (props) => (
+              <ul className="space-y-1.5 text-[8pt] text-[#555650]" {...elementProps(props)}>
+                {props.children}
+              </ul>
+            ),
+            li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+            h3: (props) => (
+              <h3 className="text-[8.4pt] font-semibold text-[#111318]" {...elementProps(props)}>
+                {props.children}
+              </h3>
+            ),
+            h4: (props) => (
+              <h4 className="mb-1 text-[7.6pt] text-[#96958f]" {...elementProps(props)}>
+                {props.children}
+              </h4>
+            ),
+            strong: (props) => (
+              <strong className="font-semibold text-[#111318]" {...elementProps(props)}>
+                {props.children}
+              </strong>
+            ),
+          }}
+        >
+          {rail[key]}
+        </ReactMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -98,6 +151,11 @@ const MinimalistGridTemplate = ({ markdown, userProfile }) => {
               </div>
             ))}
           </div>
+
+          {railSection('skills')}
+          {railSection('languages')}
+          {railSection('certifications')}
+          {railSection('education')}
         </div>
       </aside>
 

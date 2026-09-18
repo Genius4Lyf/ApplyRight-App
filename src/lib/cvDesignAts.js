@@ -1,4 +1,4 @@
-import { sidebarFill, TEMPLATES } from '../data/templates';
+import { sidebarOf, TEMPLATES } from '../data/templates';
 
 // WILL A MACHINE READ THIS?
 //
@@ -45,7 +45,7 @@ export function designAtsVerdict(templateId, design = {}, profile = {}) {
   //    interleaves with the main column — so a job title lands in the middle of a skills
   //    list. It does not garble the words; it garbles the ORDER, which is worse, because
   //    the output still looks like a CV.
-  if (sidebarFill(templateId)) {
+  if (sidebarOf(templateId)) {
     notes.push({
       id: 'columns',
       title: 'Two columns',

@@ -1,24 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
-import { CV_LABELS } from '../../lib/cvLabels';
-
-const headingForms = (canonicalKey) => {
-  const entry = CV_LABELS[canonicalKey];
-  const forms = entry ? Array.from(new Set(Object.values(entry).filter(Boolean))) : [canonicalKey];
-  return forms.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-};
-
-const sectionPattern = (canonicalKey) =>
-  new RegExp(
-    `^##\\s+(?:${headingForms(canonicalKey)})\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|(?![\\s\\S]))`,
-    'm'
-  );
-
-const extractSection = (markdown, key) => markdown.match(sectionPattern(key))?.[1]?.trim() || '';
-
-const removeSections = (markdown, keys) =>
-  keys.reduce((current, key) => current.replace(sectionPattern(key), ''), markdown).trim();
+import { planSidebar } from '../../lib/cvSidebarSections';
 
 const getName = (markdown, userProfile) => {
   const markdownName = markdown.match(/^#\s+(.+)/m)?.[1]?.trim();
@@ -144,24 +127,47 @@ const ContactList = ({ items, inverse = false }) => (
   </div>
 );
 
-const prepareTemplate = (markdown, userProfile) => {
+// `templateId` is what decides how much the rail can hold — each one is a different width,
+// and a rail cannot paginate (see lib/cvSidebarSections). Omit it and planSidebar keeps the
+// whole CV in the main column, which is what AngularCorporate, a single-column layout,
+// wants anyway.
+const prepareTemplate = (markdown, userProfile, templateId) => {
   const safeMarkdown = typeof markdown === 'string' ? markdown : '';
   const body = safeMarkdown.replace(/^#\s+.+$/m, '').trim();
+  const contactItems = getContactItems(userProfile);
+  const { sidebar, headings, mainMarkdown } = planSidebar(safeMarkdown, templateId, {
+    hasPhoto: Boolean(userProfile?.photoUrl),
+    contactCount: contactItems.length,
+  });
+
   return {
     body,
     name: getName(safeMarkdown, userProfile),
     initials: getInitials(getName(safeMarkdown, userProfile)),
     roleTitle: userProfile?.currentJobTitle || '',
-    contactItems: getContactItems(userProfile),
-    education: extractSection(body, 'education'),
-    skills: extractSection(body, 'skills'),
-    mainWithoutSidebar: removeSections(body, ['education', 'skills']),
+    contactItems,
+    rail: sidebar,
+    railHeadings: headings,
+    mainWithoutSidebar: mainMarkdown,
   };
 };
 
 export const SlateTimelineTemplate = ({ markdown, userProfile }) => {
-  const { name, initials, roleTitle, contactItems, education, skills, mainWithoutSidebar } =
-    prepareTemplate(markdown, userProfile);
+  const { name, initials, roleTitle, contactItems, rail, railHeadings, mainWithoutSidebar } =
+    prepareTemplate(markdown, userProfile, 'slate-timeline');
+  // Expertise is this template's own word for Skills; every other block is titled by the
+  // document, so a French CV reads "Formation" rather than "Education".
+  const railSection = (key, label) =>
+    rail[key] ? (
+      <section className="mb-6">
+        <h2 className="mb-2 border-b border-white/45 pb-1 text-[12pt] font-bold text-white">
+          {label || railHeadings[key]}
+        </h2>
+        <SectionMarkdown inverse compact>
+          {rail[key]}
+        </SectionMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -192,26 +198,10 @@ export const SlateTimelineTemplate = ({ markdown, userProfile }) => {
             <ContactList items={contactItems} inverse />
           </section>
         )}
-        {education && (
-          <section className="mb-6">
-            <h2 className="mb-2 border-b border-white/45 pb-1 text-[12pt] font-bold text-white">
-              Education
-            </h2>
-            <SectionMarkdown inverse compact>
-              {education}
-            </SectionMarkdown>
-          </section>
-        )}
-        {skills && (
-          <section>
-            <h2 className="mb-2 border-b border-white/45 pb-1 text-[12pt] font-bold text-white">
-              Expertise
-            </h2>
-            <SectionMarkdown inverse compact>
-              {skills}
-            </SectionMarkdown>
-          </section>
-        )}
+        {railSection('skills', 'Expertise')}
+        {railSection('education')}
+        {railSection('certifications')}
+        {railSection('languages')}
       </aside>
 
       <main className="w-[65%] px-8 py-9">
@@ -234,8 +224,19 @@ export const SlateTimelineTemplate = ({ markdown, userProfile }) => {
 };
 
 export const NavyPortraitTemplate = ({ markdown, userProfile }) => {
-  const { name, initials, roleTitle, contactItems, education, skills, mainWithoutSidebar } =
-    prepareTemplate(markdown, userProfile);
+  const { name, initials, roleTitle, contactItems, rail, railHeadings, mainWithoutSidebar } =
+    prepareTemplate(markdown, userProfile, 'navy-portrait');
+  const railSection = (key) =>
+    rail[key] ? (
+      <section className="mt-8">
+        <h2 className="mb-2 border-b border-[#d8c29d]/55 pb-2 text-[9pt] font-bold uppercase tracking-[0.2em] text-[#d8c29d]">
+          {railHeadings[key]}
+        </h2>
+        <SectionMarkdown inverse compact>
+          {rail[key]}
+        </SectionMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -264,26 +265,10 @@ export const NavyPortraitTemplate = ({ markdown, userProfile }) => {
         <div className="[&_svg]:text-[#d8c29d]">
           <ContactList items={contactItems} inverse />
         </div>
-        {education && (
-          <section className="mt-8">
-            <h2 className="mb-2 border-b border-[#d8c29d]/55 pb-2 text-[9pt] font-bold uppercase tracking-[0.2em] text-[#d8c29d]">
-              Education
-            </h2>
-            <SectionMarkdown inverse compact>
-              {education}
-            </SectionMarkdown>
-          </section>
-        )}
-        {skills && (
-          <section className="mt-8">
-            <h2 className="mb-2 border-b border-[#d8c29d]/55 pb-2 text-[9pt] font-bold uppercase tracking-[0.2em] text-[#d8c29d]">
-              Skills
-            </h2>
-            <SectionMarkdown inverse compact>
-              {skills}
-            </SectionMarkdown>
-          </section>
-        )}
+        {railSection('skills')}
+        {railSection('education')}
+        {railSection('certifications')}
+        {railSection('languages')}
       </aside>
 
       <main className="w-[64%] px-9 py-9">
@@ -339,8 +324,17 @@ export const AngularCorporateTemplate = ({ markdown, userProfile }) => {
 };
 
 export const SalesSidebarTemplate = ({ markdown, userProfile }) => {
-  const { name, initials, roleTitle, contactItems, education, skills, mainWithoutSidebar } =
-    prepareTemplate(markdown, userProfile);
+  const { name, initials, roleTitle, contactItems, rail, railHeadings, mainWithoutSidebar } =
+    prepareTemplate(markdown, userProfile, 'sales-sidebar');
+  const railSection = (key) =>
+    rail[key] ? (
+      <section className="mt-8">
+        <h2 className="mb-2 border-b border-[#747b82] pb-1 text-[12pt] font-medium uppercase tracking-[0.06em]">
+          {railHeadings[key]}
+        </h2>
+        <SectionMarkdown compact>{rail[key]}</SectionMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -378,22 +372,10 @@ export const SalesSidebarTemplate = ({ markdown, userProfile }) => {
           className="ml-0 w-[38%] shrink-0 rounded-tr-[42px] bg-[#d5dfe7] px-7 py-8"
         >
           <ContactList items={contactItems} />
-          {education && (
-            <section className="mt-8">
-              <h2 className="mb-2 border-b border-[#747b82] pb-1 text-[12pt] font-medium uppercase tracking-[0.06em]">
-                Education
-              </h2>
-              <SectionMarkdown compact>{education}</SectionMarkdown>
-            </section>
-          )}
-          {skills && (
-            <section className="mt-8">
-              <h2 className="mb-2 border-b border-[#747b82] pb-1 text-[12pt] font-medium uppercase tracking-[0.06em]">
-                Skills
-              </h2>
-              <SectionMarkdown compact>{skills}</SectionMarkdown>
-            </section>
-          )}
+          {railSection('skills')}
+          {railSection('education')}
+          {railSection('certifications')}
+          {railSection('languages')}
         </aside>
         <main className="w-[62%] px-7 py-7">
           <SectionMarkdown>{mainWithoutSidebar}</SectionMarkdown>

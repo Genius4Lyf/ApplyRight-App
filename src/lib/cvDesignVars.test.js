@@ -18,7 +18,7 @@ import {
   TYPE_SCALE,
   LEADING,
 } from './cvDesignVars';
-import { TEMPLATES, sidebarFill, GROUND_EDITABLE_IDS } from '../data/templates';
+import { TEMPLATES, sidebarFill, sidebarOf, GROUND_EDITABLE_IDS } from '../data/templates';
 
 const plain = TEMPLATES.find((t) => !t.sidebar).id;
 const sidebarTemplate = TEMPLATES.find((t) => t.sidebar).id;
@@ -77,9 +77,11 @@ describe('text size, and where it must not go', () => {
   it('is withheld from EVERY sidebar template, derived rather than listed', () => {
     // The print clone pins a sidebar with `position: fixed` so Chrome repeats it per page.
     // Zoom around that is an unknown that would fail in the PDF only. Derived from
-    // sidebarFill so a new sidebar template is excluded the day it is added.
+    // sidebarOf so a new sidebar template is excluded the day it is added — and sidebarOf,
+    // not sidebarFill: what disqualifies a template is having a pinned rail at all, which
+    // includes ApplyRight Band's uncoloured one.
     TEMPLATES.forEach((t) => {
-      expect(supportsTypeScale(t.id)).toBe(!sidebarFill(t.id));
+      expect(supportsTypeScale(t.id)).toBe(!sidebarOf(t.id));
     });
     expect(typeScaleStyle(sidebarTemplate)).toBeUndefined();
     expect(designVars({ textSize: 'small' }, { templateId: sidebarTemplate })).not.toHaveProperty(
@@ -139,6 +141,18 @@ describe('which element actually flows onto pages', () => {
     aside.setAttribute('data-cv-sidebar', '');
     root.append(aside);
     expect(flowElementFor(root, sidebarTemplate)).toBe(root);
+  });
+
+  it('looks the OTHER WAY on a right-hand rail', () => {
+    // ApplyRight Band's rail is last in flow, so its main column is the previous sibling.
+    // Asking for the next one found nothing, fell back to the root, and quietly measured
+    // max(main, rail) — the exact over-count flowElementFor exists to prevent.
+    const root = document.createElement('div');
+    const main = document.createElement('div');
+    const aside = document.createElement('aside');
+    aside.setAttribute('data-cv-sidebar', 'right');
+    root.append(main, aside);
+    expect(flowElementFor(root, 'applyright-band')).toBe(main);
   });
 
   it('survives a null node', () => {

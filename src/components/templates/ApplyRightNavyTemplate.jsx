@@ -1,13 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Globe, Linkedin, Mail, MapPin, Phone } from 'lucide-react';
-import { CV_LABELS } from '../../lib/cvLabels';
-
-const headingForms = (canonicalKey) => {
-  const entry = CV_LABELS[canonicalKey];
-  const forms = entry ? Array.from(new Set(Object.values(entry).filter(Boolean))) : [canonicalKey];
-  return forms.map((label) => label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
-};
+import { planSidebar } from '../../lib/cvSidebarSections';
 
 const elementProps = (props) => {
   const clean = { ...props };
@@ -55,16 +49,59 @@ const ApplyRightNavyTemplate = ({ markdown, userProfile }) => {
       value: userProfile.portfolioUrl.replace(/^https?:\/\//, ''),
     },
   ].filter(Boolean);
-  const bodyMarkdown = markdown.replace(/^#\s+.+$/m, '').trim();
-  const skillsPattern = new RegExp(
-    `^##\\s+(?:${headingForms('skills')})\\s*\\n([\\s\\S]*?)(?=\\n##\\s+|(?![\\s\\S]))`,
-    'm'
-  );
-  const skillsRaw = bodyMarkdown.match(skillsPattern)?.[1]?.trim() || '';
-  const languageMatch = skillsRaw.match(/^-\s+\*\*Languages:\*\*\s*(.+)$/m);
-  const languagesLine = languageMatch?.[1]?.trim() || '';
-  const skillsMarkdown = languageMatch ? skillsRaw.replace(languageMatch[0], '').trim() : skillsRaw;
-  const mainMarkdown = bodyMarkdown.replace(skillsPattern, '').trim();
+  // What the rail can hold, decided before anything renders — see lib/cvSidebarSections.
+  // Replaces a skills-only scrape that also hunted a legacy `- **Languages:**` bullet
+  // inside Skills; markdownUtils emits a standalone `## Languages` section now, so that
+  // block had been silently empty.
+  const {
+    sidebar: rail,
+    headings: railHeadings,
+    mainMarkdown,
+  } = planSidebar(markdown, 'applyright-navy', {
+    hasPhoto: Boolean(userProfile?.photoUrl),
+    contactCount: contactItems.length,
+  });
+
+  const railSection = (key) =>
+    rail[key] ? (
+      <section className="mb-7 border-t border-white/15 pt-5">
+        <h2 className="mb-3 text-[8.3pt] font-bold uppercase tracking-[0.2em] text-white/45">
+          {railHeadings[key]}
+        </h2>
+        <ReactMarkdown
+          components={{
+            p: (props) => (
+              <p className="mb-2 text-[8.8pt] text-white/80" {...elementProps(props)}>
+                {props.children}
+              </p>
+            ),
+            ul: (props) => (
+              <ul className="space-y-1.5 text-[8.8pt] text-white/80" {...elementProps(props)}>
+                {props.children}
+              </ul>
+            ),
+            li: (props) => <li {...elementProps(props)}>{props.children}</li>,
+            h3: (props) => (
+              <h3 className="text-[9pt] font-semibold text-white" {...elementProps(props)}>
+                {props.children}
+              </h3>
+            ),
+            h4: (props) => (
+              <h4 className="mb-1 text-[8.2pt] text-white/55" {...elementProps(props)}>
+                {props.children}
+              </h4>
+            ),
+            strong: (props) => (
+              <strong className="font-semibold text-white" {...elementProps(props)}>
+                {props.children}
+              </strong>
+            ),
+          }}
+        >
+          {rail[key]}
+        </ReactMarkdown>
+      </section>
+    ) : null;
 
   return (
     <div
@@ -109,44 +146,10 @@ const ApplyRightNavyTemplate = ({ markdown, userProfile }) => {
           </section>
         )}
 
-        {skillsMarkdown && (
-          <section className="mb-7 border-t border-white/15 pt-5">
-            <h2 className="mb-3 text-[8.3pt] font-bold uppercase tracking-[0.2em] text-white/45">
-              Skills
-            </h2>
-            <ReactMarkdown
-              components={{
-                p: (props) => (
-                  <p className="mb-2 text-[8.8pt] text-white/80" {...elementProps(props)}>
-                    {props.children}
-                  </p>
-                ),
-                ul: (props) => (
-                  <ul className="space-y-1.5 text-[8.8pt] text-white/80" {...elementProps(props)}>
-                    {props.children}
-                  </ul>
-                ),
-                li: (props) => <li {...elementProps(props)}>{props.children}</li>,
-                strong: (props) => (
-                  <strong className="font-semibold text-white" {...elementProps(props)}>
-                    {props.children}
-                  </strong>
-                ),
-              }}
-            >
-              {skillsMarkdown}
-            </ReactMarkdown>
-          </section>
-        )}
-
-        {languagesLine && (
-          <section className="border-t border-white/15 pt-5">
-            <h2 className="mb-3 text-[8.3pt] font-bold uppercase tracking-[0.2em] text-white/45">
-              Languages
-            </h2>
-            <p className="text-[8.8pt] text-white/80">{languagesLine}</p>
-          </section>
-        )}
+        {railSection('skills')}
+        {railSection('languages')}
+        {railSection('certifications')}
+        {railSection('education')}
       </aside>
 
       <main className="w-[66%]" style={{ padding: 'var(--cv-margin, 2.6rem)' }}>

@@ -75,6 +75,7 @@ import {
   TEMPLATE_GROUP_ORDER,
   templateGroupOf,
   sidebarFill,
+  sidebarOf,
   groundColor,
   GROUND_CHOICES,
 } from '../data/templates';
@@ -84,6 +85,7 @@ import { fitToOnePage } from '../lib/cvFit';
 import { CV_DESIGN_CSS } from '../lib/cvDesignCss';
 import { resolveDesign, DEFAULT_DESIGN } from '../lib/cvDesign';
 import StudioDesignRail from '../components/cv/StudioDesignRail';
+import SidebarFitWarning from '../components/cv/SidebarFitWarning';
 import StudioOverlay from '../components/ariaStudio/StudioOverlay';
 import useCvRailInline from '../hooks/useCvRailLayout';
 import { generateMarkdownFromDraft } from '../utils/markdownUtils';
@@ -127,6 +129,10 @@ import {
 // Watch-ad-for-credits is native-only; web has no ads. Downloads on web are
 // gated by the server-side paywall (DownloadPaywallModal), not an ad.
 const isAndroidNative = () => Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
+
+// How long the measured height must hold still before the sidebar nudge trusts it. Fonts
+// settling and a photo loading each move it once more after the first layout pass.
+const SIDEBAR_WARNING_SETTLE_MS = 350;
 
 // The sidebar-fill registry moved to data/templates (sidebarFill) so Aria Studio's
 // template preview can render the same band. It only existed here, which is why a
@@ -430,6 +436,39 @@ const ResumeReview = () => {
   const rawPageHeightPx = RAW_PAGE_HEIGHT_PX[design.paper] || RAW_PAGE_HEIGHT_PX.a4;
   const pageCount = pageCountFor(contentHeight, design.paper);
 
+  // ── The sidebar-template one-page nudge ──
+  // Armed by a deliberate pick (selectTemplate, below) and read by the effect here once
+  // the new layout has been measured. A ref and not state: at the moment of the pick,
+  // `pageCount` still describes the OUTGOING template, so the verdict cannot be reached
+  // until after the next commit. Nothing arms it on arrival, which is what keeps the
+  // dialog off a page someone merely opened. A warned template is remembered, so
+  // re-picking it says nothing.
+  const pendingSidebarCheckRef = useRef(null);
+  const warnedTemplatesRef = useRef(new Set());
+  const [sidebarWarning, setSidebarWarning] = useState(null); // { templateId, fitState }
+
+  // THE VERDICT, once the measurement has stopped moving.
+  //
+  // Three things move `contentHeight` after a template change: the layout effect above,
+  // then `document.fonts.ready`, then any photo finishing loading (every sidebar template
+  // prints one). Reading the count at the first of those would ask before the answer
+  // exists, and re-reading at each would risk the dialog appearing twice. So the timer is
+  // restarted by every height change and only the quiet that follows counts as settled.
+  useEffect(() => {
+    const pending = pendingSidebarCheckRef.current;
+    if (!pending || pending !== templateId || contentHeight == null) return undefined;
+
+    const timer = window.setTimeout(() => {
+      pendingSidebarCheckRef.current = null;
+      warnedTemplatesRef.current.add(pending);
+      if (pageCountFor(contentHeight, design.paper) > 1) {
+        setSidebarWarning({ templateId: pending, fitState: 'idle' });
+      }
+    }, SIDEBAR_WARNING_SETTLE_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [contentHeight, templateId, design.paper]);
+
   // FIT TO ONE PAGE. Measures the live DOM rather than going through React: the ladder
   // tries up to eight designs, and a render-plus-ResizeObserver round trip per rung is
   // both slow and a race with itself. Only the winner is committed to state.
@@ -472,7 +511,12 @@ const ResumeReview = () => {
   // does not know which one it is in, so the decision lives here and reaches it as
   // `onClose` — passed by the sheet, omitted by the column.
   const selectTemplate = useCallback((nextId) => {
-    setTemplateId(nextId);
+    setTemplateId((current) => {
+      if (nextId !== current && sidebarOf(nextId) && !warnedTemplatesRef.current.has(nextId)) {
+        pendingSidebarCheckRef.current = nextId;
+      }
+      return nextId;
+    });
   }, []);
 
   const [showRoleTrim, setShowRoleTrim] = useState(false);
@@ -1279,6 +1323,46 @@ const ResumeReview = () => {
         currentSummary={currentSummary}
         onApply={applySummary}
         onClose={() => setShowSummaryTrim(false)}
+      />
+
+      {/* Fires once, after a deliberate pick of a sidebar template on a CV that runs long.
+          Every remedy below is a handler LengthCoach already owns — this dialog decides
+          nothing about page length, it only asks the question at the moment the choice is
+          being made. */}
+      <SidebarFitWarning
+        open={!!sidebarWarning}
+        pageCount={pageCount}
+        templateName={TEMPLATES.find((t) => t.id === sidebarWarning?.templateId)?.name || ''}
+        fitState={sidebarWarning?.fitState || 'idle'}
+        canTrimSummary={!!currentSummary}
+        canTrimRoles={!!builderId}
+        onContinue={() => setSidebarWarning(null)}
+        onClose={() => setSidebarWarning(null)}
+        onFitOnePage={() => {
+          const result = handleFitOnePage();
+          // Only close on a real win. The ladder's strongest rung (type scale) is inert on
+          // sidebar templates, so "could not fit" is a likely outcome here and the dialog
+          // has to say so rather than appearing to do nothing.
+          if (result?.fits) setSidebarWarning(null);
+          else setSidebarWarning((prev) => (prev ? { ...prev, fitState: 'partial' } : prev));
+        }}
+        onShortenSummary={() => {
+          setSidebarWarning(null);
+          setShowSummaryTrim(true);
+        }}
+        onTrimRoles={() => {
+          setSidebarWarning(null);
+          if (isDraftMode) openRoleTrim();
+          else navigate(`/cv-builder/${builderId}/history?trim=1`);
+        }}
+        onPickAnother={() => {
+          setSidebarWarning(null);
+          // The same escape hatch the ATS panel offers: the templates tab, on the family
+          // that has no sidebar at all.
+          setRailTab('templates');
+          setTemplateGroup('Simple');
+          openDesign();
+        }}
       />
 
       {showRoleTrim && (
