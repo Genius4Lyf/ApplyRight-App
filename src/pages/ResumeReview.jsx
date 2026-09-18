@@ -265,38 +265,6 @@ const ResumeReview = () => {
     }
   }, [design, application?._id]);
 
-  // Editable DRAFT title in the toolbar (applications keep a static job title).
-  const [titleValue, setTitleValue] = useState('');
-  const savingTitleRef = useRef(false); // guard re-entrant saves (Enter + blur)
-  // Seed the editable value once the draft loads / changes. Intentionally keyed
-  // on the id only (not title) so in-progress typing isn't clobbered by re-seeds.
-  useEffect(() => {
-    setTitleValue(application?.title || '');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [application?._id]);
-  // Persist a rename on Enter/blur. Spread the full loaded draft so /cv/save
-  // (an upsert that merges via findByIdAndUpdate) never drops any field.
-  const commitDraftTitle = async () => {
-    const next = titleValue.trim();
-    if (!next) {
-      setTitleValue(application?.title || ''); // empty → revert
-      return;
-    }
-    if (next === (application?.title || '') || savingTitleRef.current) return;
-    savingTitleRef.current = true;
-    try {
-      await CVService.saveDraft({ ...application, title: next });
-      setApplication((a) => ({ ...a, title: next }));
-      toast.success('Renamed');
-    } catch (err) {
-      console.error('Rename draft failed:', err);
-      toast.error('Could not rename');
-      setTitleValue(application?.title || '');
-    } finally {
-      savingTitleRef.current = false;
-    }
-  };
-
   // Splice a new professional summary into the CV markdown: updates the live
   // preview (which re-flows → the page-count badge re-counts) and persists via the
   // same saveDraft path the title uses.
@@ -1585,33 +1553,13 @@ const ResumeReview = () => {
           {/* openCvList, not openSidebar: opening one sheet closes the other. */}
           <SidebarToggle onClick={openCvList} className="mr-auto -ml-1" />
 
-          {/* CENTER: title + PDF·A4 chip, absolutely centered together */}
+          {/* CENTER: the page-length coach (a draft) or the job title beside it (an
+              application). A DRAFT SHOWS NO NAME HERE: you arrived by picking this CV out
+              of the recents rail, which shows its name and is where it is renamed, so the
+              header was repeating the label you had just read — and "Untitled draft", the
+              commonest case, named nothing at all. */}
           <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 max-w-[calc(100%-9rem)] lg:max-w-[calc(100%-26rem)]">
-            {isDraftMode ? (
-              /* The CV's name, edited in place. It was a boxed input at the top of the
-                 design panel — which is not a design control, and which put the only
-                 rename on this page behind a drawer. Bare transparent text, no box and
-                 no ring: the same treatment the Aria Studio recents row and the CV
-                 Builder's top bar already use for a title you can just type over. */
-              <input
-                type="text"
-                value={titleValue}
-                onChange={(e) => setTitleValue(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') e.currentTarget.blur();
-                  // Escape abandons the edit. Without it the only way out of a
-                  // half-typed name is to finish typing it.
-                  if (e.key === 'Escape') {
-                    setTitleValue(application?.title || '');
-                    e.currentTarget.blur();
-                  }
-                }}
-                onBlur={commitDraftTitle}
-                placeholder="Untitled draft"
-                aria-label={t('cvStudio.renameCv')}
-                className="min-w-0 flex-1 truncate border-0 bg-transparent p-0 font-heading text-base font-bold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400 focus:outline-none dark:text-slate-100"
-              />
-            ) : (
+            {!isDraftMode && (
               <h1 className="font-heading text-base font-bold text-slate-900 dark:text-slate-100 truncate">
                 {application?.jobId?.title || application?.jobTitle || 'Untitled role'}
                 {(application?.jobId?.company || application?.jobCompany) && (
@@ -1655,6 +1603,24 @@ const ResumeReview = () => {
 
           {/* RIGHT: tab toggle (non-draft) + desktop actions */}
           <div className="flex items-center gap-2 shrink-0">
+            {/* Templates & design. It used to live in the phone's bottom action bar,
+                beside Download and Edit — two commitments and a way to browse, given
+                equal weight at the bottom of the screen. Up here it ends the header the
+                way the sidebar toggle begins it, leaving the page indicator alone in the
+                middle. Only when the panel is NOT already an inline column: at ≥1024px
+                it is permanently on screen and a button to open it opens nothing. */}
+            {!railInline && (
+              <button
+                type="button"
+                onClick={openDesign}
+                aria-haspopup="dialog"
+                aria-expanded={designOverlay}
+                aria-label={t('cvStudio.designPanel.label')}
+                className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+              >
+                <Palette className="w-[18px] h-[18px]" />
+              </button>
+            )}
             {/* Resume / Cover Letter tab toggle — single source of truth in the
             header for all screen sizes. Labels collapse to "CV"/"Letter" on
             phones to keep the row compact alongside the back button + title.
@@ -2300,19 +2266,6 @@ const ResumeReview = () => {
               onEditInBuilder={openEditInBuilder}
               triggerClassName="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-sm px-3 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
             />
-            {/* The way into templates and design. It was a MoreHorizontal labelled
-                "More options", which named the menu pattern rather than the thing behind
-                it — and what is behind it is the whole panel this page exists for. */}
-            <button
-              type="button"
-              onClick={openDesign}
-              aria-haspopup="dialog"
-              aria-expanded={designOverlay}
-              aria-label={t('cvStudio.designPanel.label')}
-              className="bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 px-3 py-2.5 rounded-lg flex items-center justify-center transition-all"
-            >
-              <Palette className="w-4 h-4" />
-            </button>
           </div>
         )}
 

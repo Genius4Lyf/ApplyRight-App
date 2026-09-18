@@ -4071,7 +4071,6 @@
       "paperSize": "Paper size",
       "pageColour": "Page colour"
     },
-    "renameCv": "CV name",
     "templateFilter": {
       "ariaLabel": "Filter templates by style"
     },

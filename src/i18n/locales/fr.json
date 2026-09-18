@@ -4067,7 +4067,6 @@
       "paperSize": "Format du papier",
       "pageColour": "Couleur de la page"
     },
-    "renameCv": "Nom du CV",
     "templateFilter": {
       "ariaLabel": "Filtrer les modèles par style"
     },
