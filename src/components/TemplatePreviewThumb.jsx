@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 
 // The id → component map is SHARED (lib/templateComponents). It used to be declared
 // here with a comment saying CVTemplateRenderer's keys deliberately differed — which is
@@ -81,21 +81,71 @@ const SAMPLE_USER_PROFILE = {
   // (photo is optional everywhere), and this avoids needing a placeholder image.
 };
 
+// The page itself, at full A4 width — the callers below scale it down. Falls back through
+// the shared map rather than a locally-imported component: this line used to name
+// `ATSCleanTemplate`, which stopped being imported when the map moved to
+// lib/templateComponents. An unknown id would have thrown a ReferenceError here — a crash
+// instead of the fallback it was written to be.
+const Inner = ({ templateId }) => {
+  const Comp = TEMPLATE_COMPONENTS[templateId] || TEMPLATE_COMPONENTS['ats-clean'];
+  return <Comp markdown={SAMPLE_MARKDOWN} userProfile={SAMPLE_USER_PROFILE} />;
+};
+
 // Live, scaled, non-interactive mini-render of one template with fixed sample
 // content, so every template is directly comparable regardless of the user's
 // actual CV length. Rendered at the template's DEFAULT styling — the design vars
 // (accent/font/…) are deliberately NOT applied here; the main preview shows the
 // applied design.
+// `fluid` renders at whatever width the parent gives it, measured, instead of a fixed px
+// value. The picker used a hardcoded 110px at every size, so the same small thumbnail was
+// shown on a phone sheet and in a 384px desktop rail, leaving room unused in both.
 const TemplatePreviewThumb = ({
   templateId,
+  fluid = false,
   width = 150,
   height = Math.round(width * (A4_HEIGHT_PX / A4_WIDTH_PX)),
 }) => {
-  // Falls back through the shared map rather than to a locally-imported component:
-  // this line used to name `ATSCleanTemplate`, which stopped being imported when the
-  // map moved to lib/templateComponents. An unknown id would have thrown a
-  // ReferenceError here — a crash instead of the fallback it was written to be.
-  const Comp = TEMPLATE_COMPONENTS[templateId] || TEMPLATE_COMPONENTS['ats-clean'];
+  const boxRef = useRef(null);
+  const [measured, setMeasured] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!fluid) return undefined;
+    const box = boxRef.current;
+    if (!box) return undefined;
+    // jsdom and older browsers have no ResizeObserver; the first measurement still lands,
+    // which is all a rail that only resizes with the window strictly needs.
+    setMeasured(box.clientWidth);
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(([entry]) =>
+      setMeasured(entry.contentRect.width || box.clientWidth)
+    );
+    observer.observe(box);
+    return () => observer.disconnect();
+  }, [fluid]);
+
+  if (fluid) {
+    return (
+      <div
+        ref={boxRef}
+        className="w-full"
+        style={{ aspectRatio: `${A4_WIDTH_PX} / ${A4_HEIGHT_PX}`, overflow: 'hidden' }}
+        aria-hidden="true"
+      >
+        {measured > 0 && (
+          <div
+            style={{
+              width: A4_WIDTH_PX,
+              transform: `scale(${measured / A4_WIDTH_PX})`,
+              transformOrigin: 'top left',
+              pointerEvents: 'none',
+            }}
+          >
+            <Inner templateId={templateId} />
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div style={{ width, height, overflow: 'hidden', position: 'relative' }} aria-hidden="true">
@@ -107,7 +157,7 @@ const TemplatePreviewThumb = ({
           pointerEvents: 'none',
         }}
       >
-        <Comp markdown={SAMPLE_MARKDOWN} userProfile={SAMPLE_USER_PROFILE} />
+        <Inner templateId={templateId} />
       </div>
     </div>
   );

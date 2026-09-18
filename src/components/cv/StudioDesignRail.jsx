@@ -549,23 +549,37 @@ const StudioDesignRail = ({
                       const isDanglingLast =
                         i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
                       return (
-                        <div
+                        <button
                           key={t.id}
+                          type="button"
+                          aria-pressed={templateId === t.id}
                           onClick={() => {
                             onSelectTemplate(t.id);
                             // Dismisses the sheet; a no-op in the inline column, which
                             // passes no onClose because there is nothing to close.
                             onClose?.();
                           }}
-                          className={`${isDanglingLast ? 'col-span-2' : ''} cursor-pointer rounded-lg border overflow-hidden transition-all ${
-                            templateId === t.id
-                              ? 'border-slate-900 ring-1 ring-slate-900 dark:border-white dark:ring-white'
-                              : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                          }`}
+                          className={`${isDanglingLast ? 'col-span-2' : ''} group block w-full cursor-pointer text-left`}
                         >
-                          {/* Live mini-render of the actual CV in this style. */}
-                          <div className="relative flex justify-center overflow-hidden bg-white border-b border-slate-200 dark:border-slate-800">
-                            <TemplatePreviewThumb templateId={t.id} width={110} />
+                          {/* NO CARD AROUND THE PAGE. A thumbnail is already a picture of
+                              a sheet of paper; a bordered box around it framed a frame,
+                              and the frame was the thing that had to shrink to fit. What
+                              separates two white pages side by side is a shadow — the
+                              paper lifting off the ground — with a hairline in dark mode,
+                              where a shadow on a near-black ground shows nothing.
+
+                              Selection is an ink outline ON the page, so the selected
+                              state reads as a state rather than as permanent chrome. */}
+                          <div
+                            className={`relative overflow-hidden rounded-sm bg-white transition-shadow ${
+                              templateId === t.id
+                                ? 'ring-2 ring-slate-900 dark:ring-white'
+                                : 'ring-1 ring-slate-900/[0.06] dark:ring-slate-700 shadow-[0_1px_2px_rgba(15,23,42,0.08),0_6px_16px_-8px_rgba(15,23,42,0.24)] group-hover:shadow-[0_2px_4px_rgba(15,23,42,0.10),0_10px_24px_-10px_rgba(15,23,42,0.30)]'
+                            }`}
+                          >
+                            {/* Fills its column instead of a fixed 110px, so the page is
+                                as big as the rail (or the phone sheet) can afford. */}
+                            <TemplatePreviewThumb templateId={t.id} fluid />
                             {/* Faint dim on locked styles. */}
                             {locked && (
                               <div className="absolute inset-0 bg-white/40 dark:bg-slate-900/50" />
@@ -576,36 +590,35 @@ const StudioDesignRail = ({
                                 <Lock size={10} className="text-white" />
                               </div>
                             )}
-                            {/* Tier badge — FREE / {cost} CR / PRO. */}
-                            <div
-                              className={`absolute bottom-1 right-1 px-1.5 py-0.5 text-[8px] font-bold rounded leading-none ${
-                                t.cost === 0
-                                  ? 'bg-emerald-500 text-white'
-                                  : locked
-                                    ? 'bg-slate-800 text-white'
-                                    : 'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                          </div>
+                          {/* Name, then the tier as quiet text on the SAME line. The tier
+                              used to be a coloured pill (emerald/amber) sitting on the
+                              artwork — loud, and covering the very thing being judged.
+                              Free carries no tag at all: free is what a template is
+                              assumed to be, so saying it on most of them is noise. */}
+                          <div className="mt-1.5 flex items-baseline gap-1.5">
+                            <span
+                              className={`min-w-0 truncate text-xs ${
+                                templateId === t.id
+                                  ? 'font-semibold text-slate-900 dark:text-white'
+                                  : 'font-medium text-slate-700 dark:text-slate-300'
                               }`}
                             >
-                              {t.cost === 0 ? 'FREE' : locked ? `${t.cost} CR` : 'PRO'}
-                            </div>
-                          </div>
-                          {/* Caption. */}
-                          <div
-                            className={`flex items-center gap-1.5 px-2 py-1.5 ${
-                              templateId === t.id ? 'bg-slate-100 dark:bg-slate-800' : ''
-                            }`}
-                          >
-                            <span className="flex-1 text-xs font-medium text-slate-700 dark:text-slate-300 truncate">
                               {t.name}
                             </span>
+                            {t.cost > 0 && (
+                              <span className="shrink-0 font-mono text-[9px] uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
+                                {locked ? `${t.cost} cr` : 'Pro'}
+                              </span>
+                            )}
                             {templateId === t.id && (
                               <Check
-                                size={13}
-                                className="shrink-0 text-slate-900 dark:text-slate-100"
+                                size={12}
+                                className="ml-auto shrink-0 self-center text-slate-900 dark:text-white"
                               />
                             )}
                           </div>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>

@@ -116,7 +116,7 @@ describe('StudioDesignRail — picking a template', () => {
     const onSelectTemplate = vi.fn();
     openTemplates({ onSelectTemplate });
     const simple = TEMPLATES.filter((t) => t.group === 'Simple');
-    fireEvent.click(screen.getByText(simple[0].name).closest('div[class*="cursor-pointer"]'));
+    fireEvent.click(screen.getByText(simple[0].name).closest('button'));
     expect(onSelectTemplate).toHaveBeenCalledWith(simple[0].id);
   });
 
@@ -128,14 +128,14 @@ describe('StudioDesignRail — picking a template', () => {
     const simple = TEMPLATES.filter((t) => t.group === 'Simple');
 
     openTemplates({ onClose });
-    fireEvent.click(screen.getByText(simple[0].name).closest('div[class*="cursor-pointer"]'));
+    fireEvent.click(screen.getByText(simple[0].name).closest('button'));
     expect(onClose).toHaveBeenCalledTimes(1);
 
     cleanup();
     // No onClose at all — the inline column. Must not throw.
     openTemplates();
     expect(() =>
-      fireEvent.click(screen.getByText(simple[0].name).closest('div[class*="cursor-pointer"]'))
+      fireEvent.click(screen.getByText(simple[0].name).closest('button'))
     ).not.toThrow();
   });
 
