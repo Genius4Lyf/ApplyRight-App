@@ -116,10 +116,22 @@ const StudioDesignRail = ({
   // dependency list to keep honest.
   const ats = designAtsVerdict(templateId, design, userProfile);
 
+  // A tailored application always has a fit score; a draft has the strip only once its
+  // readiness has been computed.
+  const hasInsights = !isDraftMode || !!atsReadiness;
+
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar">
-      {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes). */}
-      <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800">
+      {/* a) Insights strip — collapsible editorial summary (replaces the pastel boxes).
+          Collapses to nothing when there is no score to show. A draft without a readiness
+          figure used to print the words "Live draft preview" here — a third title above a
+          panel already headed "Design" and tabbed "Templates / Design", naming the thing
+          you were looking at instead of telling you anything about it. */}
+      <div
+        className={`px-5 ${
+          hasInsights ? 'py-3.5 border-b border-slate-100 dark:border-slate-800' : ''
+        }`}
+      >
         {!isDraftMode ? (
           <>
             <button
@@ -238,11 +250,7 @@ const StudioDesignRail = ({
               </div>
             )}
           </>
-        ) : (
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-slate-400 dark:text-slate-500">
-            Live draft preview
-          </p>
-        )}
+        ) : null}
       </div>
 
       {/* b) Rail tabs — Templates / Design (ink underline like the masthead). */}
@@ -543,9 +551,15 @@ const StudioDesignRail = ({
               if (!groupTemplates.length) return null;
               return (
                 <div key={groupName} className="space-y-2.5">
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* ONE PER ROW on a phone, two from sm up. An odd-numbered family
+                      already ended on a full-width thumbnail (the dangling last), and
+                      that one was the only one you could actually read — so a phone gets
+                      that size for every template rather than only the leftover. */}
+                  <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-3">
                     {groupTemplates.map((t, i) => {
                       const locked = !isUnlocked(t.id);
+                      // Only meaningful in the two-column layout — `col-span-2` in a
+                      // single-column grid would invent a second column to span into.
                       const isDanglingLast =
                         i === groupTemplates.length - 1 && groupTemplates.length % 2 === 1;
                       return (
@@ -559,7 +573,7 @@ const StudioDesignRail = ({
                             // passes no onClose because there is nothing to close.
                             onClose?.();
                           }}
-                          className={`${isDanglingLast ? 'col-span-2' : ''} group block w-full cursor-pointer text-left`}
+                          className={`${isDanglingLast ? 'sm:col-span-2' : ''} group block w-full cursor-pointer text-left`}
                         >
                           {/* NO CARD AROUND THE PAGE. A thumbnail is already a picture of
                               a sheet of paper; a bordered box around it framed a frame,
