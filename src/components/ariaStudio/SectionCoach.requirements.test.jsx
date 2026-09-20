@@ -173,13 +173,15 @@ const mount = ({ coverage = COVERAGE, keywords = KEYWORDS, messages } = {}) => {
   return { onPush };
 };
 
-// Found by its count, which is unique to the bar — the "what this job asks for" label is
-// deliberately shared with other surfaces, and the dock has several collapsibles.
+// The bar now opens on arrival, so this only waits for it and acts if something has since
+// closed it. Found by its count, which is unique to it — the "what this job asks for"
+// label is deliberately shared with other surfaces.
 const openBar = async (done = 1, total = 2) => {
   const count = await screen.findByText(
     t('ariaStudio.sectionCoach.checklist.count', { done, total })
   );
-  fireEvent.click(count.closest('button'));
+  const header = count.closest('button');
+  if (header?.getAttribute('aria-expanded') === 'false') fireEvent.click(header);
 };
 
 const pressCall = async () => {

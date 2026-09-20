@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 // `motion` is used only via <motion.div> in JSX; this eslint config lacks
 // jsx-uses-vars so it reads as unused — suppress the false positive.
 // eslint-disable-next-line no-unused-vars
@@ -535,6 +535,17 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
   // ref into state (not a plain ref) so SectionCoach re-renders and portals the moment the
   // slot is attached. See the dock in the render + SectionCoach's `dockNode`.
   const [coachDock, setCoachDock] = useState(null);
+
+  // ONE FLOATING PANEL AT A TIME.
+  //
+  // The pinned entry card hangs over the top of the conversation and the requirement bar
+  // rises from the bottom of it. Opened together on a phone they meet in the middle and
+  // bury the question being answered. Each signal only ever CLOSES the other panel, never
+  // opens it, so there is no way for the two to fight over who is showing.
+  const [pinCollapse, setPinCollapse] = useState(0);
+  const [barCollapse, setBarCollapse] = useState(0);
+  const closePinnedCard = useCallback(() => setPinCollapse((n) => n + 1), []);
+  const closeRequirementBar = useCallback(() => setBarCollapse((n) => n + 1), []);
   // One-shot guard for the localStorage → coachChats migration.
   const migratedRef = useRef(false);
   // Did this mount START a session (rail click), as opposed to OPENING an existing one?
@@ -3748,8 +3759,27 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
     const previousKey = previous ? `${previous.section}:${previous.sortId}` : null;
     if (previousKey === focusNoticeKey) return;
 
-    if (focusNotice) push({ who: 'focus', ...focusNotice });
-    else if (previous) push({ who: 'unfocus' });
+    // AND ASK THE TRANSCRIPT, not just the ref.
+    //
+    // The priming above can settle a beat before the restored pin arrives, and then the
+    // pin reads as a CHANGE and announces a focus the saved thread already ends with —
+    // two identical "Focus · <role>" rules, one under the other, on every refresh.
+    //
+    // The ref tracks what THIS mount has seen; the thread knows what the user is actually
+    // looking at. A marker that repeats the one already at the end of the conversation
+    // tells them nothing, so it is the thread that gets the final say.
+    const lastMarker = [...messages]
+      .reverse()
+      .find((m) => m?.who === 'focus' || m?.who === 'unfocus');
+    const alreadySaid = focusNotice
+      ? lastMarker?.who === 'focus' &&
+        `${lastMarker.section}:${lastMarker.sortId}` === focusNoticeKey
+      : !lastMarker || lastMarker.who === 'unfocus';
+
+    if (!alreadySaid) {
+      if (focusNotice) push({ who: 'focus', ...focusNotice });
+      else if (previous) push({ who: 'unfocus' });
+    }
     focusNoticeRef.current = focusNotice;
   }, [
     focusNoticeKey,
@@ -4062,6 +4092,8 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
               <PinnedEntryCard
                 key={pinnedEntry._sortId}
                 entry={pinnedEntry}
+                onOpen={closeRequirementBar}
+                collapseSignal={pinCollapse}
                 section={pinnedSectionKey}
                 typePicked={!!pinnedType}
                 typeLabel={(() => {
@@ -4368,6 +4400,27 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
             // interviewing on, plus the point where that focused conversation closed.
             if (m.who === 'focus' || m.who === 'unfocus') {
               const exited = m.who === 'unfocus';
+
+              // A REPEAT SAYS NOTHING, SO IT DRAWS NOTHING.
+              //
+              // The write-side guard stops NEW duplicates, but the markers are persisted —
+              // a thread that already collected three identical "Focus · <role>" rules
+              // before the guard existed would keep showing all three forever, and no
+              // amount of fixing the writer repairs a conversation already saved.
+              //
+              // Hidden rather than deleted: the stored transcript is the record of what
+              // happened, and quietly rewriting someone's history to tidy a display bug is
+              // a worse habit than rendering it kindly.
+              const previousMarker = messages
+                .slice(0, i)
+                .reverse()
+                .find((p) => p?.who === 'focus' || p?.who === 'unfocus');
+              const repeatsPrevious =
+                previousMarker?.who === m.who &&
+                (exited ||
+                  (String(previousMarker.sortId) === String(m.sortId) &&
+                    previousMarker.section === m.section));
+              if (repeatsPrevious) return null;
               return (
                 <motion.div
                   key={i}
@@ -5332,6 +5385,8 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
               onGetMinutes={() => onNavigate?.('/credits')}
               jobCoverage={jobCoverage}
               jobKeywords={jobKeywords}
+              onBarOpen={closePinnedCard}
+              barCollapseSignal={barCollapse}
               // Announce the voice feature here, and only here: this coach opens the instant
               // the entry form is submitted, with the first interview question about to be
               // asked. Once per account, enforced on the account — see SectionCoach.
@@ -5535,7 +5590,11 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
           portals its own composer (free-note + textarea + Back/turns row) in here, so a
           focused-section input stays put and ONLY the messages scroll. Empty (zero-height)
           during the coach's picker/results phases, which have no input of their own. */}
-      {coachOwnsInput && <div ref={setCoachDock} className="shrink-0" />}
+      {/* Raised above the pinned entry card (sticky, z-20). The requirement bar's list
+          grows UPWARD out of this dock into the conversation, and at the default stacking
+          the card was painted over its top edge — on desktop the list simply disappeared
+          under it. The dock is the input; it belongs on top of what scrolls behind it. */}
+      {coachOwnsInput && <div ref={setCoachDock} className="relative z-30 shrink-0" />}
 
       {/* Stopping an interview asks first, and the answer decides whether the role stays.
           Portalled to the body from here, so it is reachable from the edit panel too —

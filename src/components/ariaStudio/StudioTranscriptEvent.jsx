@@ -33,18 +33,21 @@ export const StudioReceipt = ({ title, detail, reduce = false }) => (
     {...bubbleAnim('aria', reduce)}
     role="status"
   >
+    {/* Sized to be READ, not just noticed. This is the receipt for work that just landed
+        on the CV — the moment the interview pays off — and at 14/12 it was the smallest
+        text in the thread, announcing the largest thing that had happened in it. */}
     <span
       aria-hidden="true"
-      className="mt-0.5 flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
+      className="mt-0.5 flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[12px] font-bold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400"
     >
       ✓
     </span>
     <span className="min-w-0">
-      <span className="block text-[14px] font-semibold leading-5 text-slate-800 dark:text-slate-100">
+      <span className="block text-[16px] font-semibold leading-6 text-slate-800 dark:text-slate-100">
         {title}
       </span>
       {detail ? (
-        <span className="block truncate text-[12px] leading-4 text-slate-500 dark:text-slate-400">
+        <span className="block truncate text-[13px] leading-5 text-slate-500 dark:text-slate-400">
           {detail}
         </span>
       ) : null}

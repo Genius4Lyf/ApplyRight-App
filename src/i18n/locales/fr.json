@@ -4380,7 +4380,10 @@
       "bonus": "Non exigé — un plus si vous l'avez.",
       "provedAt": "vous l'avez montré dans {{where}}",
       "askAria": "En parler à Aria",
-      "pillAria": "{{done}} sur {{total}} indispensables couverts — ouvrir ce que ce poste demande"
+      "fullDescription": "L'annonce elle-même",
+      "pillAria": "Ouvrir l'annonce",
+      "pillLabel": "Annonce",
+      "noPosting": "Aucun texte d'annonce n'a été enregistré pour ce CV."
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Copie adaptée",
@@ -5415,6 +5418,7 @@
         "count": "{{done}} sur {{total}}",
         "askMe": "Interroge-moi là-dessus",
         "askOnCall": "Pose-moi la question ensuite",
+        "asked": "Demandé — touchez-en un autre pour changer",
         "nextUp": "juste après…",
         "declined": "vous avez répondu non",
         "undo": "Reposer la question finalement"

@@ -13,6 +13,7 @@ import { useAriaModel } from '../../hooks/useAriaModel';
 import { useJobCoverage } from '../../hooks/useJobCoverage';
 import useBodyScrollLock from '../../hooks/useBodyScrollLock';
 import { bandOf } from '../../lib/applicationInsights';
+import { pressable } from '../../lib/ariaMotion';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import CVService from '../../services/cv.service';
@@ -628,30 +629,29 @@ const StudioDesk = () => {
               </button>
             )}
 
-            {/* The job tracker — the build track's answer to the score pill above. Shows
-                how many of the job's MUST-HAVES the CV can defend so far, from the moment
-                the JD is read. Deliberately ink and not a band colour: 0 of 4 at the start
-                of a build is a to-do list, and painting it red would call an unfinished CV
-                a bad one. */}
+            {/* THE POSTING, one tap away.
+                This used to carry the must-have count. It was the same figure the bar
+                above the composer shows during an interview, and the panel behind it
+                showed a third copy — so the number lived in three places at once and the
+                quietest of them was a header pill nobody was reading it from. What it is
+                actually good for is getting to the employer's own words, so it says so. */}
             {showJobTracker && (
-              <button
+              // It depresses, and the border answers on hover — the other header controls
+              // are icons, which read as pressable on sight; a bordered word does not, and
+              // this one was being read as a status chip rather than a way in.
+              <motion.button
+                {...pressable(reduceMotion)}
                 type="button"
                 onClick={openTarget}
-                aria-label={t('ariaStudio.jobTarget.pillAria', {
-                  done: jobCoverage?.mustHaveCovered ?? 0,
-                  total: jobCoverage?.mustHaveTotal ?? 0,
-                })}
-                title={t('ariaStudio.jobTarget.eyebrow')}
-                className="shrink-0 inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                aria-label={t('ariaStudio.jobTarget.pillAria')}
+                title={t('ariaStudio.jobTarget.fullDescription')}
+                className="group shrink-0 inline-flex items-center gap-1.5 rounded-full border border-slate-200 px-2.5 py-1 transition-colors hover:border-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-400 dark:hover:bg-slate-800"
               >
-                <Briefcase className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                <span className="font-heading text-[15px] font-bold tabular-nums text-slate-900 dark:text-white">
-                  {jobCoverage?.mustHaveCovered ?? 0}
+                <Briefcase className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-slate-700 transition-colors group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white">
+                  {t('ariaStudio.jobTarget.pillLabel')}
                 </span>
-                <span className="font-mono text-[9px] text-slate-400 dark:text-slate-500">
-                  /{jobCoverage?.mustHaveTotal ?? 0}
-                </span>
-              </button>
+              </motion.button>
             )}
 
             {/* View switch — the WIDE Live preview vs the NARROW insights. Active view
@@ -763,11 +763,7 @@ const StudioDesk = () => {
             </div>
           ) : panelView === 'target' ? (
             <div className="w-[320px] shrink-0 min-h-0">
-              <JobTargetPanel
-                coverage={jobCoverage}
-                keywords={jobKeywords}
-                onClose={() => layout.setPanelView(null)}
-              />
+              <JobTargetPanel onClose={() => layout.setPanelView(null)} />
             </div>
           ) : (
             <div className="w-[320px] shrink-0 min-h-0">
@@ -823,12 +819,7 @@ const StudioDesk = () => {
             isSheet={layout.panelUsesSheet}
           />
         ) : panelView === 'target' ? (
-          <JobTargetPanel
-            bare
-            coverage={jobCoverage}
-            keywords={jobKeywords}
-            onClose={() => layout.setPanelOverlay(false)}
-          />
+          <JobTargetPanel bare onClose={() => layout.setPanelOverlay(false)} />
         ) : (
           <StudioArtifactPanel
             bare

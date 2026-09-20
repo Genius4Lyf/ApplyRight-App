@@ -72,6 +72,11 @@ const SectionCoach = ({
   // Absent on the fix track, which has its own measured `missingKeywords`.
   jobCoverage = null,
   jobKeywords = [],
+  // Two floating panels share this corner of the screen — this one and the pinned entry
+  // card above the conversation. Opening either closes the other rather than letting them
+  // stack into each other on a phone.
+  onBarOpen,
+  barCollapseSignal = 0,
   messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
   onApply, // (add[], remove[]) => Promise<{ ok, found }>
@@ -134,6 +139,10 @@ const SectionCoach = ({
   // The requirement a tap has steered toward but that Aria has not reached yet. On a call
   // nothing audible happens for several seconds, so without this people tap again.
   const [pendingRequirementId, setPendingRequirementId] = useState(null);
+  // The one most recently asked about. Its tap stays spent for the rest of this interview
+  // unless another is used — asking twice in a row for the same thing is the only press
+  // here that can only repeat work.
+  const [askedRequirementId, setAskedRequirementId] = useState(null);
   // The three the pre-flight card offers. Same cap the server applies when it ranks
   // candidates — a long posting must never turn a role into an interrogation.
   const preflightRows = React.useMemo(() => askableRows(requirementRows, 3), [requirementRows]);
@@ -618,7 +627,8 @@ const SectionCoach = ({
   // to /coach/chat. The trade is that a call cannot verify the answer the way a typed turn
   // does; the transcript is banked at the end and judged there, as it already is.
   const askRequirement = (row) => {
-    if (!row?.requirementId) return;
+    if (!row?.requirementId || askedRequirementId === row.requirementId) return;
+    setAskedRequirementId(row.requirementId);
     if (call) {
       setPendingRequirementId(row.requirementId);
       call.steer?.(
@@ -1010,6 +1020,9 @@ const SectionCoach = ({
         onAsk={askRequirement}
         onUndo={undoDecline}
         pendingId={pendingRequirementId}
+        askedId={askedRequirementId}
+        onOpen={onBarOpen}
+        collapseSignal={barCollapseSignal}
         canAsk={callState !== 'connecting' && !(callSecondsLeft != null && callSecondsLeft <= 75)}
         onCall
       />
@@ -1087,6 +1100,9 @@ const SectionCoach = ({
         onAsk={askRequirement}
         onUndo={undoDecline}
         pendingId={pendingRequirementId}
+        askedId={askedRequirementId}
+        onOpen={onBarOpen}
+        collapseSignal={barCollapseSignal}
         canAsk={!thinking}
       />
       <AriaComposer

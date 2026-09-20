@@ -367,3 +367,98 @@ describe('StudioChat — focus during a REWRITE', () => {
     expect(ctx.activeEntry).toMatchObject({ section: 'project', sortId: 'p1' });
   });
 });
+
+// COMING BACK TO AN OPEN INTERVIEW.
+//
+// The focus rule records where an interview began, so the transcript still says so when
+// you return to it. On a refresh the saved thread already ends with that marker — and the
+// priming that is supposed to notice can settle a beat before the restored pin arrives,
+// at which point the pin reads as a CHANGE and announces it again. Two identical
+// "Focus · <role>" rules, one under the other, on every single refresh.
+describe('StudioChat — the focus marker survives a refresh without repeating', () => {
+  const resumedDraft = () => ({
+    ...buildDraft(),
+    coachChats: {
+      studio: [
+        { who: 'buildstart' },
+        { who: 'pinrole', sortId: 'a', section: 'experience' },
+        { who: 'focus', section: 'experience', sortId: 'a', title: 'Engineer', company: 'Acme' },
+      ],
+    },
+  });
+
+  it('does not announce a focus the conversation already ends with', async () => {
+    // A REFRESH, not a command: the pin is restored from the saved thread's own
+    // `pinrole` marker, exactly as reloading the page does it.
+    await mountStudio(resumedDraft());
+
+    await waitFor(() =>
+      expect(ctx.activeEntry).toMatchObject({ section: 'experience', sortId: 'a' })
+    );
+    expect(countOf('focus')).toBe(1);
+  });
+
+  it('still announces a focus when the interview moves to a DIFFERENT entry', async () => {
+    // The guard must not silence a real change — only a repeat of the last thing said.
+    await mountStudio(resumedDraft());
+
+    await act(async () => {
+      ctx.requestStudioCommand('editWithAria', 'project', 'p1');
+    });
+
+    await waitFor(() => expect(countOf('focus')).toBe(2));
+  });
+});
+
+// A THREAD THAT ALREADY COLLECTED THEM.
+//
+// Fixing the writer repairs nothing that is already saved: a conversation that gathered
+// three identical "Focus · <role>" rules before the guard existed would keep showing all
+// three forever. The render collapses a repeat instead — the stored transcript is left
+// exactly as it is, because quietly rewriting someone's history to tidy a display bug is
+// the worse habit.
+describe('StudioChat — markers already stacked up in a saved thread', () => {
+  const focusMarker = () => ({
+    who: 'focus',
+    section: 'experience',
+    sortId: 'a',
+    title: 'Engineer',
+    company: 'Acme',
+  });
+
+  it('draws ONE rule however many identical ones were stored', async () => {
+    await mountStudio({
+      ...buildDraft(),
+      coachChats: {
+        studio: [
+          { who: 'buildstart' },
+          { who: 'pinrole', sortId: 'a', section: 'experience' },
+          focusMarker(),
+          focusMarker(),
+          focusMarker(),
+        ],
+      },
+    });
+
+    await waitFor(() => expect(screen.getAllByText(/Focus.*Engineer/).length).toBeGreaterThan(0));
+    expect(screen.getAllByText(/Focus.*Engineer/)).toHaveLength(1);
+  });
+
+  it('still draws both when the interview genuinely moved and came back', async () => {
+    // Focus A → focus B → focus A is three real events, not a repeat of one.
+    await mountStudio({
+      ...buildDraft(),
+      coachChats: {
+        studio: [
+          { who: 'buildstart' },
+          focusMarker(),
+          { who: 'focus', section: 'project', sortId: 'p1', title: 'Difference Engine' },
+          focusMarker(),
+        ],
+      },
+    });
+
+    await waitFor(() => expect(screen.getAllByText(/Focus.*Engineer/).length).toBeGreaterThan(0));
+    expect(screen.getAllByText(/Focus.*Acme|Focus.*Engineer/).length).toBeGreaterThanOrEqual(2);
+  });
+});

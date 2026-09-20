@@ -4384,7 +4384,10 @@
       "bonus": "Not required — extra credit if you have them.",
       "provedAt": "you showed this in {{where}}",
       "askAria": "Ask Aria about this",
-      "pillAria": "{{done}} of {{total}} must-haves covered — open what this job asks for"
+      "fullDescription": "The posting itself",
+      "pillAria": "Open the job posting",
+      "pillLabel": "JD",
+      "noPosting": "No posting text was saved for this CV."
     },
     "studioArtifactPanel": {
       "tailoredCopy": "Tailored copy",
@@ -5419,6 +5422,7 @@
         "count": "{{done}} of {{total}}",
         "askMe": "Ask me about this",
         "askOnCall": "Ask me about this next",
+        "asked": "Asked — tap another to switch",
         "nextUp": "next up…",
         "declined": "you said no",
         "undo": "Ask about this again after all"

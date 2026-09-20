@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 // eslint-disable-next-line no-unused-vars
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
 import { isSpeechRecognitionSupported, startDictation } from '../../lib/speech';
 import { costForActionTier, tierOf } from '../../lib/models';
+import { pressable } from '../../lib/ariaMotion';
 
 // THE Aria composer — one docked input shared by every Aria chat surface (the builder's
 // AriaChat + AskAriaGenerate, the Target step's inert parity row, StudioChat, and
@@ -60,6 +61,7 @@ const AriaComposer = ({
   hideDisclaimer = false,
 }) => {
   const { t } = useTranslation();
+  const reduce = useReducedMotion();
   const [listening, setListening] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [modelNotice, setModelNotice] = useState(null);
@@ -180,13 +182,15 @@ const AriaComposer = ({
       {/* Capped and centered — on a wide desktop the pill stays chat-width, it doesn't
           stretch edge to edge with the column (matches the reference chat). */}
       <div className="w-full max-w-4xl mx-auto px-3 sm:px-0">
-        <div className={`relative border bg-white dark:bg-slate-900 shadow-md shadow-slate-900/10 dark:shadow-black/30 p-1.5 transition-[border-color,box-shadow] ${
-          expanded ? 'rounded-[26px]' : 'rounded-full'
-        } ${
-          listening
-            ? 'border-rose-300/80 dark:border-rose-400/40'
-            : 'border-slate-200/70 dark:border-slate-700/80'
-        }`}>
+        <div
+          className={`relative border bg-white dark:bg-slate-900 shadow-md shadow-slate-900/10 dark:shadow-black/30 p-1.5 transition-[border-color,box-shadow] ${
+            expanded ? 'rounded-[26px]' : 'rounded-full'
+          } ${
+            listening
+              ? 'border-rose-300/80 dark:border-rose-400/40'
+              : 'border-slate-200/70 dark:border-slate-700/80'
+          }`}
+        >
           <AnimatePresence>
             {modelNotice && (
               <motion.div
@@ -244,9 +248,7 @@ const AriaComposer = ({
             // the text line with the 44px control buttons rather than leaving it top-heavy.
             className={`block w-full min-h-14 bg-transparent border-0 outline-none resize-none overscroll-none [touch-action:pan-y] py-4 text-[17px] leading-6 text-slate-800 dark:text-slate-100 placeholder:text-[17px] placeholder:font-normal placeholder-slate-400 dark:placeholder-slate-500 scrollbar-none max-h-[240px] ${
               expanded ? 'px-3' : showModelPicker ? 'pl-12 pr-28 sm:pl-32' : 'pl-3 pr-28'
-            } ${
-              inputInert ? 'opacity-50' : ''
-            } ${inert ? 'cursor-not-allowed' : ''}`}
+            } ${inputInert ? 'opacity-50' : ''} ${inert ? 'cursor-not-allowed' : ''}`}
           />
 
           <div
@@ -260,64 +262,81 @@ const AriaComposer = ({
                   }`
             }
           >
-          {/* The model chip trails the text, right of the input — mirrors the reference
+            {/* The model chip trails the text, right of the input — mirrors the reference
               chat's layout. Its menu drops UP since the composer is docked at the bottom
               of the viewport. Omitted entirely when the caller already shows the model
               elsewhere (Aria Studio's header). */}
-          {showModelPicker && (
-            <div className="pointer-events-auto">
-              <ModelPicker value={modelId} onSelect={onSelectModel} drop="up" align="right" compact />
-            </div>
-          )}
+            {showModelPicker && (
+              <div className="pointer-events-auto">
+                <ModelPicker
+                  value={modelId}
+                  onSelect={onSelectModel}
+                  drop="up"
+                  align="right"
+                  compact
+                />
+              </div>
+            )}
 
-          <div className="pointer-events-auto flex items-center gap-2">
-          {canDictate && (
-            <button
-              type="button"
-              onClick={toggleDictation}
-              aria-label={listening ? t('cvBuilder.ariaComposer.stopDictation') : t('cvBuilder.ariaComposer.startDictation')}
-              aria-pressed={listening}
-              className={`relative shrink-0 h-11 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
-                listening
-                  ? 'w-[92px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
-                  : 'w-11 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              {listening ? (
-                <span className="flex h-full items-center justify-center gap-[3px]" aria-hidden="true">
-                  {[12, 19, 27, 16, 23, 13, 20].map((height, index) => (
+            <div className="pointer-events-auto flex items-center gap-2">
+              {canDictate && (
+                <button
+                  type="button"
+                  onClick={toggleDictation}
+                  aria-label={
+                    listening
+                      ? t('cvBuilder.ariaComposer.stopDictation')
+                      : t('cvBuilder.ariaComposer.startDictation')
+                  }
+                  aria-pressed={listening}
+                  className={`relative shrink-0 h-11 rounded-full transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/30 dark:focus-visible:ring-white/40 ${
+                    listening
+                      ? 'w-[92px] bg-rose-50 dark:bg-rose-500/15 text-rose-600 dark:text-rose-300'
+                      : 'w-11 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                  }`}
+                >
+                  {listening ? (
                     <span
-                      key={index}
-                      className="w-[2px] rounded-full bg-current animate-pulse"
-                      style={{ height: `${height}px`, animationDelay: `${index * 90}ms` }}
-                    />
-                  ))}
-                  <span className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-white">
-                    <Square className="h-3 w-3 fill-current" />
-                  </span>
-                </span>
-              ) : (
-                <Mic className="mx-auto h-5 w-5" />
+                      className="flex h-full items-center justify-center gap-[3px]"
+                      aria-hidden="true"
+                    >
+                      {[12, 19, 27, 16, 23, 13, 20].map((height, index) => (
+                        <span
+                          key={index}
+                          className="w-[2px] rounded-full bg-current animate-pulse"
+                          style={{ height: `${height}px`, animationDelay: `${index * 90}ms` }}
+                        />
+                      ))}
+                      <span className="ml-1 flex h-8 w-8 items-center justify-center rounded-full bg-rose-500 text-white">
+                        <Square className="h-3 w-3 fill-current" />
+                      </span>
+                    </span>
+                  ) : (
+                    <Mic className="mx-auto h-5 w-5" />
+                  )}
+                </button>
               )}
-            </button>
-          )}
 
-          <button
-            type="button"
-            onClick={send}
-            disabled={!canSend}
-            aria-label={resolvedSendAriaLabel}
-            className={`shrink-0 h-11 flex items-center justify-center rounded-full transition-colors ${
-              sendLabel ? 'px-4 text-[13px] font-semibold' : 'w-11 aspect-square'
-            } ${
-              inert
-                ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
-                : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white disabled:opacity-40'
-            }`}
-          >
-            {sendLabel || <ArrowUp className="w-5 h-5" />}
-          </button>
-          </div>
+              {/* Sending is the one press in here that commits something, and it had no
+              physical answer at all — the button changed colour and that was it. It
+              depresses now, so the tap lands. */}
+              <motion.button
+                {...pressable(reduce)}
+                type="button"
+                onClick={send}
+                disabled={!canSend}
+                aria-label={resolvedSendAriaLabel}
+                className={`shrink-0 h-11 flex items-center justify-center rounded-full transition-colors ${
+                  sendLabel ? 'px-4 text-[13px] font-semibold' : 'w-11 aspect-square'
+                } ${
+                  inert
+                    ? 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white disabled:opacity-40'
+                }`}
+              >
+                {sendLabel || <ArrowUp className="w-5 h-5" />}
+              </motion.button>
+            </div>
           </div>
         </div>
 

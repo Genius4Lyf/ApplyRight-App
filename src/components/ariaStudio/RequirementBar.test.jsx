@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import i18n from '../../i18n';
 import RequirementBar from './RequirementBar';
 import { REQUIREMENT_STATE } from '../../lib/requirementRows';
@@ -41,7 +41,14 @@ const ROWS = [
 
 const setup = (props = {}) => render(<RequirementBar rows={ROWS} {...props} />);
 
-const openBar = () => fireEvent.click(screen.getByRole('button', { expanded: false }));
+// It now opens on arrival (see "one look at what this job asks for"), so this only has
+// to act when something has since closed it.
+const openBar = () => {
+  const collapsed = screen.queryByRole('button', { expanded: false });
+  if (collapsed) fireEvent.click(collapsed);
+};
+
+const header = () => screen.getByText(i18n.t('ariaStudio.jobTarget.eyebrow')).closest('button');
 
 afterEach(cleanup);
 
@@ -51,10 +58,18 @@ describe('RequirementBar', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  it('is collapsed by default — ignoring it stays a complete way to work', () => {
+  // A collapsed strip above the keyboard is easy to never notice, and someone who never
+  // opens it never learns the interview has a spine. It shows itself once, on arrival.
+  it('opens on arrival, so the list is seen at least once', () => {
     setup();
-    expect(screen.getByRole('button', { expanded: false })).toBeTruthy();
-    expect(screen.queryByText('Troubleshooting')).toBeNull();
+    expect(screen.getByRole('button', { expanded: true })).toBeTruthy();
+    expect(screen.getByText('Troubleshooting')).toBeTruthy();
+  });
+
+  it('closes on a tap and stays closed — from then on the user decides', async () => {
+    setup();
+    fireEvent.click(header());
+    await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
   });
 
   it('counts only what it shows, and says so on one line', () => {
@@ -147,5 +162,97 @@ describe('RequirementBar', () => {
       <RequirementBar rows={[ROW({ name: 'Mechanical Engineering', qualification: true })]} />
     );
     expect(container.firstChild).toBeNull();
+  });
+});
+
+// The count and the target panel measure the SAME job on the same screen. Counting
+// nice-to-haves here made the bar say "0 of 6" while the panel said "0 of 5".
+describe('RequirementBar — what the count counts', () => {
+  const MIXED = [
+    ROW({ name: 'Permit-to-Work', requirementId: 'req_ptw' }),
+    ROW({
+      name: 'HSSE',
+      requirementId: 'req_hsse',
+      covered: true,
+      state: REQUIREMENT_STATE.COVERED,
+    }),
+    ROW({ name: 'Upstream production', requirementId: 'req_up', importance: 'nice_to_have' }),
+  ];
+
+  it('counts must-haves only — a bonus you have not covered is not a gap', () => {
+    render(<RequirementBar rows={MIXED} />);
+    expect(
+      screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.count', { done: 1, total: 2 }))
+    ).toBeTruthy();
+  });
+
+  it('still lists the nice-to-have — it is worth having, just not counted', () => {
+    render(<RequirementBar rows={MIXED} />);
+    openBar();
+    expect(screen.getByText('Upstream production')).toBeTruthy();
+  });
+
+  it('falls back to counting everything when the posting states no must-have', () => {
+    render(<RequirementBar rows={[ROW({ name: 'Nice thing', importance: 'nice_to_have' })]} />);
+    expect(
+      screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.count', { done: 0, total: 1 }))
+    ).toBeTruthy();
+  });
+});
+
+describe('RequirementBar — asking twice for the same thing', () => {
+  it('spends the tap, so the same requirement cannot be re-asked', () => {
+    const onAsk = vi.fn();
+    setup({ onAsk, askedId: 'req_ts' });
+    openBar();
+    const spent = screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.asked'));
+    fireEvent.click(spent);
+    expect(onAsk).not.toHaveBeenCalled();
+    expect(spent.closest('button').disabled).toBe(true);
+  });
+
+  it('leaves the row in place rather than reshuffling under the finger', () => {
+    setup({ askedId: 'req_ts' });
+    openBar();
+    expect(screen.getByText('Troubleshooting')).toBeTruthy();
+  });
+});
+
+// The pinned entry card hangs over the top of the conversation and this rises from the
+// bottom. Opened together on a phone they meet in the middle and bury the question.
+describe('RequirementBar — one floating panel at a time', () => {
+  it('announces a user-opened list, so whatever else is open can stand down', () => {
+    const onOpen = vi.fn();
+    setup({ onOpen });
+    // Arriving open is not a user action and announces nothing — nothing else is open yet
+    // to be closed by it, and closing the pinned card behind someone's back would be rude.
+    expect(onOpen).not.toHaveBeenCalled();
+
+    fireEvent.click(header()); // closed
+    fireEvent.click(header()); // opened, by hand
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not announce on close', () => {
+    const onOpen = vi.fn();
+    setup({ onOpen });
+    fireEvent.click(header()); // close
+    fireEvent.click(header()); // open  → 1
+    fireEvent.click(header()); // close → still 1
+    expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes when the parent signals, and only ever closes', async () => {
+    const { rerender } = render(<RequirementBar rows={ROWS} collapseSignal={0} />);
+    openBar();
+    expect(screen.getByText('Troubleshooting')).toBeTruthy();
+
+    // The list animates out, so it lingers a frame after the signal lands.
+    rerender(<RequirementBar rows={ROWS} collapseSignal={1} />);
+    await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
+
+    // A further signal cannot re-open it — that is what stops two panels fighting.
+    rerender(<RequirementBar rows={ROWS} collapseSignal={2} />);
+    await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
   });
 });

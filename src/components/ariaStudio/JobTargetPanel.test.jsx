@@ -1,159 +1,103 @@
 // @vitest-environment jsdom
 //
-// "What this job asks for" — the panel behind the top-bar tracker.
+// THE POSTING PANEL — just the posting.
 //
-// The honesty rules are the whole point, and they are what these tests hold:
+// It used to carry the requirement checklist and a 0-of-5 target, from back when nothing
+// else did. The bar above the composer took that job and took it better: it sits inside
+// the interview, it ticks as you work, and its rows can be tapped to steer the questions.
+// Two lists of the same requirements on one screen is one too many, and the one that could
+// not be acted on was this one.
 //
-//   · THE TARGET IS THE MUST-HAVES. Not a share of everything, and never an invented "ATS
-//     pass rate". Nice-to-haves are shown as bonus, outside the count.
-//   · Provenance is claimed ONLY where the interview ledger has it — where the user proved
-//     something in their own words. A requirement matched in CV text is marked covered and
-//     nothing more; inventing a source is exactly the failure this feature exists to stop.
-//   · An open must-have offers the cross-history hunt, which is already built.
+// What these hold is the half the bar cannot: the employer's own words, in full, reachable
+// at any time rather than only mid-interview — and NO count, because the same figure was
+// being shown in three places at once.
 import React from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import i18n from '../../i18n';
 import JobTargetPanel from './JobTargetPanel';
 
-const requestStudioCommand = vi.fn();
 let cvData = {};
 
 vi.mock('../../context/AriaStudioContext', () => ({
-  useAriaStudio: () => ({ cvData, requestStudioCommand }),
+  useAriaStudio: () => ({ cvData }),
 }));
 
-afterEach(() => {
-  cleanup();
-  requestStudioCommand.mockReset();
-});
+afterEach(cleanup);
 
-const KEYWORDS = [
-  { name: 'Kubernetes', importance: 'must_have', aliases: [] },
-  { name: 'Terraform', importance: 'must_have', aliases: [] },
-  { name: 'GraphQL', importance: 'nice_to_have', aliases: [] },
-];
-
-const COVERAGE = {
-  results: [
-    { name: 'Kubernetes', importance: 'must_have', covered: true },
-    { name: 'Terraform', importance: 'must_have', covered: false },
-    { name: 'GraphQL', importance: 'nice_to_have', covered: true },
-  ],
-  covered: 2,
-  total: 3,
-  mustHaveCovered: 1,
-  mustHaveTotal: 2,
-};
+const POSTING = 'Operating oil and gas facilities safely.\n\nRequirements\n- Permit-to-Work';
 
 const baseDraft = {
   targetJob: {
-    title: 'Platform Engineer',
+    title: 'Operations and Maintenance Technician',
+    description: POSTING,
     brief: {
-      role: 'Platform Engineer',
-      company: 'Acme',
-      requirements: [
-        { id: 'req_k8s', name: 'Kubernetes', priority: 'must_have' },
-        { id: 'req_tf', name: 'Terraform', priority: 'must_have' },
-        { id: 'req_gql', name: 'GraphQL', priority: 'nice_to_have' },
-      ],
+      role: 'Operations and Maintenance Technician',
+      company: 'Renaissance',
+      mustHaves: [{ name: 'Permit-to-Work', importance: 'must_have' }],
+      requirements: [{ id: 'req_ptw', name: 'Permit-to-Work', priority: 'must_have' }],
     },
   },
-  experience: [{ _sortId: 'e1', title: 'Engineer', company: 'Northwind' }],
+  experience: [],
   projects: [],
-  // Kubernetes was proved in the interview and filed under e1; GraphQL was only matched
-  // in CV text, so it has no ledger entry.
-  coachEvidence: {
-    e1: { evidence: [{ id: 'ev1', requirementIds: ['req_k8s'] }] },
-  },
+  coachEvidence: {},
 };
 
 const setup = (over = {}) => {
   cvData = { ...baseDraft, ...over };
-  render(<JobTargetPanel coverage={COVERAGE} keywords={KEYWORDS} onClose={vi.fn()} />);
+  render(<JobTargetPanel onClose={vi.fn()} />);
 };
 
-describe('JobTargetPanel — the target is the must-haves', () => {
-  it('counts must-haves only, with nice-to-haves outside the total', () => {
+describe('JobTargetPanel — the employer’s own words', () => {
+  it('names the role it belongs to', () => {
     setup();
-    expect(screen.getByText('1')).toBeTruthy();
-    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.ofTarget', { total: 2 }))).toBeTruthy();
+    expect(screen.getByText('Operations and Maintenance Technician · Renaissance')).toBeTruthy();
   });
 
-  it('splits the two groups and labels the bonus as not required', () => {
+  it('shows the posting straight away, with no disclosure to open first', () => {
+    // It is the only thing in here now; a panel whose single item has to be unfolded
+    // before it says anything wasted the tap that opened it.
     setup();
-    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.mustHave'))).toBeTruthy();
-    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.niceToHave'))).toBeTruthy();
-    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.bonus'))).toBeTruthy();
+    expect(screen.getByText(/Operating oil and gas facilities safely/)).toBeTruthy();
   });
 
-  it('lists every requirement the job named', () => {
+  it('keeps the posting’s own line breaks', () => {
     setup();
-    ['Kubernetes', 'Terraform', 'GraphQL'].forEach((name) => {
-      expect(screen.getByText(name)).toBeTruthy();
-    });
+    const body = screen.getByText(/Operating oil and gas facilities safely/);
+    expect(body.className).toContain('whitespace-pre-wrap');
+  });
+
+  it('says so plainly when no posting text was saved', () => {
+    setup({ targetJob: { ...baseDraft.targetJob, description: '' } });
+    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.noPosting'))).toBeTruthy();
+  });
+
+  it('falls back to a neutral title when the job has no name yet', () => {
+    setup({ targetJob: { description: POSTING } });
+    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.thisJob'))).toBeTruthy();
   });
 });
 
-describe('JobTargetPanel — provenance is only ever claimed, never guessed', () => {
-  it('names the entry for something proved in the interview', () => {
+// The three copies of one number are down to two, and this is not one of them: the header
+// pill opens the posting, the interview bar tracks the work.
+describe('JobTargetPanel — no second scoreboard', () => {
+  it('shows no requirement checklist', () => {
+    setup();
+    expect(screen.queryByText(i18n.t('ariaStudio.jobTarget.mustHave'))).toBeNull();
+    expect(screen.queryByText(i18n.t('ariaStudio.jobTarget.niceToHave'))).toBeNull();
+  });
+
+  it('shows no coverage count', () => {
     setup();
     expect(
-      screen.getByText(i18n.t('ariaStudio.jobTarget.provedAt', { where: 'Engineer · Northwind' }))
-    ).toBeTruthy();
+      screen.queryByText((_, node) =>
+        (node?.textContent || '').includes(i18n.t('ariaStudio.jobTarget.ofTarget', { total: 1 }))
+      )
+    ).toBeNull();
   });
 
-  it('claims no source for something merely matched in CV text', () => {
-    // GraphQL is covered but has no ledger entry — exactly one provenance line on screen.
+  it('never offers to start a hunt from here', () => {
     setup();
-    const lines = screen.queryAllByText(/you showed this in/i);
-    expect(lines).toHaveLength(1);
-  });
-
-  it('claims nothing when the ledger is empty', () => {
-    setup({ coachEvidence: {} });
-    expect(screen.queryByText(/you showed this in/i)).toBeNull();
-  });
-
-  it('ignores ledger evidence whose entry has since been deleted', () => {
-    // A stale sortId must not resolve to a blank label or the wrong role.
-    setup({ coachEvidence: { gone: { evidence: [{ requirementIds: ['req_k8s'] }] } } });
-    expect(screen.queryByText(/you showed this in/i)).toBeNull();
-  });
-});
-
-describe('JobTargetPanel — an open must-have opens the hunt', () => {
-  it('offers it only on the ones NOT yet covered', () => {
-    setup();
-    // Kubernetes and GraphQL are covered; Terraform is the only open row.
-    expect(screen.getAllByText(i18n.t('ariaStudio.jobTarget.askAria'))).toHaveLength(1);
-  });
-
-  it('dispatches the cross-history hunt for that requirement', () => {
-    setup();
-    fireEvent.click(screen.getByText(i18n.t('ariaStudio.jobTarget.askAria')));
-
-    expect(requestStudioCommand).toHaveBeenCalledWith('proveSkill', 'skills', null, {
-      requirementId: 'req_tf',
-      name: 'Terraform',
-    });
-  });
-
-  it('offers nothing when the requirement has no id to address', () => {
-    // Requirement ids live on brief.requirements; without them the hunt cannot be aimed.
-    setup({ targetJob: { title: 'Platform Engineer', brief: { role: 'Platform Engineer' } } });
     expect(screen.queryByText(i18n.t('ariaStudio.jobTarget.askAria'))).toBeNull();
-  });
-});
-
-describe('JobTargetPanel — before the first coverage lands', () => {
-  it('shows zero of the target rather than a blank or a guess', () => {
-    cvData = baseDraft;
-    render(<JobTargetPanel coverage={null} keywords={KEYWORDS} onClose={vi.fn()} />);
-
-    expect(screen.getByText('0')).toBeTruthy();
-    // Falls back to counting the must-haves it was handed, so the target is right from
-    // the very first paint.
-    expect(screen.getByText(i18n.t('ariaStudio.jobTarget.ofTarget', { total: 2 }))).toBeTruthy();
   });
 });

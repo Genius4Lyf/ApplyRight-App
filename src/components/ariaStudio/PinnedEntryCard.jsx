@@ -43,8 +43,11 @@ const COPY = {
 // The card's paper. The header and the body that drops out of it are two separate boxes
 // (see the render), so the border/background/shadow that make them read as one sheet are
 // written once here rather than typed twice and left to drift apart.
+// It floats OVER the conversation (sticky, translucent, backdrop-blurred), so it needs a
+// shadow to sit above the text scrolling under it — a hairline alone left it reading as
+// part of the thread it is supposed to stay clear of.
 const CARD_CHROME =
-  'border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur';
+  'border border-slate-200 dark:border-slate-800 border-l-2 border-l-slate-900 dark:border-l-white bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-sm';
 
 // ─── Which captured fields can be corrected in place ───
 //
@@ -106,6 +109,11 @@ const PinnedEntryCard = ({
   onReviewHintOpen,
   // Always starts collapsed; the user decides when this status summary opens.
   defaultExpanded = false,
+  // Fired when the user opens the card, so whatever else is open can stand down.
+  onOpen,
+  // Bumped by the parent to close this. One-directional on purpose — it can only ever
+  // collapse, never re-open, so two panels can never fight over who is showing.
+  collapseSignal = 0,
 }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultExpanded);
@@ -141,9 +149,14 @@ const PinnedEntryCard = ({
     setOpen((wasOpen) => {
       const next = !wasOpen;
       if (next && reviewHint) onReviewHintOpen?.();
+      if (next) onOpen?.();
       return next;
     });
   };
+
+  useEffect(() => {
+    if (collapseSignal) setOpen(false);
+  }, [collapseSignal]);
   // This is a glanceable progress summary, not another form. Close it after a brief
   // idle window, but never while the user is hovering or keyboard-focused inside it.
   useEffect(() => {
@@ -312,16 +325,24 @@ const PinnedEntryCard = ({
           aria-expanded={open}
           className="w-full flex items-center gap-2.5 px-3 py-2 text-left"
         >
+          {/* THE SAME LANGUAGE AS THE REQUIREMENT BAR — no fill, no separate status dot.
+              It carried both a pulsing circle AND an icon AND a filled chip to say one
+              thing: an interview is open. Three devices for one fact, and the chip's
+              background made a label out of it. The icon does the living now, exactly as
+              the briefcase does above the composer, and the word sits in the same quiet
+              mono as every other eyebrow on the screen. */}
           <span
             role="status"
             title={t('ariaStudio.pinnedEntry.liveStatus')}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400"
+            className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500"
           >
-            <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70 motion-reduce:animate-none" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.12)]" />
+            <span className="relative flex h-4 w-4 items-center justify-center" aria-hidden="true">
+              <span className="absolute inline-flex h-4 w-4 animate-ping rounded-full bg-emerald-400/40 motion-reduce:animate-none" />
+              <SectionIcon
+                section={section}
+                className="relative w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400"
+              />
             </span>
-            <SectionIcon section={section} className="w-3.5 h-3.5 inline-block align-middle" />{' '}
             <span>{t(copy.labelKey)}</span>
           </span>
           <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-slate-800 dark:text-slate-100">
