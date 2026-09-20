@@ -583,7 +583,12 @@ const StudioDesk = () => {
           {/* `relative z-10` keeps the header above the transcript that scrolls beneath
               it. The old `studio-mobile-header` hook is gone with the blurred fade it
               existed to position. */}
-          <div className="relative z-10 shrink-0 flex items-center gap-2 px-3 sm:px-4 py-1 sm:py-2.5">
+          {/* ONE HEIGHT AT EVERY WIDTH.
+              Desktop carried 2.5 of vertical padding to the phone's 1 — 12px more air
+              around the same 40px controls, on the width that has the most room and needs
+              it least. It read as a band of nothing between the nav and the conversation.
+              The phone's rhythm was the right one; desktop just gets the wider gutter. */}
+          <div className="relative z-10 shrink-0 flex items-center gap-2 px-3 py-1 sm:px-4">
             <button
               type="button"
               onClick={() =>
