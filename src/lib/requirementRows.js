@@ -31,7 +31,7 @@ const lower = (value) =>
  * @param {object}   args.cvData    the draft (targetJob.brief, coachEvidence, skillDeclines)
  * @param {object}   args.coverage  useJobCoverage's coverage: { results: [{name, covered}] }
  * @param {object[]} args.keywords  useJobCoverage's keywords, in display order
- * @returns {{name, importance, state, covered, declined, qualification, requirementId, provenAt}[]}
+ * @returns {{name, importance, state, covered, declined, qualification, behavioural, requirementId, provenAt}[]}
  */
 export function buildRequirementRows({ cvData, coverage, keywords = [] }) {
   const brief = cvData?.targetJob?.brief;
@@ -88,6 +88,11 @@ export function buildRequirementRows({ cvData, coverage, keywords = [] }) {
       // Something you HOLD (a degree field, a licence), not something you did in a role.
       // Shown for context, never asked about — see the brief's `qualification` flag.
       qualification: !!(requirement?.qualification || k.qualification),
+      // A soft trait the posting really does ask for but that nobody can evidence by
+      // describing work. "Tell me about your communication skills" can only produce the
+      // vague answer this interview exists to avoid. Marked server-side; four of nine
+      // real postings carried one as a must-have.
+      behavioural: !!(requirement?.behavioural || k.behavioural),
       state: covered
         ? REQUIREMENT_STATE.COVERED
         : declined
@@ -104,10 +109,14 @@ export function buildRequirementRows({ cvData, coverage, keywords = [] }) {
 
 /**
  * The rows a role interview should actually offer to steer toward: still open, addressable
- * by id, and never a qualification. Ordered must-haves first, as the keywords arrive.
+ * by id, and neither a qualification nor a behavioural trait. Ordered must-haves first,
+ * as the keywords arrive.
  */
 export function askableRows(rows, cap = Infinity) {
   return rows
-    .filter((r) => r.state === REQUIREMENT_STATE.OPEN && r.requirementId && !r.qualification)
+    .filter(
+      (r) =>
+        r.state === REQUIREMENT_STATE.OPEN && r.requirementId && !r.qualification && !r.behavioural
+    )
     .slice(0, cap);
 }

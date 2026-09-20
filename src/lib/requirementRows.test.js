@@ -124,3 +124,60 @@ describe('askableRows', () => {
     expect(askableRows(rowsFor(), 0)).toEqual([]);
   });
 });
+
+// A soft trait the posting really does ask for, but that nobody can evidence by describing
+// work. Running ten real postings through the reader found one as a must-have on four of
+// nine, so this is the common case. Marked server-side; both surfaces honour the flag.
+describe('behavioural traits', () => {
+  const TRAIT = {
+    name: 'Communication skills',
+    importance: 'must_have',
+    covered: false,
+    declined: false,
+    qualification: false,
+    behavioural: true,
+    state: REQUIREMENT_STATE.OPEN,
+    requirementId: 'req_comm',
+    provenAt: '',
+  };
+
+  it('is never offered as something to be asked about', () => {
+    expect(askableRows([TRAIT])).toEqual([]);
+  });
+
+  it('carries the flag through from the typed requirement', () => {
+    const cvData = {
+      targetJob: {
+        brief: {
+          requirements: [
+            {
+              id: 'req_comm',
+              name: 'Communication skills',
+              priority: 'must_have',
+              behavioural: true,
+            },
+          ],
+        },
+      },
+    };
+    const [row] = buildRequirementRows({
+      cvData,
+      coverage: { results: [] },
+      keywords: [{ name: 'Communication skills', importance: 'must_have' }],
+    });
+    expect(row.behavioural).toBe(true);
+  });
+
+  it('carries it from the compact keyword too, which is all a call has', () => {
+    const [row] = buildRequirementRows({
+      cvData: {},
+      coverage: { results: [] },
+      keywords: [{ name: 'Teamwork', importance: 'must_have', behavioural: true }],
+    });
+    expect(row.behavioural).toBe(true);
+  });
+
+  it('leaves a real competency askable', () => {
+    expect(askableRows([{ ...TRAIT, name: 'Permit-to-Work', behavioural: false }])).toHaveLength(1);
+  });
+});

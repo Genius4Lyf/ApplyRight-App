@@ -21,7 +21,7 @@ import { REQUIREMENT_STATE } from '../../lib/requirementRows';
 // The same component renders during a call, which is the only reason steering a live call
 // is possible at all: a call has no chat stream, so without a bar there is nothing to tap.
 
-const QUALIFICATIONS_ARE_NOT_SHOWN = (row) => !row.qualification;
+const NOT_ANSWERABLE_BY_TALKING = (row) => !row.qualification && !row.behavioural;
 
 const RequirementBar = ({
   rows = [],
@@ -61,10 +61,19 @@ const RequirementBar = ({
     setOpen(false);
   }
 
-  // A qualification is something you HOLD, not something you did in a role. Offering it
-  // here would invite "did you do Mechanical Engineering at this job?" — and it is not
-  // answerable by talking, which is the only thing this bar is for.
-  const shown = rows.filter(QUALIFICATIONS_ARE_NOT_SHOWN);
+  // Two kinds of requirement are real, stated by the employer, and still have no place
+  // here — because this bar is only for things answerable by TALKING about your work.
+  //
+  // A qualification is something you HOLD. Offering it invites "did you do Mechanical
+  // Engineering at this job?", a question with no sensible answer.
+  //
+  // A behavioural trait fails from the other side: "tell me about your communication
+  // skills" can only produce the vague, undefendable answer this whole interview exists
+  // to avoid. Running ten real postings through the reader found one as a must-have on
+  // four of nine — it was never the rare case we assumed.
+  //
+  // Both are filtered, never counted, and scoring still sees them.
+  const shown = rows.filter(NOT_ANSWERABLE_BY_TALKING);
   if (!shown.length) return null;
 
   // Counted over MUST-HAVES only, so this number and the target panel's never disagree

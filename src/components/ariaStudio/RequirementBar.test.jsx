@@ -256,3 +256,36 @@ describe('RequirementBar — one floating panel at a time', () => {
     await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
   });
 });
+
+// The bar is only for things answerable by TALKING about your work. A qualification fails
+// that from one side ("did you do Mechanical Engineering at this job?"); a behavioural
+// trait fails it from the other ("tell me about your communication skills" can only
+// produce the vague answer this interview exists to avoid).
+//
+// Ten real postings through the reader found a trait as a must-have on four of nine — it
+// was never the rare case we assumed when only one posting had been tested.
+describe('RequirementBar — behavioural traits', () => {
+  it('never shows one, and does not count it', () => {
+    render(
+      <RequirementBar rows={[...ROWS, ROW({ name: 'Communication skills', behavioural: true })]} />
+    );
+    expect(
+      screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.count', { done: 1, total: 3 }))
+    ).toBeTruthy();
+    openBar();
+    expect(screen.queryByText('Communication skills')).toBeNull();
+  });
+
+  it('renders nothing when every requirement is one', () => {
+    const { container } = render(
+      <RequirementBar rows={[ROW({ name: 'Attention to Detail', behavioural: true })]} />
+    );
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('still shows a named skill that merely contains a trait word', () => {
+    render(<RequirementBar rows={[ROW({ name: 'Technical Communication' })]} />);
+    openBar();
+    expect(screen.getByText('Technical Communication')).toBeTruthy();
+  });
+});
