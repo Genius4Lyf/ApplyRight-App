@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { bubbleAnim } from '../../lib/ariaMotion';
 
-export const SelectedAnswerBubble = ({ children, reduce = false }) => {
+export const SelectedAnswerBubble = ({ children, eyebrow, reduce = false }) => {
   const { t } = useTranslation();
 
   return (
@@ -15,7 +15,10 @@ export const SelectedAnswerBubble = ({ children, reduce = false }) => {
       {...bubbleAnim('user', reduce)}
     >
       <span className="mb-1 block font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-slate-500 dark:text-slate-400">
-        {t('ariaStudio.chat.respondedToAriaInterview')}
+        {/* Defaults to the system wording, because most of these bubbles ARE a
+            recorded interview answer. A caller that knows better — the requirement
+            tap, where the user asked rather than answered — says so. */}
+        {eyebrow || t('ariaStudio.chat.respondedToAriaInterview')}
       </span>
       {/* `break-words` so an unbroken 60-character string (a scraped title, a URL) wraps
           instead of forcing the bubble wider than the column. */}

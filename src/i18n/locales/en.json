@@ -5421,6 +5421,8 @@
       "checklist": {
         "count": "{{done}} of {{total}}",
         "askMe": "Ask me about this",
+        "askedEyebrow": "You asked",
+        "askedMessage": "About {{name}}",
         "askOnCall": "Ask me about this next",
         "asked": "Asked — tap another to switch",
         "nextUp": "next up…",

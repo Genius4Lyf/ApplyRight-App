@@ -5417,6 +5417,8 @@
       "checklist": {
         "count": "{{done}} sur {{total}}",
         "askMe": "Interroge-moi là-dessus",
+        "askedEyebrow": "Vous avez demandé",
+        "askedMessage": "À propos de {{name}}",
         "askOnCall": "Pose-moi la question ensuite",
         "asked": "Demandé — touchez-en un autre pour changer",
         "nextUp": "juste après…",

@@ -546,6 +546,15 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
   const [barCollapse, setBarCollapse] = useState(0);
   const closePinnedCard = useCallback(() => setPinCollapse((n) => n + 1), []);
   const closeRequirementBar = useCallback(() => setBarCollapse((n) => n + 1), []);
+
+  // WHICH FLOATING PANEL IS SHOWING. Both of them hang over the conversation — the pinned
+  // BUILDING card drops down from the top of the scroll area, the requirement bar rises
+  // from the dock — and while either is open the thread behind it is something you are
+  // reading PAST, not reading. A backdrop says so; without one the two sheets sit on live
+  // text and the eye keeps trying to finish the sentence underneath.
+  const [barOpen, setBarOpen] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
+  const floatingOpen = barOpen || pinOpen;
   // One-shot guard for the localStorage → coachChats migration.
   const migratedRef = useRef(false);
   // Did this mount START a session (rail click), as opposed to OPENING an existing one?
@@ -4078,6 +4087,34 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
             gap, and taking it out entirely put the first line against the header. 12px is
             a breath, not a band — and being the same figure desktop already used, there
             is no longer a per-width rule to keep in step with a decoration. */}
+        {/* The backdrop behind whichever sheet is open. A sibling of the scroller rather
+            than a filter ON it: blurring the scroller would blur the pinned card too, and
+            that card is sometimes the thing being read. z-20 puts it over the thread and
+            under the dock (z-30), which is where the requirement bar lives. */}
+        <AnimatePresence>
+          {floatingOpen && (
+            <motion.div
+              key="floating-backdrop"
+              aria-hidden="true"
+              // ANIMATE THE BLUR, NEVER THE OPACITY.
+              // Fading a backdrop-filter element in and out makes the browser rebuild and
+              // re-composite the blurred layer on every frame, and mounting it creates that
+              // layer from nothing — which is what read as the backdrop shaking on the way
+              // in and out. Interpolating the blur RADIUS instead keeps opacity pinned at 1,
+              // so there is one stable layer being resampled rather than an alpha blend of a
+              // blur that is itself changing.
+              //
+              // No tint either, for the same reason it is one property and not three: a
+              // white wash would have to fade, and its dark-mode value cannot ride in a
+              // framer value without a theme lookup. A touch more blur does the same job.
+              initial={reduce ? false : { backdropFilter: 'blur(0px)' }}
+              animate={{ backdropFilter: 'blur(4px)' }}
+              exit={{ backdropFilter: 'blur(0px)' }}
+              transition={{ duration: reduce ? 0 : 0.22, ease: 'easeOut' }}
+              className="pointer-events-none absolute inset-0 z-20"
+            />
+          )}
+        </AnimatePresence>
         <div
           ref={chatRef}
           className="absolute inset-0 chat-scroll flex flex-col gap-5 pt-3 pb-12 sm:pb-14"
@@ -4088,11 +4125,19 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
               Always starts collapsed so it remains a glanceable status bar and never
               competes with the active question. The user controls when it opens. */}
           {showPinnedEntryCard && (
-            <div className="sticky top-0 z-20 w-full sm:w-[94%] mx-auto pb-1.5 pt-0.5">
+            <div
+              className={`sticky top-0 w-full sm:w-[94%] mx-auto pb-1.5 pt-0.5 ${
+                // Above the backdrop when this card is the one open; under it when the
+                // requirement bar is, because then this card is part of what you are
+                // reading past.
+                pinOpen ? 'z-40' : 'z-20'
+              }`}
+            >
               <PinnedEntryCard
                 key={pinnedEntry._sortId}
                 entry={pinnedEntry}
                 onOpen={closeRequirementBar}
+                onOpenChange={setPinOpen}
                 collapseSignal={pinCollapse}
                 section={pinnedSectionKey}
                 typePicked={!!pinnedType}
@@ -4219,7 +4264,11 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
             if (m.who === 'user') {
               if (m.selected) {
                 return (
-                  <SelectedAnswerBubble key={i} reduce={reduce}>
+                  <SelectedAnswerBubble
+                    key={i}
+                    reduce={reduce}
+                    eyebrow={m.eyebrowKey ? t(m.eyebrowKey) : undefined}
+                  >
                     {m.text}
                   </SelectedAnswerBubble>
                 );
@@ -5386,6 +5435,7 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
               jobCoverage={jobCoverage}
               jobKeywords={jobKeywords}
               onBarOpen={closePinnedCard}
+              onBarOpenChange={setBarOpen}
               barCollapseSignal={barCollapse}
               // Announce the voice feature here, and only here: this coach opens the instant
               // the entry form is submitted, with the first interview question about to be

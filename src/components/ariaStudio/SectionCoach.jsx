@@ -76,6 +76,8 @@ const SectionCoach = ({
   // card above the conversation. Opening either closes the other rather than letting them
   // stack into each other on a phone.
   onBarOpen,
+  // Reports open AND close, so StudioChat can blur the thread behind the sheet.
+  onBarOpenChange,
   barCollapseSignal = 0,
   messages = [], // the SHARED studio stream — coach turns persist with everything else
   onPush, // (…msgs) => void
@@ -361,7 +363,17 @@ const SectionCoach = ({
     setCallEnded(null);
     const next = [...coachMessages, { who: 'user', text: val }];
     // `selected` renders the quieter chosen-answer bubble: this was a tap, not typing.
-    onPush({ who: 'user', text: val, ...(opts.selected ? { selected: true } : {}) });
+    // WHAT IS SHOWN AND WHAT IS SENT ARE NOT ALWAYS THE SAME SENTENCE.
+    // The requirement tap shows the user's own words ("About Permit-to-Work", under "You
+    // asked") while sending the server the same instruction it has always had. The probe
+    // is what actually drives the hunt, but the free text rides along in the transcript,
+    // and quietly weakening it to match a caption would be changing behaviour to fix copy.
+    onPush({
+      who: 'user',
+      text: opts.display ?? val,
+      ...(opts.selected ? { selected: true } : {}),
+      ...(opts.eyebrowKey ? { eyebrowKey: opts.eyebrowKey } : {}),
+    });
     setInput('');
     if (inputRef.current) inputRef.current.style.height = 'auto';
     setExampleAnswers([]);
@@ -638,9 +650,21 @@ const SectionCoach = ({
     }
     if (thinking) return;
     setPendingRequirementId(row.requirementId);
+    // THE BUBBLE IS THE USER SPEAKING, so it has to sound like them.
+    // It used to echo Aria's own invitation back as their words — "Ask me about this:
+    // Permit-to-Work" under a label reading RESPONDED TO ARIA INTERVIEW — which is the
+    // control's caption and a system event, not anything a person would say or do. What
+    // they actually did was ask for a topic, so that is what it says now. Nothing about
+    // the probe sent to the server changes; only what the user reads.
+    // SENT: exactly the instruction this has always sent, unchanged.
+    // SHOWN: the user's own words. The eyebrow and the body read as one line —
+    //        "You asked · About Permit-to-Work" — rather than echoing the control's
+    //        caption back at them under a label about answering an interview.
     send(t('ariaStudio.sectionCoach.checklist.askMe') + `: ${row.name}`, {
       probe: { requirementId: row.requirementId },
       selected: true,
+      display: t('ariaStudio.sectionCoach.checklist.askedMessage', { name: row.name }),
+      eyebrowKey: 'ariaStudio.sectionCoach.checklist.askedEyebrow',
     }).finally(() => setPendingRequirementId(null));
   };
 
@@ -1022,6 +1046,7 @@ const SectionCoach = ({
         pendingId={pendingRequirementId}
         askedId={askedRequirementId}
         onOpen={onBarOpen}
+        onOpenChange={onBarOpenChange}
         collapseSignal={barCollapseSignal}
         canAsk={callState !== 'connecting' && !(callSecondsLeft != null && callSecondsLeft <= 75)}
         onCall
@@ -1102,6 +1127,7 @@ const SectionCoach = ({
         pendingId={pendingRequirementId}
         askedId={askedRequirementId}
         onOpen={onBarOpen}
+        onOpenChange={onBarOpenChange}
         collapseSignal={barCollapseSignal}
         canAsk={!thinking}
       />

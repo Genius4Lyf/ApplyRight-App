@@ -111,6 +111,8 @@ const PinnedEntryCard = ({
   defaultExpanded = false,
   // Fired when the user opens the card, so whatever else is open can stand down.
   onOpen,
+  // See RequirementBar: the backdrop needs the falling edge too.
+  onOpenChange,
   // Bumped by the parent to close this. One-directional on purpose — it can only ever
   // collapse, never re-open, so two panels can never fight over who is showing.
   collapseSignal = 0,
@@ -157,6 +159,15 @@ const PinnedEntryCard = ({
   useEffect(() => {
     if (collapseSignal) setOpen(false);
   }, [collapseSignal]);
+
+  // Report open AND close, not just open. onOpen exists so the OTHER floating panel can
+  // stand down, which only ever needs the rising edge; the backdrop behind them needs both
+  // edges, or it blurs the conversation and never un-blurs it. An effect rather than a call
+  // inside the toggle because `open` also changes from collapseSignal and on arrival, and a
+  // backdrop that missed those would be stuck on.
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
   // This is a glanceable progress summary, not another form. Close it after a brief
   // idle window, but never while the user is hovering or keyboard-focused inside it.
   useEffect(() => {

@@ -267,6 +267,41 @@ describe('tapping a requirement in chat', () => {
     expect(pushed.text).toContain('Permit-to-Work');
   });
 
+  // THE BUBBLE IS THE USER SPEAKING.
+  //
+  // It used to push Aria's own invitation back as their words — "Ask me about this:
+  // Permit-to-Work" — under an eyebrow reading RESPONDED TO ARIA INTERVIEW. One is the
+  // control's caption, the other is a system event; neither is a thing a person says, and
+  // what they actually did was ask for a topic. Reported from use, and the old assertion
+  // (`text` merely CONTAINS the requirement name) passed happily through the bad copy.
+  describe('what the tap says in the transcript', () => {
+    const tapped = async () => {
+      const { onPush } = mount();
+      await openBar();
+      fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.checklist.askMe')));
+      await waitFor(() => expect(CVService.coachChat).toHaveBeenCalled());
+      return onPush.mock.calls.flat().find((m) => m?.who === 'user');
+    };
+
+    it('speaks in the user voice, naming the requirement', async () => {
+      const pushed = await tapped();
+      expect(pushed.text).toBe(
+        t('ariaStudio.sectionCoach.checklist.askedMessage', { name: 'Permit-to-Work' })
+      );
+    });
+
+    it("never echoes the control's own caption back as the user's words", async () => {
+      const pushed = await tapped();
+      expect(pushed.text).not.toContain(t('ariaStudio.sectionCoach.checklist.askMe'));
+    });
+
+    it('carries an eyebrow saying the user ASKED, not that they answered', async () => {
+      const pushed = await tapped();
+      expect(pushed.eyebrowKey).toBe('ariaStudio.sectionCoach.checklist.askedEyebrow');
+      expect(t(pushed.eyebrowKey)).not.toBe(t('ariaStudio.chat.respondedToAriaInterview'));
+    });
+  });
+
   it("shows a declined requirement as 'you said no' the moment the server says so", async () => {
     CVService.coachChat.mockResolvedValue({
       reply: 'Understood — I won’t ask again.',

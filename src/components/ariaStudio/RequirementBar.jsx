@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
@@ -43,6 +43,8 @@ const RequirementBar = ({
   onCall = false,
   // Fired when the user opens the list, so whatever else is open can stand down.
   onOpen,
+  // Fired on every change of state, so the backdrop behind can blur and un-blur.
+  onOpenChange,
   // Bumped by the parent to close this. One-directional on purpose — it can only ever
   // collapse, never re-open, so two panels can never fight over who is showing.
   collapseSignal = 0,
@@ -67,6 +69,29 @@ const RequirementBar = ({
     setSeenCollapse(collapseSignal);
     setOpen(false);
   }
+
+  // JOINED — "is the list still on top of the header?", which is NOT the same question as
+  // `open`, and conflating them is what made closing look broken while opening looked fine.
+  //
+  // Opening: `open` flips true, the header squares its top corners, and the list animates
+  // in above it. Every change lands together, so it reads as one movement.
+  // Closing: `open` flips false and the header instantly re-rounds and drops its shadow —
+  // while the list is still 280ms from being gone. The corners popped out from under a
+  // panel that was still there.
+  //
+  // So the header follows the ANIMATION, not the state: square while the list is present,
+  // rounded again only once the exit has finished.
+  const [joined, setJoined] = useState(true);
+  if (open && !joined) setJoined(true);
+
+  // Report open AND close, not just open. onOpen exists so the OTHER floating panel can
+  // stand down, which only ever needs the rising edge; the backdrop behind them needs both
+  // edges, or it blurs the conversation and never un-blurs it. An effect rather than a call
+  // inside the toggle because `open` also changes from collapseSignal and on arrival, and a
+  // backdrop that missed those would be stuck on.
+  useEffect(() => {
+    onOpenChange?.(open);
+  }, [open, onOpenChange]);
 
   // Two kinds of requirement are real, stated by the employer, and still have no place
   // here — because this bar is only for things answerable by TALKING about your work.
@@ -241,7 +266,7 @@ const RequirementBar = ({
             Translucent and blurred for the same reason it is there: the conversation stays
             visible underneath, so the list reads as floating OVER the chat rather than
             replacing it. */}
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} onExitComplete={() => setJoined(false)}>
           {open && (
             <motion.div
               key="rows"
@@ -265,10 +290,10 @@ const RequirementBar = ({
         </AnimatePresence>
 
         <div
-          className={`overflow-hidden border border-b-0 transition-[border-radius,box-shadow] ${SHEET} ${
+          className={`overflow-hidden border border-b-0 transition-[border-radius,box-shadow] duration-300 ease-out ${SHEET} ${
             // Square-topped while open: the floating list sits directly on it, and the two
             // have to read as one sheet rather than two stacked cards.
-            open ? 'rounded-none shadow-lg' : 'rounded-t-2xl shadow-sm'
+            joined ? 'rounded-none shadow-lg' : 'rounded-t-2xl shadow-sm'
           }`}
         >
           <button
