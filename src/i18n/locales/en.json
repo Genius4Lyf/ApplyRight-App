@@ -4451,21 +4451,21 @@
       "steps": {
         "welcome": {
           "title": "Welcome to your career workspace.",
-          "body": "ARIA Studio brings the conversation, CV health and live preview into one place, so you can make confident improvements without losing your place.",
+          "body": "ARIA Studio brings the conversation, CV health and editing into one place, so you can make confident improvements without losing your place.",
           "detailOne": "Start a new CV with ARIA or open a saved CV to tailor it to a job.",
           "detailTwo": "Your work is saved to the CV while you move through the conversation."
         },
         "workspace": {
           "title": "Three areas work together while you edit.",
-          "body": "Use the chat to tell ARIA what you need. CV Health keeps the next priority visible, and Live preview shows the actual CV page.",
+          "body": "Use the chat to tell ARIA what you need. CV Health keeps the next priority visible, and Edit shows the actual CV page.",
           "detailOne": "Select CV Health when you want to see what is complete or still needs attention.",
-          "detailTwo": "Open Live preview when you want to check layout, templates and final wording."
+          "detailTwo": "Open Edit when you want to check layout, templates and final wording."
         },
         "edit": {
           "title": "Use Studio to improve what is already on your CV.",
-          "body": "ARIA Studio is best for refining existing roles, project bullets, skills and summaries—either through the chat or directly in the live preview.",
+          "body": "ARIA Studio is best for refining existing roles, project bullets, skills and summaries—either through the chat or directly on the CV page.",
           "detailOne": "Ask ARIA to sharpen a section, tailor it to a job, or fix gaps the scan finds.",
-          "detailTwo": "Use Edit in Live preview for quick, contextual changes to existing content."
+          "detailTwo": "Use Edit for quick, contextual changes to existing content."
         },
         "review": {
           "title": "Review the real page before you send it.",
@@ -4958,7 +4958,7 @@
       "confirmBriefWithSource": "Good. I'll tailor a copy of {{title}} — one moment.",
       "confirmBriefNoSource": "Good. Which CV should I work from?",
       "scanDone": "Here's where you stand. The red and amber sections are where the work is.",
-      "buildScanGapNudge": "You're at {{fit}}% fit for this job. The biggest gaps are in {{sections}} — this role wants {{keywords}}, which I don't see on your CV yet. If any of that is truthfully yours, open the Live preview and add it to those sections.",
+      "buildScanGapNudge": "You're at {{fit}}% fit for this job. The biggest gaps are in {{sections}} — this role wants {{keywords}}, which I don't see on your CV yet. If any of that is truthfully yours, open Edit and add it to those sections.",
       "buildScanStrong": "Nice — you're already a {{fit}}% fit for this job. Have a look at any amber sections if you want to push it higher, or you're good to finish.",
       "scanInsufficientCredits": "You need {{required}} credits for a full scan and you have {{current}}. Top up and I'll run it.",
       "scanFailed": "I couldn't finish the scan just now — try again in a moment.",
@@ -5429,13 +5429,13 @@
       }
     },
     "livePreview": {
-      "heading": "Live preview",
-      "headingLive": "Live preview — on, updating as you go",
+      "heading": "Edit",
+      "headingLive": "Edit — on, updating as you go",
       "editModeUnlocked": "Edit mode unlocked",
-      "headingEditable": "Live preview — your CV is ready to edit",
+      "headingEditable": "Edit — your CV is ready",
       "yourCv": "Your CV",
       "closePreview": "Close preview",
-      "viewMode": "Live preview mode",
+      "viewMode": "Edit or preview",
       "editMode": "Edit",
       "previewMode": "Preview",
       "entryActions": "Entry actions",

@@ -5,7 +5,7 @@ import { trashFlash } from '../../lib/trashFlash';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { PanelLeft, FilePen, ListChecks, Briefcase } from 'lucide-react';
+import { PanelLeft, FilePen, Briefcase, Heart } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { editorUnlocked, editorJustUnlocked, finishableNow } from '../../lib/studioFlow';
@@ -664,7 +664,13 @@ const StudioDesk = () => {
                 score pill stays to their right. */}
             <div className="relative shrink-0 flex items-center gap-1">
               {canPreview && (
-                <button
+                // THE SAME OBJECT AS THE JD PILL, because it does the same kind of thing:
+                // a bordered word that opens a panel. As a bare icon with a label that
+                // vanished below md, it read as chrome next to JD's pill — and on a phone,
+                // where the label was hidden, as an unlabelled glyph. Now it wears the
+                // pill at every width, so the two controls are visibly the same species.
+                <motion.button
+                  {...pressable(reduceMotion)}
                   type="button"
                   onClick={() => selectView('preview')}
                   aria-pressed={panelView === 'preview'}
@@ -673,27 +679,39 @@ const StudioDesk = () => {
                       ? t('ariaStudio.livePreview.headingEditable')
                       : t('ariaStudio.livePreview.heading')
                   }
-                  className={`inline-flex items-center gap-1.5 h-10 px-2.5 rounded-lg text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 ${
+                  className={`group shrink-0 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
                     panelView === 'preview'
-                      ? 'text-slate-900 dark:text-white'
-                      : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                      ? 'border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-800'
+                      : 'border-slate-200 hover:border-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-400 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {/* The dot sits ON the icon, not beside the label — the label is hidden
-                      below md, and that is exactly the width where "your CV is editable
-                      now" is hardest to notice. aria-hidden: the state is already in the
+                  {/* The dot sits ON the icon rather than beside the label, so it is in the
+                      same place at every width. aria-hidden: the state is already in the
                       button's label, so announcing the dot too would just be noise. */}
                   <span className="relative inline-flex shrink-0">
-                    <FilePen className="w-5 h-5" />
+                    {/* The warm gold from the post designs (DESIGN-SYSTEM.md §2): #9A6608
+                        on light, #DFA83C on dark — the doc prescribes that exact pair,
+                        the brighter one for a dark ground. It gives this control its own
+                        identity beside JD's emerald and CV health's red, so three pills in
+                        a row are told apart by colour before the label is read. */}
+                    <FilePen className="w-3.5 h-3.5 text-[#9A6608] dark:text-[#DFA83C]" />
                     {editorReady && (
                       <span
                         aria-hidden="true"
-                        className="studio-live-dot absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950"
+                        className="studio-live-dot absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950"
                       />
                     )}
                   </span>
-                  <span className="hidden md:inline">{t('ariaStudio.livePreview.heading')}</span>
-                </button>
+                  <span
+                    className={`font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors ${
+                      panelView === 'preview'
+                        ? 'text-slate-900 dark:text-white'
+                        : 'text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white'
+                    }`}
+                  >
+                    {t('ariaStudio.livePreview.heading')}
+                  </span>
+                </motion.button>
               )}
 
               {/* The recurring nudge. role="status" rather than an alert: it is news, not
@@ -734,7 +752,12 @@ const StudioDesk = () => {
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                <ListChecks className="w-5 h-5" />
+                {/* A HEART, in red. This opens CV health, and a checklist glyph said
+                    "another list" — the same thing the requirement bar and the section
+                    verdicts already say. Health has one universal symbol and this is it;
+                    red because that is the colour health is read in, and because it
+                    separates this control from JD's emerald and Edit's gold at a glance. */}
+                <Heart className="w-5 h-5 text-rose-500 dark:text-rose-400" />
               </button>
             </div>
           </div>

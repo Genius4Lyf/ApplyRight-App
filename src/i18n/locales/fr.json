@@ -4447,21 +4447,21 @@
       "steps": {
         "welcome": {
           "title": "Bienvenue dans votre espace carrière.",
-          "body": "ARIA Studio réunit la conversation, la santé du CV et l’aperçu en direct au même endroit pour vous permettre d’améliorer votre CV sans perdre le fil.",
+          "body": "ARIA Studio réunit la conversation, la santé du CV et la modification au même endroit pour vous permettre d’améliorer votre CV sans perdre le fil.",
           "detailOne": "Créez un CV avec ARIA ou ouvrez un CV enregistré pour l’adapter à un poste.",
           "detailTwo": "Votre travail est enregistré dans le CV tout au long de la conversation."
         },
         "workspace": {
           "title": "Trois espaces fonctionnent ensemble pendant vos modifications.",
-          "body": "Utilisez la discussion pour dire à ARIA ce dont vous avez besoin. La santé du CV indique la prochaine priorité et l’aperçu en direct montre la vraie page du CV.",
+          "body": "Utilisez la discussion pour dire à ARIA ce dont vous avez besoin. La santé du CV indique la prochaine priorité et Modifier montre la vraie page du CV.",
           "detailOne": "Sélectionnez Santé du CV pour voir ce qui est terminé ou ce qui doit encore être amélioré.",
-          "detailTwo": "Ouvrez l’aperçu en direct pour vérifier la mise en page, les modèles et la formulation finale."
+          "detailTwo": "Ouvrez Modifier pour vérifier la mise en page, les modèles et la formulation finale."
         },
         "edit": {
           "title": "Utilisez Studio pour améliorer ce qui est déjà dans votre CV.",
-          "body": "ARIA Studio est idéal pour améliorer des postes, des puces de projet, des compétences et des résumés existants, dans la discussion ou directement dans l’aperçu en direct.",
+          "body": "ARIA Studio est idéal pour améliorer des postes, des puces de projet, des compétences et des résumés existants, dans la discussion ou directement sur la page du CV.",
           "detailOne": "Demandez à ARIA d’affiner une section, de l’adapter à un poste ou de corriger les manques trouvés par l’analyse.",
-          "detailTwo": "Utilisez Modifier dans l’aperçu en direct pour des changements rapides et contextualisés."
+          "detailTwo": "Utilisez Modifier pour des changements rapides et contextualisés."
         },
         "review": {
           "title": "Vérifiez la vraie page avant l’envoi.",
@@ -4954,7 +4954,7 @@
       "confirmBriefWithSource": "Parfait. Je vais adapter une copie de {{title}} — un instant.",
       "confirmBriefNoSource": "Parfait. À partir de quel CV dois-je travailler ?",
       "scanDone": "Voici où vous en êtes. Les sections rouges et orange sont là où il y a du travail.",
-      "buildScanGapNudge": "Vous êtes à {{fit}} % d'adéquation avec ce poste. Les principales lacunes se trouvent dans {{sections}} — ce poste demande {{keywords}}, que je ne vois pas encore sur votre CV. Si l'une de ces choses est réellement la vôtre, ouvrez l'aperçu en direct et ajoutez-la à ces sections.",
+      "buildScanGapNudge": "Vous êtes à {{fit}} % d'adéquation avec ce poste. Les principales lacunes se trouvent dans {{sections}} — ce poste demande {{keywords}}, que je ne vois pas encore sur votre CV. Si l'une de ces choses est réellement la vôtre, ouvrez Modifier et ajoutez-la à ces sections.",
       "buildScanStrong": "Bien — vous êtes déjà à {{fit}} % d'adéquation avec ce poste. Jetez un œil aux sections orange si vous voulez aller plus loin, ou vous pouvez terminer.",
       "scanInsufficientCredits": "Une analyse complète nécessite {{required}} crédits et vous en avez {{current}}. Rechargez et je la lancerai.",
       "scanFailed": "Je n'ai pas pu terminer l'analyse pour l'instant — réessayez dans un instant.",
@@ -5425,13 +5425,13 @@
       }
     },
     "livePreview": {
-      "heading": "Aperçu en direct",
-      "headingLive": "Aperçu en direct — activé, mis à jour au fil de vos modifications",
+      "heading": "Modifier",
+      "headingLive": "Modifier — activé, mis à jour au fil de vos modifications",
       "editModeUnlocked": "Mode édition débloqué",
-      "headingEditable": "Aperçu en direct — votre CV est prêt à être modifié",
+      "headingEditable": "Modifier — votre CV est prêt",
       "yourCv": "Votre CV",
       "closePreview": "Fermer l'aperçu",
-      "viewMode": "Mode d'aperçu du CV",
+      "viewMode": "Modifier ou aperçu",
       "editMode": "Modifier",
       "previewMode": "Aperçu",
       "entryActions": "Actions de l'entrée",
