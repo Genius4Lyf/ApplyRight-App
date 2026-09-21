@@ -293,7 +293,13 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
 
       {isBuild ? (
         /* BUILD MODE — the document's own progress, not a job match. */
-        <div className="h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none p-4 space-y-5">
+        <div
+          className={`h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none space-y-5 ${
+            // As a full-screen sheet the side padding is the only thing between the
+            // content and the bezel, so it can be narrower than it is beside the chat.
+            bare ? 'px-3 py-4' : 'p-4'
+          }`}
+        >
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">
               {t('ariaStudio.studioArtifactPanel.cvHealth')}
@@ -434,7 +440,13 @@ const StudioArtifactPanel = ({ onClose, onViewCv, bare = false }) => {
           </div>
         </div>
       ) : (
-        <div className="h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none p-4 space-y-5">
+        <div
+          className={`h-0 flex-1 overflow-y-auto overscroll-contain scrollbar-none space-y-5 ${
+            // As a full-screen sheet the side padding is the only thing between the
+            // content and the bezel, so it can be narrower than it is beside the chat.
+            bare ? 'px-3 py-4' : 'p-4'
+          }`}
+        >
           {/* Overall */}
           <div>
             <p className="font-mono text-[9px] uppercase tracking-wider text-slate-400 dark:text-slate-500">

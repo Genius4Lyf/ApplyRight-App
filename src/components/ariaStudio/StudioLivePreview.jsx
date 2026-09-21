@@ -558,7 +558,14 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
 
   return (
     <aside
-      className={`h-full min-h-0 flex flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 ${
+      // THE DESK ONLY EXISTS WHEN THERE IS SOMETHING TO SIT ON.
+      // Grey ground behind a floating white page is what makes an inline panel read as a
+      // document beside the conversation. As a SHEET it is the whole screen, so the same
+      // grey is just a band around a card that has nothing to be distinguished from — and
+      // on a phone it cost 16px of gutter plus the card's own border on each side.
+      className={`h-full min-h-0 flex flex-col overflow-hidden ${
+        isSheet ? 'bg-white dark:bg-slate-900' : 'bg-slate-50 dark:bg-slate-950'
+      } ${
         // Edge to edge in the sheet: card chrome at the screen edge reads as a rendering
         // fault, and the rounded corners would show the scrim through four notches.
         isSheet ? '' : 'border-l border-slate-200 dark:border-slate-800'
@@ -654,9 +661,21 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
       ) : (
         <div className="h-0 flex-1 min-h-0">
           {effectiveView === 'edit' ? (
-            <div className="h-full overflow-y-auto overscroll-contain scrollbar-none p-4 sm:p-6">
+            <div
+              className={`h-full overflow-y-auto overscroll-contain scrollbar-none ${
+                isSheet ? 'p-0' : 'p-4 sm:p-6'
+              }`}
+            >
               {/* The paper sheet — a themed surface, not a hard white A4 in dark mode. */}
-              <div className="mx-auto max-w-[680px] rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)] p-6 sm:p-8 space-y-6">
+              <div
+                className={`mx-auto max-w-[680px] bg-white dark:bg-slate-900 space-y-6 ${
+                  // A sheet IS the paper. Border, rounding and shadow only say "this is a
+                  // page on a desk", and there is no desk here — they just eat width.
+                  isSheet
+                    ? 'px-4 py-5'
+                    : 'rounded-lg border border-slate-200 p-6 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_10px_28px_-14px_rgba(15,23,42,0.18)] sm:p-8 dark:border-slate-800 dark:shadow-[0_16px_40px_-24px_rgba(0,0,0,.55)]'
+                }`}
+              >
                 {/* Says WHY there is nothing to touch. One muted line at the top of the
                     sheet, in the same helper voice as the rest of the panel — an
                     explanation, not a warning. */}

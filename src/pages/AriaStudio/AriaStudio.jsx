@@ -17,13 +17,11 @@ import { pressable } from '../../lib/ariaMotion';
 import { BAND_TEXT } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import CVService from '../../services/cv.service';
-import AriaOrbit from '../../components/cv/AriaOrbit';
 import StudioChat from '../../components/ariaStudio/StudioChat';
 import ResumeSessionModal from '../../components/ariaStudio/ResumeSessionModal';
 import StudioArtifactPanel from '../../components/ariaStudio/StudioArtifactPanel';
 import JobTargetPanel from '../../components/ariaStudio/JobTargetPanel';
 import StudioLivePreview from '../../components/ariaStudio/StudioLivePreview';
-import ModelPicker from '../../components/ModelPicker';
 import SessionRail from '../../components/ariaStudio/SessionRail';
 import StudioOverlay from '../../components/ariaStudio/StudioOverlay';
 import DeleteSessionModal from '../../components/ariaStudio/DeleteSessionModal';
@@ -69,7 +67,8 @@ const StudioDesk = () => {
   const [resuming, setResuming] = useState(false);
 
   // The session's Aria model — the same per-draft choice the chat composers write to.
-  const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
+  // Only the id: the picker moved to the composer, which owns its own useAriaModel.
+  const { modelId } = useAriaModel({ draftId, cvData, updateCvData });
 
   const layout = useStudioLayout();
   const { closePreview, setPanelOverlay, setPanelView } = layout;
@@ -604,15 +603,16 @@ const StudioDesk = () => {
               <PanelLeft className="w-5 h-5" />
             </button>
 
-            <AriaOrbit size={20} className="shrink-0" />
-
-            <div className="min-w-0 flex-1 flex items-center">
-              {/* Model picker lives here now — no header title/subtitle to edit or read;
-                  renaming a CV happens from its row in the Recents rail instead. */}
-              {draftId && (
-                <ModelPicker value={modelId} onSelect={selectModel} align="left" studio />
-              )}
-            </div>
+            {/* A SPACER, and deliberately nothing else.
+                The orbit and the model picker both used to sit here. The orbit is Aria's
+                mark, and she is already the entire right-hand column — repeating her badge
+                above a conversation she is visibly having is decoration. The picker had a
+                better home: it is also on the composer (here and in SectionCoach), which is
+                where the choice is actually made — at the moment of sending, not as
+                standing chrome. Two copies meant the header carried a permanent dropdown to
+                duplicate a control three inches below it, and pushed JD / EDIT / health,
+                the things you press, into the corner. */}
+            <div className="min-w-0 flex-1" />
 
             {/* The score stays in the top bar at EVERY width — on a phone it's the only
                 thing permanently on screen, and it's the number people come back for. */}
