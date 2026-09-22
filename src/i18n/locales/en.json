@@ -1594,17 +1594,21 @@
     },
     "modelPicker": {
       "tierLight": "Basic",
-      "tierFlagship": "Pro",
+      "tierAdvanced": "Advanced",
+      "tierFlagship": "Expert",
+      "freeDaily": "free each day",
+      "perMessage": "{{n}} cr/msg",
       "triggerTitle": "Choose the model powering ARIA",
       "ariaLabelModel": "AI model: {{tier}}",
       "header": "Choose your AI",
       "whatsDifference": "What's the difference?",
       "close": "Close",
       "standardBlurb": "Fast and efficient ({{standardLabel}}). Great for most CVs — solid bullets, summaries and tailoring. Cheapest on credits, and included free on paid plans.",
+      "advancedBlurb": "A reasoning model ({{advancedLabel}}). Follows an interview more closely — it changes tack when you push back, asks one thing at a time, and drops the metric questions once you've said there aren't any. Uses credits on every message.",
       "flagshipBlurb": "The strongest models — sharper writing and better nuance on tough or senior roles, with tighter keyword tailoring. Costs more credits per action, and always metered (even on paid plans).",
       "notSure": "Not sure? {{standardLabel}} is great for most CVs — reach for {{flagshipLabel}} when a role is competitive or you want the most polished result.",
       "noModels": "No models available.",
-      "footnote": "{{flagshipLabel}} always uses credits. {{standardLabel}} is included on paid plans.",
+      "footnote": "{{standardLabel}} is free each day and included on paid plans. The models above it use credits on every message.",
       "proBlurb": {
         "claude-sonnet-5": "The most natural, human writing feel.",
         "gpt-5": "Familiar and strong all-round."

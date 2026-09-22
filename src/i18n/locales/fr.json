@@ -1590,17 +1590,21 @@
     },
     "modelPicker": {
       "tierLight": "Basique",
-      "tierFlagship": "Pro",
+      "tierAdvanced": "Avancé",
+      "tierFlagship": "Expert",
+      "freeDaily": "gratuit chaque jour",
+      "perMessage": "{{n}} cr par message",
       "triggerTitle": "Choisir le modèle qui anime Aria",
       "ariaLabelModel": "Modèle IA : {{tier}}",
       "header": "Choisissez votre IA",
       "whatsDifference": "Quelle est la différence ?",
       "close": "Fermer",
       "standardBlurb": "Rapide et efficace ({{standardLabel}}). Idéal pour la plupart des CV — des points solides, des résumés et un ciblage bien fait. Le moins coûteux en crédits, et inclus gratuitement sur les formules payantes.",
+      "advancedBlurb": "Un modèle de raisonnement ({{advancedLabel}}). Il suit l'entretien de plus près : il change d'angle quand vous le reprenez, pose une seule question à la fois et cesse de réclamer des chiffres dès que vous dites qu'il n'y en a pas. Consomme des crédits à chaque message.",
       "flagshipBlurb": "Les modèles les plus puissants — une écriture plus fine et plus nuancée pour les postes exigeants ou seniors, avec un ciblage de mots-clés plus précis. Coûte plus de crédits par action, et toujours facturé même sur les formules payantes.",
       "notSure": "Un doute ? {{standardLabel}} convient très bien à la plupart des CV — passez à {{flagshipLabel}} pour un poste compétitif ou le résultat le plus abouti.",
       "noModels": "Aucun modèle disponible.",
-      "footnote": "{{flagshipLabel}} utilise toujours des crédits. {{standardLabel}} est inclus sur les formules payantes.",
+      "footnote": "{{standardLabel}} est gratuit chaque jour et inclus sur les formules payantes. Les modèles au-dessus consomment des crédits à chaque message.",
       "proBlurb": {
         "claude-sonnet-5": "L'écriture la plus naturelle, la plus humaine.",
         "gpt-5": "Familier et solide sur tous les plans."

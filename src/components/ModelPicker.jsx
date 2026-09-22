@@ -20,6 +20,9 @@ import {
   modelLabel,
   modelsByTier,
   costForActionTier,
+  tierOf,
+  tierAlwaysMeters,
+  TIER_ORDER,
   subscribeModelConfig,
   getModelConfigVersion,
 } from '../lib/models';
@@ -55,10 +58,14 @@ const ModelPicker = ({
 }) => {
   const { t } = useTranslation();
   useSyncExternalStore(subscribeModelConfig, getModelConfigVersion, getModelConfigVersion);
-  const tierLabel = (tier) =>
-    t(
-      tier === 'flagship' ? 'cvBuilder.modelPicker.tierFlagship' : 'cvBuilder.modelPicker.tierLight'
-    );
+  // One key per tier, looked up rather than branched. A ternary here is how the middle
+  // rung would have shown up in the menu labelled "Basic".
+  const TIER_LABEL_KEYS = {
+    light: 'cvBuilder.modelPicker.tierLight',
+    advanced: 'cvBuilder.modelPicker.tierAdvanced',
+    flagship: 'cvBuilder.modelPicker.tierFlagship',
+  };
+  const tierLabel = (tier) => t(TIER_LABEL_KEYS[tier] || TIER_LABEL_KEYS.light);
   // Per-model character line for the explainer's Pro list — i18n, not hardcoded, so it
   // exists in every locale (see GenerationModelRow, which reads the same keys). A model
   // id with no entry returns '' rather than a raw key, so it just shows the name alone.
@@ -161,19 +168,21 @@ const ModelPicker = ({
   }, [open]);
 
   const current = value || AI_MODELS.defaultModel;
-  const currentTier = modelsByTier('flagship').some((m) => m.id === current) ? 'flagship' : 'light';
+  const currentTier = tierOf(current);
 
   const pick = (id) => {
     setOpen(false);
     if (id !== value) onSelect?.(id);
   };
 
-  // Exposed models, Standard (light) first then Pro (flagship). Each is ONE option — the
-  // TIER is the primary label, the model name a subtitle. With one exposed light model,
-  // "Basic" is naturally a single row (no intra-tier list).
+  // Exposed models, cheapest tier first. Each is ONE option — the TIER is the primary
+  // label, the model name a subtitle. Built by walking TIER_ORDER rather than
+  // concatenating two named lists, so a rung added to the catalog appears in its right
+  // place instead of falling off the menu.
   const lightModels = modelsByTier('light');
+  const advancedModels = modelsByTier('advanced');
   const proModels = modelsByTier('flagship');
-  const rows = [...lightModels, ...proModels];
+  const rows = TIER_ORDER.flatMap((tier) => modelsByTier(tier));
   // Data-driven names for the explainer, so it never drifts from the exposed set.
   const standardLabel = modelLabel(lightModels[0]?.id || AI_MODELS.defaultModel);
 
@@ -208,7 +217,17 @@ const ModelPicker = ({
             }`}
           >
             {modelLabel(m.id)}
-            {typeof cost === 'number' ? ` · ${cost} cr/msg` : ''}
+            {/* BASIC READS AS FREE, BECAUSE THAT IS WHAT IT IS FOR ALMOST EVERYONE.
+                It showed "1 cr/msg" flatly, which is the price only once a free user has
+                burned the day's pool — and never, on a paid plan. Quoting the exception
+                as the rule made the cheapest option look like it cost money, which is the
+                opposite of what the tier is for. The metered rungs keep their number,
+                because for those it IS the rule: they charge on every message. */}
+            {tierAlwaysMeters(m.tier)
+              ? typeof cost === 'number'
+                ? ` · ${t('cvBuilder.modelPicker.perMessage', { n: cost })}`
+                : ''
+              : ` · ${t('cvBuilder.modelPicker.freeDaily')}`}
           </span>
         </span>
         {selected && <Check className="w-3.5 h-3.5 shrink-0" />}
@@ -320,6 +339,22 @@ const ModelPicker = ({
                     </p>
                   </div>
 
+                  {/* The middle rung only speaks when there IS one — an admin can hide it
+                      from the registry, and an explainer describing an option nobody can
+                      pick is worse than one that stops a line short. */}
+                  {advancedModels.length > 0 && (
+                    <div>
+                      <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
+                        {tierLabel('advanced')}
+                      </p>
+                      <p className="mt-1 text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300">
+                        {t('cvBuilder.modelPicker.advancedBlurb', {
+                          advancedLabel: modelLabel(advancedModels[0].id),
+                        })}
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-slate-500 dark:text-slate-400">
                       {tierLabel('flagship')}
@@ -366,7 +401,6 @@ const ModelPicker = ({
                 <p className="px-3 py-2 text-[10px] leading-snug text-slate-400 dark:text-slate-500 border-t border-slate-100 dark:border-slate-800">
                   {t('cvBuilder.modelPicker.footnote', {
                     standardLabel: tierLabel('light'),
-                    flagshipLabel: tierLabel('flagship'),
                   })}
                 </p>
               </>

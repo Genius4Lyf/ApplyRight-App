@@ -3,10 +3,17 @@
 // hydrate step mutates it in place. The picker + cost tags read from here.
 import { CREDIT_COSTS } from './credits';
 
+// The tiers, cheapest first. Light is the only one a paid plan includes; everything above
+// it meters on every call. Ordering the picker off this list rather than off a hardcoded
+// [light, flagship] pair is what keeps a new rung from landing at the bottom of the menu.
+export const TIER_ORDER = ['light', 'advanced', 'flagship'];
+
 export const AI_MODELS = {
-  models: [], // [{ id, tier: 'light'|'flagship', provider }] — EXPOSED models only
+  models: [], // [{ id, tier: 'light'|'advanced'|'flagship', provider }] — EXPOSED only
   defaultModel: 'gpt-4o-mini',
-  flagshipCreditCosts: {}, // action → flagship credit cost (light costs live in CREDIT_COSTS)
+  // action → credit cost, per metered tier. Light costs live in CREDIT_COSTS.
+  flagshipCreditCosts: {},
+  advancedCreditCosts: {},
 };
 
 // Model config arrives asynchronously from /auth/config. Consumers used to read this
@@ -35,22 +42,39 @@ export function hydrateModels(payload) {
   if (!payload || typeof payload !== 'object') return;
   if (Array.isArray(payload.models)) AI_MODELS.models = payload.models;
   if (typeof payload.defaultModel === 'string') AI_MODELS.defaultModel = payload.defaultModel;
-  if (payload.flagshipCreditCosts && typeof payload.flagshipCreditCosts === 'object') {
-    const remapped = {};
-    Object.entries(payload.flagshipCreditCosts).forEach(([k, v]) => {
-      remapped[BACKEND_TO_FRONTEND_KEY[k] || k] = v;
+  const remap = (map) => {
+    const out = {};
+    Object.entries(map).forEach(([k, v]) => {
+      out[BACKEND_TO_FRONTEND_KEY[k] || k] = v;
     });
-    AI_MODELS.flagshipCreditCosts = remapped;
+    return out;
+  };
+  if (payload.flagshipCreditCosts && typeof payload.flagshipCreditCosts === 'object') {
+    AI_MODELS.flagshipCreditCosts = remap(payload.flagshipCreditCosts);
+  }
+  // An older backend sends no advanced map; the tier then prices at the light cost, which
+  // under-quotes rather than over-quotes. Deliberate direction: a user is never shown a
+  // bill higher than the one they get.
+  if (payload.advancedCreditCosts && typeof payload.advancedCreditCosts === 'object') {
+    AI_MODELS.advancedCreditCosts = remap(payload.advancedCreditCosts);
   }
   publishModelConfig();
 }
 
-// The model tier ('light'|'flagship') for a resolved/selected model id — used to price
-// action cost tags at the selected model's tier. Unknown id → 'light' (the safe default).
+// The model tier for a resolved/selected model id — used to price action cost tags at the
+// selected model's tier. Validated against TIER_ORDER rather than compared to one name:
+// the old `tier === 'flagship' ? 'flagship' : 'light'` collapsed every other value to
+// light, so a new rung would have been quoted at the free price everywhere it appeared.
+// Unknown id or tier → 'light', which under-quotes rather than over-quotes.
 export function tierOf(modelId) {
   const m = modelById(modelId);
-  return m && m.tier === 'flagship' ? 'flagship' : 'light';
+  return m && TIER_ORDER.includes(m.tier) ? m.tier : 'light';
 }
+
+// Does this tier charge on every message, plan or no plan? Mirrors `alwaysMeters` in the
+// backend catalog — the two must agree, or the UI quotes a price the server does not
+// charge (or promises "free" for something that bills).
+export const tierAlwaysMeters = (tier) => tier === 'advanced' || tier === 'flagship';
 
 // Human labels + a single-glyph provider mark for the picker (no external icon deps).
 export const MODEL_LABELS = {
@@ -94,11 +118,18 @@ export const modelsByTier = (tier) => AI_MODELS.models.filter((m) => m.tier === 
 export const modelById = (id) => AI_MODELS.models.find((m) => m.id === id) || null;
 
 // The credit cost of an action at a model TIER. Light reads the live CREDIT_COSTS (the
-// same map the rest of the UI uses); flagship reads the flagship table from /auth/config,
-// falling back to the light cost for any action without a flagship-specific price.
+// same map the rest of the UI uses); the metered tiers read their own table from
+// /auth/config, falling back to the light cost for any action without a tier-specific
+// price — which mirrors the server's sparse-delta resolver exactly.
+const TIER_COST_MAPS = {
+  advanced: () => AI_MODELS.advancedCreditCosts,
+  flagship: () => AI_MODELS.flagshipCreditCosts,
+};
+
 export function costForActionTier(action, tier) {
   const light = CREDIT_COSTS[action];
-  if (tier !== 'flagship') return light;
-  const flag = AI_MODELS.flagshipCreditCosts[action];
-  return typeof flag === 'number' ? flag : light;
+  const source = TIER_COST_MAPS[tier];
+  if (!source) return light;
+  const price = source()[action];
+  return typeof price === 'number' ? price : light;
 }
