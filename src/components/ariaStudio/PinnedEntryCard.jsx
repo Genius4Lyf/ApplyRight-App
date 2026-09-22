@@ -165,8 +165,17 @@ const PinnedEntryCard = ({
   // edges, or it blurs the conversation and never un-blurs it. An effect rather than a call
   // inside the toggle because `open` also changes from collapseSignal and on arrival, and a
   // backdrop that missed those would be stuck on.
+  //
+  // The cleanup is the other half, and it is not decorative. "Next role" re-keys this
+  // card to the new entry and "Done with work history" removes it altogether, so in both
+  // cases the card that was OPEN simply disappears — and a component that vanishes never
+  // gets to run the line above with `false`. The parent was left holding pinOpen=true and
+  // the backdrop stayed blurred over a conversation with nothing floating above it.
+  // Safe on an ordinary change too: React runs the cleanup and the effect in the same
+  // commit, so the false/true pair batches to true and nothing flickers.
   useEffect(() => {
     onOpenChange?.(open);
+    return () => onOpenChange?.(false);
   }, [open, onOpenChange]);
   // This is a glanceable progress summary, not another form. Close it after a brief
   // idle window, but never while the user is hovering or keyboard-focused inside it.
@@ -449,7 +458,30 @@ const PinnedEntryCard = ({
         }`}
       >
         <div className={`overflow-hidden rounded-b-xl ${CARD_CHROME} border-t-0`}>
-          <div className="px-3 pb-3 pt-2.5">
+          {/* ONE SCROLLER, BOUNDED BY THE CHAT AREA — not by the window.
+              The bullets used to be the only thing that scrolled, capped at
+              min(34vh, 260px), on the theory that fixed fields plus a capped list plus
+              the action row would always fit. They did not. `vh` measures the WINDOW,
+              and everything docked under the conversation — the requirement bar, the
+              composer, the AI notice, the two call chips — is height this panel does not
+              have. On a laptop at 100% that arithmetic put "Next role" and "Done with
+              work history" behind the composer, so the two ways out of a role were
+              invisible and nothing on screen said where they had gone.
+              So the whole body scrolls against the scroller's REAL height (published by
+              StudioChat as --studio-chat-h; the vh fallback only applies before the first
+              measurement), and the decisions are pinned to the bottom of it. They are now
+              on screen whenever any part of this panel is, at any content length — and a
+              nested scroll-within-a-scroll is gone with it. */}
+          <div
+            // A scroll container unreachable by keyboard is a WCAG 2.1.1 failure — it has
+            // to take focus for arrows/PageDown to move it.
+            // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
+            tabIndex={0}
+            role="group"
+            aria-label={t('ariaStudio.pinnedEntry.detailsPanel')}
+            onScroll={bumpActivity}
+            className="custom-scrollbar max-h-[calc(var(--studio-chat-h,70vh)-4rem)] overflow-y-auto overscroll-contain px-3 pt-2.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600"
+          >
             <dl className="space-y-1.5">
               {fields.map((f) => {
                 const value = valueFor(f.key);
@@ -546,20 +578,14 @@ const PinnedEntryCard = ({
               })}
             </dl>
 
-            {/* Capped and scrollable, because a role can collect a dozen achievements and
-                this card is sticky — an unbounded list pushes "Next role" and "Done" off
-                the viewport with no way to scroll down to them. The fields above and the
-                actions below stay in flow; only the bullets move. */}
+            {/* No longer its own scroller — the body above is. A role can collect a dozen
+                achievements and they simply run on; the pinned action row below is what
+                stops them burying the way out. */}
             {bullets.length > 0 && (
               <div
                 role="group"
-                // A scroll container unreachable by keyboard is a WCAG 2.1.1 failure —
-                // it has to take focus for arrows/PageDown to move it.
-                // eslint-disable-next-line jsx-a11y/no-noninteractive-tabindex
-                tabIndex={0}
                 aria-label={t('ariaStudio.pinnedEntry.achievementsList')}
-                onScroll={bumpActivity}
-                className="custom-scrollbar mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 max-h-[min(34vh,260px)] overflow-y-auto overscroll-contain rounded focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600"
+                className="mt-2.5 border-t border-slate-100 pt-2.5 dark:border-slate-800"
               >
                 <ul className="space-y-1">
                   {bullets.map((b, i) => (
@@ -581,7 +607,14 @@ const PinnedEntryCard = ({
                 them. `sm:contents` dissolves that sub-row from `sm` up, so Edit and Cancel
                 become direct children of this flex row again and Cancel's `ml-auto` keeps
                 pushing it to the far right exactly as before. */}
-            <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
+            {/* PINNED TO THE BOTTOM OF THE PANEL. These two are the only ways out of a
+                role interview; a user who cannot see them has to work out that the answer
+                is to scroll a box they may not know scrolls. Sticky, so they ride at the
+                foot of the panel however long the achievements get. The negative margin
+                cancels the body's side padding so the bar spans the full card width, and
+                the translucent fill matches the card's own so content scrolls under it
+                rather than through it. */}
+            <div className="sticky bottom-0 -mx-3 mt-3 flex flex-col gap-2 border-t border-slate-100 bg-white/95 px-3 pb-3 pt-2.5 backdrop-blur sm:flex-row sm:flex-wrap sm:items-center dark:border-slate-800 dark:bg-slate-900/95">
               <button
                 type="button"
                 onClick={onNextRole}

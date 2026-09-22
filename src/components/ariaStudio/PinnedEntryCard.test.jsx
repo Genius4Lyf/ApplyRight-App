@@ -307,3 +307,91 @@ describe('the collapsed card is inert', () => {
     expect(panel.textContent).toContain(i18n.t('ariaStudio.pinnedEntry.copy.education.done'));
   });
 });
+
+// THE WAY OUT OF A ROLE HAS TO BE ON SCREEN.
+//
+// "Next role" and "Done with work history" are the only two exits from an interview.
+// They sat below an achievements list capped in `vh` — a unit that cannot see the
+// requirement bar and composer docked beneath the conversation — so on a laptop at 100%
+// both fell behind the dock, with nothing on screen saying where they had gone. Reported
+// from use: "it might make them not able to figure it out".
+//
+// jsdom loads no CSS, so these pin the MECHANISM rather than measured pixels: one bounded
+// scroller sized to the chat area, the decisions stuck to the foot of it, and the bullets
+// no longer a scroller of their own. That cannot prove the buttons are visible; it can
+// prove nobody quietly removed what makes them so.
+describe('the decisions cannot be scrolled out of reach', () => {
+  const longRole = {
+    ...experienceEntry,
+    description: Array.from({ length: 40 }, (_, i) => `• bullet number ${i}`).join('\n'),
+  };
+
+  const openPanel = () => {
+    const { container } = render(
+      <PinnedEntryCard
+        entry={longRole}
+        section="experience"
+        defaultExpanded
+        onNextRole={vi.fn()}
+        onDone={vi.fn()}
+      />
+    );
+    return container;
+  };
+
+  const bodyOf = (container) => container.querySelector('[role="group"][tabindex="0"]');
+
+  it('bounds the panel body against the chat area, not the window', () => {
+    const body = bodyOf(openPanel());
+    expect(body).toBeTruthy();
+    expect(body.className).toContain('overflow-y-auto');
+    // The variable StudioChat publishes from the scroller's real height. A `vh` bound
+    // here is precisely the bug.
+    expect(body.className).toContain('--studio-chat-h');
+  });
+
+  it('pins the two exits to the foot of that body', () => {
+    const container = openPanel();
+    const row = screen
+      .getByText(i18n.t('ariaStudio.pinnedEntry.copy.experience.next'))
+      .closest('div');
+    expect(row.className).toContain('sticky');
+    expect(row.className).toContain('bottom-0');
+    expect(row.textContent).toContain(i18n.t('ariaStudio.pinnedEntry.copy.experience.done'));
+    // Inside the scroller, or there is nothing for sticky to stick within.
+    expect(bodyOf(container).contains(row)).toBe(true);
+  });
+
+  // A PANEL THAT DISAPPEARS IS A PANEL THAT CLOSED.
+  //
+  // "Next role" re-keys this card to the new entry and "Done with work history" removes
+  // it altogether — so in both cases the card that was OPEN simply vanishes. Reporting
+  // only on `open` meant it never said so on the way out, and StudioChat was left holding
+  // pinOpen=true: the backdrop stayed blurred over a conversation with nothing floating
+  // above it. Reported from use, on exactly those two buttons.
+  it('reports itself closed when it is unmounted while open', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(
+      <PinnedEntryCard
+        entry={experienceEntry}
+        section="experience"
+        defaultExpanded
+        onOpenChange={onOpenChange}
+        onNextRole={vi.fn()}
+        onDone={vi.fn()}
+      />
+    );
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+
+    unmount();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
+  });
+
+  it('leaves the achievements list in plain flow — one scroller, not two nested', () => {
+    const list = openPanel().querySelector(
+      `[role="group"][aria-label="${i18n.t('ariaStudio.pinnedEntry.achievementsList')}"]`
+    );
+    expect(list).toBeTruthy();
+    expect(list.className).not.toContain('overflow-y-auto');
+  });
+});

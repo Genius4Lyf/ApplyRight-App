@@ -1853,6 +1853,12 @@
         "3": "Affinage des verbes…",
         "4": "Peaufinage…"
       },
+      "chat": {
+        "1": "Lecture de votre réponse…",
+        "2": "Comparaison avec votre CV…",
+        "3": "Rédaction de la réponse…",
+        "4": "Toujours en cours…"
+      },
       "thinking": "Réflexion…"
     },
     "ariaComposer": {
@@ -4368,6 +4374,7 @@
       "openProjectToReview": "Ouvrir ce projet pour le vérifier",
       "editField": "Modifier {{field}}",
       "achievementsList": "Réalisations",
+      "detailsPanel": "Détails de l'entrée",
       "saveField": "Enregistrer"
     },
     "jobTarget": {
@@ -5076,7 +5083,8 @@
           "personal": "Maintenant la partie intéressante — qu’est-ce qui vous a poussé à créer {{title}}, et que fait-il ? On verra ensuite comment vous l’avez construit et qui l’a utilisé.",
           "work": "Maintenant la partie intéressante — quel problème {{title}} résolvait-il, et pour qui ? On verra ensuite votre rôle, les outils et ce qui s’est passé après la mise en production."
         },
-        "achievementsRole": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une."
+        "achievementsRole": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. Vous pouvez donner une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une.",
+        "achievementsRoleTargeted": "Maintenant ce qui compte vraiment — dites-moi ce que vous avez réellement fait chez {{company}}. J'ai l'annonce {{target}} sous les yeux, alors laissez-moi faire les rapprochements : racontez ce qui s'est vraiment passé, pas ce que l'annonce veut entendre. Une ou plusieurs activités ; séparez-les par des points et je les prendrai une par une."
       },
       "fieldCorrected": {
         "roleTitle": "Ah, je vois que vous avez changé le rôle en {{value}} — on va travailler avec ça pour que les points ne se mélangent pas.",

@@ -51,12 +51,19 @@ const RequirementBar = ({
 }) => {
   const { t } = useTranslation();
   const reduce = useReducedMotion();
-  // OPEN ON ARRIVAL, ONCE.
+  // CLOSED ON ARRIVAL — the pre-flight card is what announces this now.
   //
-  // A collapsed strip above the keyboard is easy to never notice, and someone who never
-  // opens it never learns the interview has a spine. It shows itself when the interview
-  // starts — one look at what this job asks for — and from then on the user decides.
-  const [open, setOpen] = useState(true);
+  // It used to open itself once per mount, on the reasoning that a collapsed strip above
+  // the keyboard is easy to never notice. Two things made that wrong. The "Before we
+  // start" card lists the very same rows, tappable, at the very same moment — so the bar
+  // opening on top of it said the same thing twice, over a conversation the user had not
+  // read yet. And "once" was per MOUNT, not per interview: applying bullets remounts the
+  // coach (StudioChat bumps buildRoundNonce to reset the turn window), so the panel threw
+  // itself open again every single time a round of bullets landed.
+  //
+  // Discoverability now rests on the pulsing ring below, which keeps going until the bar
+  // has been opened by hand — an invitation rather than an interruption.
+  const [open, setOpen] = useState(false);
   // Until it has been opened BY HAND, the icon keeps a soft pulse. After that the user
   // knows it is there, and a control that keeps waving at someone who has already answered
   // it is just noise.
@@ -81,7 +88,9 @@ const RequirementBar = ({
   //
   // So the header follows the ANIMATION, not the state: square while the list is present,
   // rounded again only once the exit has finished.
-  const [joined, setJoined] = useState(true);
+  // Seeded from `open`'s own initial value: a header that started `joined` while closed
+  // would paint square-topped with a lifted shadow, waiting for a list that is not there.
+  const [joined, setJoined] = useState(false);
   if (open && !joined) setJoined(true);
 
   // Report open AND close, not just open. onOpen exists so the OTHER floating panel can
@@ -89,8 +98,15 @@ const RequirementBar = ({
   // edges, or it blurs the conversation and never un-blurs it. An effect rather than a call
   // inside the toggle because `open` also changes from collapseSignal and on arrival, and a
   // backdrop that missed those would be stuck on.
+  //
+  // The cleanup matters for the same reason it does on the pinned card: this bar lives in
+  // the composer, and the composer is unmounted outright the moment the interview leaves
+  // the chat phase — a bullet generation, a call starting, the coach being re-keyed after
+  // bullets are applied. A bar that was open when that happened never got to report
+  // `false`, so the backdrop stayed blurred with nothing floating above it.
   useEffect(() => {
     onOpenChange?.(open);
+    return () => onOpenChange?.(false);
   }, [open, onOpenChange]);
 
   // Two kinds of requirement are real, stated by the employer, and still have no place
@@ -212,7 +228,20 @@ const RequirementBar = ({
                   <button
                     type="button"
                     disabled={askedId === row.requirementId}
-                    onClick={() => onAsk?.(row)}
+                    // THE TAP IS THE END OF THIS PANEL'S JOB — in chat.
+                    //
+                    // The answer to a tap lands in the thread THIS SHEET IS COVERING: the
+                    // user's own "You asked · About X" bubble, then Aria's question under
+                    // it. Staying open buries the reply to the press that was just made,
+                    // and left people tapping a second row to make something happen.
+                    //
+                    // On a call it stays. There is no thread to uncover there — the
+                    // "next up…" row below is the only acknowledgement a steer ever gets,
+                    // and closing over it would make the tap look ignored.
+                    onClick={() => {
+                      if (!onCall) setOpen(false);
+                      onAsk?.(row);
+                    }}
                     className={`mt-0.5 text-[10px] font-semibold underline decoration-dotted underline-offset-2 transition-colors ${
                       askedId === row.requirementId
                         ? 'cursor-not-allowed text-slate-300 dark:text-slate-600'

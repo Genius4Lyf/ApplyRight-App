@@ -41,8 +41,9 @@ const ROWS = [
 
 const setup = (props = {}) => render(<RequirementBar rows={ROWS} {...props} />);
 
-// It now opens on arrival (see "one look at what this job asks for"), so this only has
-// to act when something has since closed it.
+// It arrives collapsed — the pre-flight card is what announces the list now — so almost
+// every test here opens it first. Tolerant of an already-open bar so it stays a single
+// helper if that default ever moves again.
 const openBar = () => {
   const collapsed = screen.queryByRole('button', { expanded: false });
   if (collapsed) fireEvent.click(collapsed);
@@ -58,18 +59,46 @@ describe('RequirementBar', () => {
     expect(container.firstChild).toBeNull();
   });
 
-  // A collapsed strip above the keyboard is easy to never notice, and someone who never
-  // opens it never learns the interview has a spine. It shows itself once, on arrival.
-  it('opens on arrival, so the list is seen at least once', () => {
+  // IT ARRIVES CLOSED.
+  //
+  // It used to throw itself open on every mount, for discoverability. The pre-flight card
+  // lists the same rows, tappable, at the same moment — so that was the same thing said
+  // twice over an unread conversation. Worse, "once" was per MOUNT: applying bullets
+  // remounts the coach, so the panel reopened itself after every single round.
+  it('arrives collapsed — the pre-flight card is what announces the list', () => {
     setup();
-    expect(screen.getByRole('button', { expanded: true })).toBeTruthy();
-    expect(screen.getByText('Troubleshooting')).toBeTruthy();
+    expect(screen.getByRole('button', { expanded: false })).toBeTruthy();
+    expect(screen.queryByText('Troubleshooting')).toBeNull();
   });
 
-  it('closes on a tap and stays closed — from then on the user decides', async () => {
+  it('opens on a tap, and closes again on the next one', async () => {
     setup();
     fireEvent.click(header());
+    expect(screen.getByText('Troubleshooting')).toBeTruthy();
+    fireEvent.click(header());
     await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
+  });
+
+  // THE TAP IS THE END OF THIS PANEL'S JOB, in chat.
+  //
+  // What a tap produces lands in the thread this sheet is covering — the user's own
+  // bubble, then Aria's question under it. Staying open buries the answer to the press
+  // that was just made, which is what left people tapping a second row to make something
+  // happen.
+  it('closes itself once a requirement has been asked about', async () => {
+    setup({ onAsk: vi.fn() });
+    openBar();
+    fireEvent.click(screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.askMe')));
+    await waitFor(() => expect(screen.queryByText('Troubleshooting')).toBeNull());
+  });
+
+  // On a call there is no thread to uncover. The "next up…" row is the ONLY
+  // acknowledgement a steer ever gets, so closing over it would make the tap look ignored.
+  it('stays open after a tap on a call, where the pending row is the only receipt', () => {
+    setup({ onAsk: vi.fn(), onCall: true });
+    openBar();
+    fireEvent.click(screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.askOnCall')));
+    expect(screen.getByText('Troubleshooting')).toBeTruthy();
   });
 
   it('counts only what it shows, and says so on one line', () => {
@@ -224,11 +253,10 @@ describe('RequirementBar — one floating panel at a time', () => {
   it('announces a user-opened list, so whatever else is open can stand down', () => {
     const onOpen = vi.fn();
     setup({ onOpen });
-    // Arriving open is not a user action and announces nothing — nothing else is open yet
-    // to be closed by it, and closing the pinned card behind someone's back would be rude.
+    // Arriving is not a user action and announces nothing — nothing else is open yet to
+    // be closed by it, and closing the pinned card behind someone's back would be rude.
     expect(onOpen).not.toHaveBeenCalled();
 
-    fireEvent.click(header()); // closed
     fireEvent.click(header()); // opened, by hand
     expect(onOpen).toHaveBeenCalledTimes(1);
   });
@@ -236,10 +264,26 @@ describe('RequirementBar — one floating panel at a time', () => {
   it('does not announce on close', () => {
     const onOpen = vi.fn();
     setup({ onOpen });
-    fireEvent.click(header()); // close
     fireEvent.click(header()); // open  → 1
     fireEvent.click(header()); // close → still 1
     expect(onOpen).toHaveBeenCalledTimes(1);
+  });
+
+  // A PANEL THAT DISAPPEARS IS A PANEL THAT CLOSED.
+  //
+  // This bar lives in the composer, and the composer is unmounted outright whenever the
+  // interview leaves the chat phase — a generation, a call starting, the coach re-keyed
+  // after bullets land. Reporting only on `open` meant a bar that was open at that moment
+  // never said so, and the backdrop behind it stayed blurred over a conversation with
+  // nothing floating above it.
+  it('reports itself closed when it is unmounted while open', () => {
+    const onOpenChange = vi.fn();
+    const { unmount } = render(<RequirementBar rows={ROWS} onOpenChange={onOpenChange} />);
+    fireEvent.click(header());
+    expect(onOpenChange).toHaveBeenLastCalledWith(true);
+
+    unmount();
+    expect(onOpenChange).toHaveBeenLastCalledWith(false);
   });
 
   it('closes when the parent signals, and only ever closes', async () => {

@@ -529,6 +529,35 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
   }, [draftId, cvData?.studioPending]);
 
   const chatRef = useRef(null);
+
+  // HOW TALL THIS SCROLLER ACTUALLY IS, published for whatever hangs inside it.
+  //
+  // The pinned card's body hangs off the top of this area and has to be bounded, or its
+  // "Next role" / "Done with work history" row falls off the bottom and the user is left
+  // with no visible way to move on. That bound used to be written in `vh` — and `vh` is
+  // the wrong unit for it. The dock BELOW this scroller (the requirement bar, the
+  // composer, the AI notice, the two call chips) is a real and variable slice of the
+  // window that `vh` knows nothing about, so on a laptop at 100% the two decisions sat
+  // behind the composer.
+  //
+  // A custom property rather than a prop: the card stays presentational and needs no idea
+  // what it is mounted inside, and this is the one element whose box is the answer.
+  // Skipped while the height reads zero (an unmounted or hidden moment, and jsdom), where
+  // publishing it would collapse the very panel this exists to keep reachable.
+  useEffect(() => {
+    const el = chatRef.current;
+    if (!el || typeof ResizeObserver === 'undefined') return undefined;
+    const publish = () => {
+      const h = el.clientHeight;
+      if (h > 0) el.style.setProperty('--studio-chat-h', `${h}px`);
+      else el.style.removeProperty('--studio-chat-h');
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
   const inputRef = useRef(null);
   // The docked slot the ACTIVE coach's composer portals into, so a focused-section input
   // stays pinned below the scroll instead of scrolling away with the messages. A callback
@@ -775,12 +804,40 @@ const StudioChat = ({ onPaywall, onNavigate, onOpenPanel, jobCoverage, jobKeywor
   // interview opens, and again whenever the role or company is corrected underneath it —
   // where an acknowledgement on its own left the user looking at a reply with no question
   // in it, and the only copy of the question scrolled off the top.
-  const achievementsAsk = (entry, sectionKey, type) =>
-    sectionKey === 'project'
-      ? projectAchievementsOpener(entry?.title, type)
-      : t('ariaStudio.chat.nextLine.achievementsRole', {
-          company: entry?.company || t('ariaStudio.chat.thisJobFallback'),
-        });
+  //
+  // THE ROLE OPENER KNOWS WHETHER THERE IS A JOB TO AIM AT.
+  //
+  // One line served both cases, so a CV being built against a pasted posting opened on
+  // exactly the same sentence as one being built against nothing — and the checklist that
+  // had just appeared under the composer had nothing anywhere in the conversation saying
+  // why it was there.
+  //
+  // The targeted line deliberately does NOT recite the requirements. The pre-flight card
+  // renders directly beneath it and already names three of them, tappable; saying them
+  // twice in two shapes is how a first screen stops being read. What it adds is the one
+  // thing that card cannot: that Aria is holding the posting against the answer HERSELF,
+  // so the user should describe what actually happened rather than write toward the
+  // advert. That instruction is the whole defence against a tailored interview turning
+  // into a fabricated one.
+  //
+  // Falls back to the neutral line whenever the posting cannot be NAMED — an unnamed
+  // "the posting" reads as a bluff, and the generic opener is not wrong, just unaimed.
+  const targetJobName = () => {
+    const target = cvData?.targetJob;
+    if (!target) return '';
+    const posted = !!String(target.description || '').trim() || !!target.brief;
+    if (!posted) return '';
+    return String(target.brief?.role || target.title || '').trim();
+  };
+
+  const achievementsAsk = (entry, sectionKey, type) => {
+    if (sectionKey === 'project') return projectAchievementsOpener(entry?.title, type);
+    const company = entry?.company || t('ariaStudio.chat.thisJobFallback');
+    const target = targetJobName();
+    return target
+      ? t('ariaStudio.chat.nextLine.achievementsRoleTargeted', { company, target })
+      : t('ariaStudio.chat.nextLine.achievementsRole', { company });
+  };
 
   // The pinned status card duplicates the combined capture card's own fields while an
   // experience/project entry is still on the type-chip or form stage — showing both at

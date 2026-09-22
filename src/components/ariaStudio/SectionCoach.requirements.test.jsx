@@ -173,9 +173,9 @@ const mount = ({ coverage = COVERAGE, keywords = KEYWORDS, messages } = {}) => {
   return { onPush };
 };
 
-// The bar now opens on arrival, so this only waits for it and acts if something has since
-// closed it. Found by its count, which is unique to it — the "what this job asks for"
-// label is deliberately shared with other surfaces.
+// The bar arrives collapsed, so this waits for it and opens it. Found by its count, which
+// is unique to it — the "what this job asks for" label is deliberately shared with other
+// surfaces. Tolerant of an already-open bar so it survives the default moving again.
 const openBar = async (done = 1, total = 2) => {
   const count = await screen.findByText(
     t('ariaStudio.sectionCoach.checklist.count', { done, total })
@@ -311,6 +311,12 @@ describe('tapping a requirement in chat', () => {
     mount();
     await openBar();
     fireEvent.click(screen.getByText(t('ariaStudio.sectionCoach.checklist.askMe')));
+    // The tap closes the bar — what it produced lands in the thread the bar was covering.
+    // The refusal is a durable record, so it is waiting the next time the list is opened.
+    await waitFor(() =>
+      expect(screen.queryByText(t('ariaStudio.sectionCoach.checklist.declined'))).toBeNull()
+    );
+    await openBar(1, 2);
 
     expect(await screen.findByText(t('ariaStudio.sectionCoach.checklist.declined'))).toBeTruthy();
   });

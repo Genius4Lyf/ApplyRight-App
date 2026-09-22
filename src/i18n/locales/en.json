@@ -1857,6 +1857,12 @@
         "3": "Sharpening the verbs…",
         "4": "Polishing…"
       },
+      "chat": {
+        "1": "Reading what you said…",
+        "2": "Checking it against your CV…",
+        "3": "Putting a reply together…",
+        "4": "Still on it…"
+      },
       "thinking": "Thinking…"
     },
     "ariaComposer": {
@@ -4372,6 +4378,7 @@
       "openProjectToReview": "Open this project to review it",
       "editField": "Edit {{field}}",
       "achievementsList": "Achievements",
+      "detailsPanel": "Entry details",
       "saveField": "Save"
     },
     "jobTarget": {
@@ -5080,7 +5087,8 @@
           "personal": "Now the interesting part — what made you build {{title}}, and what does it do? We'll come to how you built it and who ended up using it.",
           "work": "Now the interesting part — what problem was {{title}} solving, and who for? We'll come to your part in it, the tools, and what happened once it shipped."
         },
-        "achievementsRole": "Now the part that matters — tell me what you actually did at {{company}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time."
+        "achievementsRole": "Now the part that matters — tell me what you actually did at {{company}}. You can share one activity or several; separate different things with full stops, and I'll take them one at a time.",
+        "achievementsRoleTargeted": "Now the part that matters — tell me what you actually did at {{company}}. I've got the {{target}} posting open beside this, so leave the matching to me: say what really happened, not what the advert wants to hear. One activity or several; separate different things with full stops, and I'll take them one at a time."
       },
       "fieldCorrected": {
         "roleTitle": "Oh, I see you changed the role to {{value}} — let's work with that so the bullets don't get confused.",

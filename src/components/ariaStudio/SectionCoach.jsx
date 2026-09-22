@@ -1441,10 +1441,23 @@ const SectionCoach = ({
                         >
                           ✓
                         </span>
-                        <span className="min-w-0 text-[12.5px] leading-relaxed text-slate-700 dark:text-slate-200">
+                        {/* SIZED FOR THE DESKTOP TOO, not only under it.
+                            index.css forces every non-mono p/span/li inside an
+                            .aria-response-card to 17px below 640px — so on a phone these
+                            three lines were comfortable (and completely flat: bullet,
+                            evidence and match all at one size). Above 640px that rule
+                            stops and the raw values took over: 12.5px of bullet with a
+                            10.5px reason under it and a 9px match under that. This is
+                            the one card in the build where the user has to READ closely
+                            and decide what is true about their own work, and it was the
+                            smallest type in the app to do it in.
+                            The `sm:` breakpoint is exactly the mobile rule's ceiling, so
+                            the two never overlap — and stepping each line separately
+                            keeps the hierarchy that the phone's blanket 17px flattens. */}
+                        <span className="min-w-0 text-[12.5px] leading-relaxed text-slate-700 sm:text-[14.5px] dark:text-slate-200">
                           <span className="block">{b}</span>
                           {!!detail?.evidence?.length && (
-                            <span className="mt-1.5 block text-[10.5px] leading-snug text-slate-500 dark:text-slate-400">
+                            <span className="mt-1.5 block text-[10.5px] leading-snug text-slate-500 sm:text-[12.5px] dark:text-slate-400">
                               {t('ariaStudio.sectionCoach.supportedBy', {
                                 evidence: detail.evidence
                                   .slice(0, 2)
@@ -1454,7 +1467,7 @@ const SectionCoach = ({
                             </span>
                           )}
                           {!!detail?.requirements?.length && (
-                            <span className="mt-1 block font-mono text-[9px] uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                            <span className="mt-1 block font-mono text-[9px] uppercase tracking-wide text-emerald-700 sm:text-[10.5px] dark:text-emerald-400">
                               {t('ariaStudio.sectionCoach.matchesRequirements', {
                                 requirements: detail.requirements
                                   .map((item) => item.name)
