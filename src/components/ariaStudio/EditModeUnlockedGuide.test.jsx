@@ -66,3 +66,36 @@ describe('the edit-mode guide', () => {
     expect(dialog.getAttribute('aria-labelledby')).toBe('studio-editmode-title');
   });
 });
+
+// The control this guide teaches became a bordered pill with a gold glyph and an EDIT
+// label, and the guide went on showing the old bare pencil — a picture of a button that
+// was no longer in the header. It renders `EditPillFace` now, the same component the
+// Studio header does, so the next change reaches both. These pin the shared face rather
+// than the copy, which is the part that drifted.
+describe('the replica is the real control', () => {
+  it('shows the label, not just a glyph', () => {
+    render(<EditModeUnlockedGuide open onComplete={vi.fn()} />);
+    // The header's own label key — if the button is renamed, the guide renames with it.
+    expect(screen.getAllByText(t('ariaStudio.livePreview.heading')).length).toBeGreaterThan(0);
+  });
+
+  it('wears the pill, in gold, with the dot on the icon', () => {
+    const { container } = render(<EditModeUnlockedGuide open onComplete={vi.fn()} />);
+
+    const pill = container.querySelector('.rounded-full.border');
+    expect(pill).toBeTruthy();
+    // Attribute match, not a class selector: `text-[#9A6608]` is an arbitrary Tailwind
+    // value and the brackets/hash are not selectable without escaping gymnastics.
+    expect(pill.querySelector('[class*="#9A6608"]')).toBeTruthy();
+    // On the icon, not loose in the pill — that is what makes it recognisable at a glance.
+    expect(pill.querySelector('.relative > .studio-live-dot')).toBeTruthy();
+  });
+
+  it('sits the replica on the ground the header uses, so the dot ring is invisible', () => {
+    const { container } = render(<EditModeUnlockedGuide open onComplete={vi.fn()} />);
+    const dot = container.querySelector('.studio-live-dot');
+    expect(dot.className).toContain('ring-white');
+    // The row behind it must match that ring or it reads as a halo.
+    expect(dot.closest('div.rounded-xl').className).toContain('bg-white');
+  });
+});

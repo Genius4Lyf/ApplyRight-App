@@ -27,6 +27,8 @@ const AdminUserDetails = () => {
   const [updatingPlan, setUpdatingPlan] = useState(false);
   const [updatingUnlock, setUpdatingUnlock] = useState(false);
   const [updatingMaintenanceAccess, setUpdatingMaintenanceAccess] = useState(false);
+  const [updatingPasses, setUpdatingPasses] = useState(false);
+  const [passInput, setPassInput] = useState('1');
 
   // Support grant: unlock ALL interview-loop interviewers for this user (bypass
   // the 65% gate). Used when a user reaches out asking to skip the gamification.
@@ -68,6 +70,29 @@ const AdminUserDetails = () => {
       toast.error('Failed to update maintenance access');
     } finally {
       setUpdatingMaintenanceAccess(false);
+    }
+  };
+
+  // Support grant: hand this user free CV download passes. They land in the same
+  // bucket a ₦500 purchase fills, so the download paywall simply stops appearing
+  // until the passes run out. `delta` adds (negative claws back); `set` overwrites.
+  const handleDownloadPasses = async (body) => {
+    setUpdatingPasses(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const { data } = await api.put(`/admin/users/${id}/download-passes`, body, config);
+      const passRemaining = data.data.passRemaining;
+      setUserData((prev) => ({
+        ...prev,
+        user: { ...prev.user, downloads: { ...prev.user.downloads, passRemaining } },
+      }));
+      toast.success(data.message);
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || 'Failed to update download passes');
+    } finally {
+      setUpdatingPasses(false);
     }
   };
 
@@ -288,6 +313,56 @@ const AdminUserDetails = () => {
                     <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
                   )}
                 </div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <Download className="w-4 h-4 text-slate-400 mt-1" />
+              <div className="flex-1">
+                <p className="text-xs text-slate-500">
+                  CV download passes{' '}
+                  <span className="font-semibold text-slate-900">
+                    {user.downloads?.passRemaining ?? 0} left
+                  </span>
+                </p>
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <input
+                    type="number"
+                    min="1"
+                    max="500"
+                    value={passInput}
+                    onChange={(e) => setPassInput(e.target.value)}
+                    className="w-16 px-2 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadPasses({ grant: parseInt(passInput, 10) })}
+                    disabled={
+                      updatingPasses ||
+                      !Number.isInteger(parseInt(passInput, 10)) ||
+                      parseInt(passInput, 10) < 1
+                    }
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-colors disabled:opacity-60"
+                  >
+                    Grant passes
+                  </button>
+                  {(user.downloads?.passRemaining ?? 0) > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadPasses({ set: 0 })}
+                      disabled={updatingPasses}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors disabled:opacity-60"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  {updatingPasses && (
+                    <span className="inline-block animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></span>
+                  )}
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1.5">
+                  Each pass = one paywall-free CV download (PDF or Word). Free grant — no payment is
+                  recorded.
+                </p>
               </div>
             </div>
           </div>

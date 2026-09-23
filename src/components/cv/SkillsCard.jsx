@@ -42,6 +42,95 @@ const legacyGroups = (suggestions, bestForRole) => {
       };
 };
 
+// Defined at MODULE level on purpose, and it has to stay there.
+//
+// This lived inside SkillsCard's body, which made it a NEW component type on every
+// render of the card. React compares element types by identity, so a type that is a
+// fresh function each time is never an update - it is always an unmount plus a mount.
+// Ticking one checkbox therefore tore out EVERY row and rebuilt it.
+//
+// That is what made the card jump. React commits deletions before insertions, so for
+// that moment the max-h-[58vh] scroller below held nothing, its scrollHeight collapsed
+// to the padding, and the browser clamped scrollTop to 0. The rows came back; the
+// scroll position did not. Picking a skill near the bottom of a twenty-skill list threw
+// you back to the top of the card every single time.
+const SkillRow = ({ row, added, active, detailOpen, onToggle, onToggleDetail }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+      <div className="flex items-start gap-2.5 p-3">
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={added}
+          aria-pressed={active || added}
+          className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
+            active || added
+              ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
+              : 'border-slate-300 dark:border-slate-600'
+          }`}
+        >
+          {(active || added) && <Check className="h-2.5 w-2.5" />}
+        </button>
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={added}
+          className="min-w-0 flex-1 text-left disabled:cursor-default"
+        >
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
+              {row.name}
+            </span>
+            {row.explicitlyConfirmed && (
+              <span className="rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-[8px] uppercase text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                {t('cvBuilder.skillsCard.confirmedByYou')}
+              </span>
+            )}
+            {added && (
+              <span className="font-mono text-[8px] uppercase text-slate-400">
+                {t('cvBuilder.skillsCard.onCv')}
+              </span>
+            )}
+          </div>
+          {row.reason && (
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
+              {row.reason}
+            </p>
+          )}
+        </button>
+        {!!row.evidence?.length && (
+          <button
+            type="button"
+            onClick={onToggleDetail}
+            className="rounded p-1 text-slate-400 hover:text-slate-800 dark:hover:text-white"
+            aria-label={t('cvBuilder.skillsCard.whyFits')}
+          >
+            <ChevronDown
+              className={`h-3.5 w-3.5 transition-transform ${detailOpen ? 'rotate-180' : ''}`}
+            />
+          </button>
+        )}
+      </div>
+      {detailOpen && (
+        <div className="border-t border-slate-100 px-3 py-2.5 text-[11px] dark:border-slate-800">
+          {(row.evidence || []).map((item, index) => (
+            <p
+              key={`${item.type}-${item.refIndex}-${index}`}
+              className="text-slate-500 dark:text-slate-400"
+            >
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {item.sourceLabel || item.type}:
+              </span>{' '}
+              {item.snippet}
+            </p>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 const SkillsCard = ({
   suggestions = [],
   bestForRole = [],
@@ -146,85 +235,6 @@ const SkillsCard = ({
     onAdd?.(picked);
   };
 
-  const SkillRow = ({ row }) => {
-    const added = existingSet.has(lower(row.name));
-    const active = selected.has(row.name);
-    const detailOpen = openDetail === row.name;
-    return (
-      <div className="rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
-        <div className="flex items-start gap-2.5 p-3">
-          <button
-            type="button"
-            onClick={() => toggle(row)}
-            disabled={added}
-            aria-pressed={active || added}
-            className={`mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-              active || added
-                ? 'border-slate-900 bg-slate-900 text-white dark:border-white dark:bg-white dark:text-slate-900'
-                : 'border-slate-300 dark:border-slate-600'
-            }`}
-          >
-            {(active || added) && <Check className="h-2.5 w-2.5" />}
-          </button>
-          <button
-            type="button"
-            onClick={() => toggle(row)}
-            disabled={added}
-            className="min-w-0 flex-1 text-left disabled:cursor-default"
-          >
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[13px] font-semibold text-slate-800 dark:text-slate-100">
-                {row.name}
-              </span>
-              {row.explicitlyConfirmed && (
-                <span className="rounded bg-emerald-50 px-1.5 py-0.5 font-mono text-[8px] uppercase text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  {t('cvBuilder.skillsCard.confirmedByYou')}
-                </span>
-              )}
-              {added && (
-                <span className="font-mono text-[8px] uppercase text-slate-400">
-                  {t('cvBuilder.skillsCard.onCv')}
-                </span>
-              )}
-            </div>
-            {row.reason && (
-              <p className="mt-0.5 text-[11px] leading-snug text-slate-500 dark:text-slate-400">
-                {row.reason}
-              </p>
-            )}
-          </button>
-          {!!row.evidence?.length && (
-            <button
-              type="button"
-              onClick={() => setOpenDetail(detailOpen ? null : row.name)}
-              className="rounded p-1 text-slate-400 hover:text-slate-800 dark:hover:text-white"
-              aria-label={t('cvBuilder.skillsCard.whyFits')}
-            >
-              <ChevronDown
-                className={`h-3.5 w-3.5 transition-transform ${detailOpen ? 'rotate-180' : ''}`}
-              />
-            </button>
-          )}
-        </div>
-        {detailOpen && (
-          <div className="border-t border-slate-100 px-3 py-2.5 text-[11px] dark:border-slate-800">
-            {(row.evidence || []).map((item, index) => (
-              <p
-                key={`${item.type}-${item.refIndex}-${index}`}
-                className="text-slate-500 dark:text-slate-400"
-              >
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  {item.sourceLabel || item.type}:
-                </span>{' '}
-                {item.snippet}
-              </p>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200 border-l-2 border-l-slate-900 bg-white dark:border-slate-800 dark:border-l-white dark:bg-slate-900/60">
       <div className="border-b border-slate-100 p-4 dark:border-slate-800">
@@ -249,7 +259,15 @@ const SkillsCard = ({
             </h4>
             <div className="space-y-2">
               {rows.map((row) => (
-                <SkillRow key={row.name} row={row} />
+                <SkillRow
+                  key={row.name}
+                  row={row}
+                  added={existingSet.has(lower(row.name))}
+                  active={selected.has(row.name)}
+                  detailOpen={openDetail === row.name}
+                  onToggle={() => toggle(row)}
+                  onToggleDetail={() => setOpenDetail(openDetail === row.name ? null : row.name)}
+                />
               ))}
             </div>
           </section>

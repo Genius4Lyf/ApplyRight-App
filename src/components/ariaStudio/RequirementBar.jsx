@@ -30,6 +30,27 @@ const NOT_ANSWERABLE_BY_TALKING = (row) => !row.qualification && !row.behavioura
 const SHEET =
   'border-slate-200 bg-white/95 backdrop-blur dark:border-slate-800 dark:bg-slate-900/95';
 
+// Module level, not inside the component: a type redefined on every render is never an
+// update to React, it is an unmount plus a mount. Harmless for a dot, but it is the same
+// mistake that made SkillsCard jump its scroller (SkillsCard.scroll.test.jsx).
+const Dot = ({ row }) => (
+  <span
+    aria-hidden="true"
+    className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
+      row.state === REQUIREMENT_STATE.COVERED
+        ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
+        : row.state === REQUIREMENT_STATE.DECLINED
+          ? 'border border-dashed border-slate-300 dark:border-slate-700'
+          : 'border border-slate-300 dark:border-slate-700'
+    }`}
+  >
+    {row.state === REQUIREMENT_STATE.COVERED && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
+    {row.state === REQUIREMENT_STATE.DECLINED && (
+      <span className="block w-1.5 h-px bg-slate-400 dark:bg-slate-500" />
+    )}
+  </span>
+);
+
 const RequirementBar = ({
   rows = [],
   onAsk,
@@ -138,24 +159,6 @@ const RequirementBar = ({
       return !wasOpen;
     });
   };
-
-  const Dot = ({ row }) => (
-    <span
-      aria-hidden="true"
-      className={`mt-0.5 shrink-0 w-4 h-4 rounded-full flex items-center justify-center ${
-        row.state === REQUIREMENT_STATE.COVERED
-          ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
-          : row.state === REQUIREMENT_STATE.DECLINED
-            ? 'border border-dashed border-slate-300 dark:border-slate-700'
-            : 'border border-slate-300 dark:border-slate-700'
-      }`}
-    >
-      {row.state === REQUIREMENT_STATE.COVERED && <Check className="w-2.5 h-2.5" strokeWidth={3} />}
-      {row.state === REQUIREMENT_STATE.DECLINED && (
-        <span className="block w-1.5 h-px bg-slate-400 dark:bg-slate-500" />
-      )}
-    </span>
-  );
 
   const listRows = (
     <>

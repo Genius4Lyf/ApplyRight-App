@@ -5,7 +5,7 @@ import { trashFlash } from '../../lib/trashFlash';
 import { useTranslation } from 'react-i18next';
 // eslint-disable-next-line no-unused-vars
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { PanelLeft, FilePen, Briefcase, Heart } from 'lucide-react';
+import { PanelLeft, Briefcase, Heart } from 'lucide-react';
 import { AriaStudioProvider, useAriaStudio } from '../../context/AriaStudioContext';
 import { useStudioLayout, studioMainAttrs } from '../../hooks/useStudioLayout';
 import { editorUnlocked, editorJustUnlocked, finishableNow } from '../../lib/studioFlow';
@@ -18,6 +18,7 @@ import { BAND_TEXT } from '../../lib/noteStyles';
 import { STUDIO_TAILORING_ENABLED } from '../../lib/studioFeatures';
 import CVService from '../../services/cv.service';
 import StudioChat from '../../components/ariaStudio/StudioChat';
+import EditPillFace from '../../components/ariaStudio/EditPillFace';
 import ResumeSessionModal from '../../components/ariaStudio/ResumeSessionModal';
 import StudioArtifactPanel from '../../components/ariaStudio/StudioArtifactPanel';
 import JobTargetPanel from '../../components/ariaStudio/JobTargetPanel';
@@ -679,38 +680,11 @@ const StudioDesk = () => {
                       ? t('ariaStudio.livePreview.headingEditable')
                       : t('ariaStudio.livePreview.heading')
                   }
-                  className={`group shrink-0 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 transition-colors ${
-                    panelView === 'preview'
-                      ? 'border-slate-900 bg-slate-50 dark:border-slate-400 dark:bg-slate-800'
-                      : 'border-slate-200 hover:border-slate-900 hover:bg-slate-50 dark:border-slate-700 dark:hover:border-slate-400 dark:hover:bg-slate-800'
-                  }`}
+                  className="group inline-flex shrink-0 rounded-full"
                 >
-                  {/* The dot sits ON the icon rather than beside the label, so it is in the
-                      same place at every width. aria-hidden: the state is already in the
-                      button's label, so announcing the dot too would just be noise. */}
-                  <span className="relative inline-flex shrink-0">
-                    {/* The warm gold from the post designs (DESIGN-SYSTEM.md §2): #9A6608
-                        on light, #DFA83C on dark — the doc prescribes that exact pair,
-                        the brighter one for a dark ground. It gives this control its own
-                        identity beside JD's emerald and CV health's red, so three pills in
-                        a row are told apart by colour before the label is read. */}
-                    <FilePen className="w-3.5 h-3.5 text-[#9A6608] dark:text-[#DFA83C]" />
-                    {editorReady && (
-                      <span
-                        aria-hidden="true"
-                        className="studio-live-dot absolute -top-1 -right-1 w-1.5 h-1.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-950"
-                      />
-                    )}
-                  </span>
-                  <span
-                    className={`font-mono text-[11px] font-semibold uppercase tracking-wider transition-colors ${
-                      panelView === 'preview'
-                        ? 'text-slate-900 dark:text-white'
-                        : 'text-slate-700 group-hover:text-slate-900 dark:text-slate-200 dark:group-hover:text-white'
-                    }`}
-                  >
-                    {t('ariaStudio.livePreview.heading')}
-                  </span>
+                  {/* The face is shared with EditModeUnlockedGuide, which draws a replica
+                      of this control to teach it. See EditPillFace.jsx. */}
+                  <EditPillFace active={panelView === 'preview'} showDot={editorReady} />
                 </motion.button>
               )}
 

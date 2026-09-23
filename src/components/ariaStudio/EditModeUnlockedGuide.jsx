@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useChatTheme } from '../../hooks/useChatTheme';
 import AriaOrbit from '../cv/AriaOrbit';
+import EditPillFace from './EditPillFace';
 
 // Shown ONCE, the first time a CV in this Studio becomes editable.
 //
@@ -13,9 +14,12 @@ import AriaOrbit from '../cv/AriaOrbit';
 // has forgotten by the time they can. This fires at the moment the thing actually becomes
 // true, which is the only moment it means anything.
 //
-// It shows the REAL button — same FilePen, same green dot — because "tap the pencil with
-// the green dot" is only useful if you can recognise it when you look up. Deliberately one
-// step: the welcome guide is an orientation, this is a single fact.
+// It shows the REAL button, because "tap the control with the green dot" is only useful if
+// you can recognise it when you look up. That replica is drawn from `EditPillFace`, the
+// same component the Studio header renders — it used to be hand-copied markup, and when
+// the header control became a bordered gold pill this guide went on teaching a bare pencil
+// that was no longer there. Deliberately one step: the welcome guide is an orientation,
+// this is a single fact.
 const EditModeUnlockedGuide = ({ open, onOpenPreview, onComplete }) => {
   const { t } = useTranslation();
   const [chatTheme] = useChatTheme();
@@ -91,15 +95,17 @@ const EditModeUnlockedGuide = ({ open, onOpenPreview, onComplete }) => {
                 {t('ariaStudio.editModeGuide.title')}
               </h2>
 
-              {/* The button as it actually appears in the header, dot and all. A written
-                  description of an icon is worth much less than the icon. */}
-              <div className="mt-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 dark:border-slate-700 dark:bg-slate-800/60">
-                <span className="relative inline-flex shrink-0 text-slate-900 dark:text-white">
-                  <FilePen className="h-5 w-5" />
-                  <span
-                    aria-hidden="true"
-                    className="studio-live-dot absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-slate-50 dark:ring-slate-800"
-                  />
+              {/* The button as it actually appears in the header, dot and all — drawn
+                  from the SAME face component the header uses, so the two cannot drift
+                  again. A written description of an icon is worth much less than the icon,
+                  and a picture of the wrong icon is worth less than nothing.
+
+                  The row is white / slate-950 rather than the usual slate-50 because the
+                  dot's ring is the header's ground; on a tinted row it would read as a
+                  halo instead of disappearing into the surface. */}
+              <div className="mt-5 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-3.5 py-3 dark:border-slate-700 dark:bg-slate-950">
+                <span className="shrink-0" aria-hidden="true">
+                  <EditPillFace showDot />
                 </span>
                 <p className="min-w-0 text-[13px] leading-5 text-slate-700 dark:text-slate-200">
                   {t('ariaStudio.editModeGuide.buttonHint')}
