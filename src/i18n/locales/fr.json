@@ -5371,20 +5371,20 @@
         "carryOn": "Pas de souci — continuons ici. Tout ce qui a été dit pendant l'appel est ci-dessus : reprenez là où nous en étions, ou dites-moi ce que vous voulez ajouter ou modifier. Je proposerai les options de puces dès que nous aurons assez d'éléments."
       },
       "settings": {
-        "title": "Comment doit se dérouler cet appel ?",
-        "open": "Réglages de l'appel : {{summary}}",
+        "title": "Comment Aria doit-elle vous interroger ?",
+        "open": "Réglages de l'entretien : {{summary}}",
         "depthLabel": "Profondeur",
         "styleLabel": "Style d'Aria",
-        "voiceLabel": "Voix",
-        "paceLabel": "Débit",
+        "voiceLabel": "Voix (appels uniquement)",
+        "paceLabel": "Débit (appels uniquement)",
         "depth": {
           "thorough": {
             "label": "Approfondi",
-            "hint": "Passe en revue tout ce que vous mentionnez et pose des questions sur les petites choses qu'on oublie — les meilleures puces."
+            "hint": "Passe en revue tout ce que vous mentionnez et pose des questions sur les petites choses qu'on oublie — les meilleures puces. À l'écrit comme en appel."
           },
           "quick": {
             "label": "Rapide",
-            "hint": "L'essentiel et ce qui en a résulté. Des appels plus courts, moins de minutes."
+            "hint": "L'essentiel et ce qui en a résulté. Moins de questions à l'écrit, des appels plus courts, moins de minutes."
           }
         },
         "style": {

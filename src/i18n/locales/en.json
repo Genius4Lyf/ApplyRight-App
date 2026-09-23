@@ -5375,20 +5375,20 @@
         "carryOn": "No problem — let's keep going here. Everything from the call is above, so pick up where we left off, or tell me anything you want to add or change. I'll bring out the bullet options once we've got enough."
       },
       "settings": {
-        "title": "How should this call go?",
-        "open": "Call settings: {{summary}}",
+        "title": "How should Aria interview you?",
+        "open": "Interview settings: {{summary}}",
         "depthLabel": "How deep",
         "styleLabel": "Aria's style",
-        "voiceLabel": "Voice",
-        "paceLabel": "Pace",
+        "voiceLabel": "Voice (calls only)",
+        "paceLabel": "Pace (calls only)",
         "depth": {
           "thorough": {
             "label": "Thorough",
-            "hint": "Goes through everything you mention and asks about the small things people forget — the best bullets."
+            "hint": "Goes through everything you mention and asks about the small things people forget — the best bullets. Typed or on a call."
           },
           "quick": {
             "label": "Quick",
-            "hint": "The main points and what came of them. Shorter calls, fewer minutes."
+            "hint": "The main points and what came of them. Fewer questions when typing, shorter calls, fewer minutes."
           }
         },
         "style": {

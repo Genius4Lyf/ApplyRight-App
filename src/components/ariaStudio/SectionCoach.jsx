@@ -390,6 +390,10 @@ const SectionCoach = ({
         focus: { section: entry.section, sortId: entry.sortId },
         buildTurns: turnsTaken + 1,
         studioInterview: true,
+        // Thorough or quick — the same chip that configures a call. It governed calls
+        // ONLY until now, while sitting in plain sight under the composer through every
+        // typed interview, which made it a control that appeared to do nothing.
+        depth: callSettings.depth,
         model: modelId,
         // Ride the picked stage along (undefined → backend infers from the draft).
         stage: careerStage,
