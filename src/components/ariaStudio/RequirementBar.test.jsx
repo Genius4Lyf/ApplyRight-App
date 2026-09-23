@@ -132,11 +132,45 @@ describe('RequirementBar', () => {
     expect(onAsk).toHaveBeenCalledWith(expect.objectContaining({ requirementId: 'req_ts' }));
   });
 
-  it('never offers to ask about something already covered or already refused', () => {
+  it('never offers to ask about something already refused', () => {
     setup({ onAsk: vi.fn() });
     openBar();
-    // Only the one OPEN row may be asked about.
+    // Exactly one OPEN row, so exactly one "ask me". The DECLINED row offers nothing —
+    // the answer was already given, and the way back is the undo, not a second asking.
     expect(screen.getAllByText(i18n.t('ariaStudio.sectionCoach.checklist.askMe'))).toHaveLength(1);
+    const declined = screen.getByText('Root-cause analysis').closest('li');
+    expect(declined.textContent).not.toContain(
+      i18n.t('ariaStudio.sectionCoach.checklist.alsoHere')
+    );
+  });
+
+  // "I DID THIS HERE TOO".
+  //
+  // A CV is read role by role, and coverage is computed across the WHOLE CV — so a
+  // requirement proved at a 2019 job leaves the most recent role, the one a recruiter
+  // reads first, silent on it. Not re-asking automatically is right; having no manual
+  // door beside it was not. The control simply did not render once a row went green.
+  it('offers a covered row a different tap, in its own words', () => {
+    const onAsk = vi.fn();
+    setup({ onAsk });
+    openBar();
+
+    const covered = screen.getByText('HSSE').closest('li');
+    expect(covered.textContent).toContain(i18n.t('ariaStudio.sectionCoach.checklist.alsoHere'));
+    // Not the open row's wording: "ask me about this" is a request to be taught
+    // something. Here the user already has it and is placing it at this job as well.
+    expect(covered.textContent).not.toContain(i18n.t('ariaStudio.sectionCoach.checklist.askMe'));
+  });
+
+  it('hands the covered row back on a tap, so the caller can scope it', () => {
+    const onAsk = vi.fn();
+    setup({ onAsk });
+    openBar();
+    fireEvent.click(screen.getByText(i18n.t('ariaStudio.sectionCoach.checklist.alsoHere')));
+
+    expect(onAsk).toHaveBeenCalledWith(
+      expect.objectContaining({ requirementId: 'req_hsse', state: REQUIREMENT_STATE.COVERED })
+    );
   });
 
   it('lets a "no" be taken back — once it is visible, a mis-tap must not be permanent', () => {

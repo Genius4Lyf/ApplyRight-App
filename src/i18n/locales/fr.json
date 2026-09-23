@@ -1103,7 +1103,7 @@
       "settingUp": "Préparation de votre CV…",
       "freeChatsLeft": "{{n}} échanges gratuits restants aujourd’hui",
       "freeChatsDone": "Échanges gratuits épuisés aujourd’hui · 1 crédit chacun",
-      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Basique, c’est gratuit",
+      "meteredTurnCost": "Modèle {{tier}} · {{n}} crédits/message · repassez en Basique, c’est gratuit",
       "tailoredFor": "Adapté pour {{title}} chez {{company}}",
       "at": "chez",
       "focus": "Ciblage",
@@ -1626,22 +1626,27 @@
       "blurb": {
         "experience": {
           "light": "Fiable et exact. Idéal pour les stages, les emplois à temps partiel et les premiers postes.",
+          "advanced": "Suit vos réponses de plus près et insiste moins sur des chiffres que vous n'avez pas.",
           "flagship": "Meilleur pour repérer le chiffre caché dans votre récit. Utile pour les postes seniors ou très disputés."
         },
         "project": {
           "light": "Explique ce que vous avez construit et pourquoi cela comptait.",
+          "advanced": "Reste plus fidèle à ce que vous avez réellement construit, avec moins de remplissage.",
           "flagship": "Va plus loin sur les détails techniques et le résultat. Utile quand un projet est votre meilleur atout."
         },
         "summary": {
           "light": "Clair et juste.",
+          "advanced": "Plus resserré et moins générique que Basique, sans le prix d'Expert.",
           "flagship": "On dirait vraiment qu'une personne l'a écrit. Utile quand le résumé doit convaincre."
         },
         "skills": {
           "light": "Extrait les compétences techniques de votre parcours.",
+          "advanced": "Repère mieux la compétence derrière une tâche décrite simplement.",
           "flagship": "Repère des compétences que vous n'auriez pas pensé à noter."
         },
         "coverLetter": {
           "light": "Clair, direct, et ancré dans votre CV.",
+          "advanced": "Se lit plus naturellement que Basique et colle davantage à votre CV.",
           "flagship": "L'écriture la plus naturelle, la plus humaine. Utile quand c'est la lettre qui doit convaincre."
         }
       }
@@ -5409,7 +5414,7 @@
     "sectionCoach": {
       "rerollWasFree": "Cette relance était gratuite.",
       "freeBackAndForth": "Cet échange est gratuit · vous ne payez que pour la rédaction",
-      "proTurnCost": "Modèle Pro · {{n}} crédits/message · repassez en Basique, c’est gratuit",
+      "meteredTurnCost": "Modèle {{tier}} · {{n}} crédits/message · repassez en Basique, c’est gratuit",
       "backToSections": "Retour aux sections",
       "aimingAt": "Objectif : {{keywords}}",
       "questionsLeft_one": "{{count}} question restante sur ce poste",
@@ -5429,6 +5434,8 @@
       "checklist": {
         "count": "{{done}} sur {{total}}",
         "askMe": "Interroge-moi là-dessus",
+        "alsoHere": "Je l'ai fait ici aussi",
+        "alsoHereMessage": "J'ai aussi fait {{name}} à ce poste",
         "askedEyebrow": "Vous avez demandé",
         "askedMessage": "À propos de {{name}}",
         "askOnCall": "Pose-moi la question ensuite",

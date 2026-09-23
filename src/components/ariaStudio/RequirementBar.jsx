@@ -212,7 +212,15 @@ const RequirementBar = ({
               </span>
             )}
 
-            {row.state === REQUIREMENT_STATE.OPEN &&
+            {/* THE TAP IS OFFERED ON A COVERED ROW TOO — "I did this here too".
+                A CV is read role by role. A requirement proved only at a 2019 job leaves
+                the most recent role, the one a recruiter reads first, silent on it — and
+                there was no way to say so: the control simply did not render once a row
+                went green, so the automatic behaviour (never re-ask what the CV already
+                covers, which is right) had no manual door beside it.
+                A DECLINED row still has none. There the answer was already given, and
+                the way back is the undo above, not a second way to be asked. */}
+            {(row.state === REQUIREMENT_STATE.OPEN || row.state === REQUIREMENT_STATE.COVERED) &&
               row.requirementId &&
               (pendingId === row.requirementId ? (
                 // Nothing audible happens for several seconds after a tap on a
@@ -248,12 +256,17 @@ const RequirementBar = ({
                         : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                     }`}
                   >
+                    {/* A covered row is a different sentence. "Ask me about this" is a
+                        request to be taught something; here the user already has it and
+                        is telling Aria it belongs to this job as well. */}
                     {t(
                       askedId === row.requirementId
                         ? 'ariaStudio.sectionCoach.checklist.asked'
-                        : onCall
-                          ? 'ariaStudio.sectionCoach.checklist.askOnCall'
-                          : 'ariaStudio.sectionCoach.checklist.askMe'
+                        : row.state === REQUIREMENT_STATE.COVERED
+                          ? 'ariaStudio.sectionCoach.checklist.alsoHere'
+                          : onCall
+                            ? 'ariaStudio.sectionCoach.checklist.askOnCall'
+                            : 'ariaStudio.sectionCoach.checklist.askMe'
                     )}
                   </button>
                 )

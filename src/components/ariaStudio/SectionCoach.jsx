@@ -27,7 +27,7 @@ import { bankFailureReason, callRecapLines, callRecapMessage } from '../../lib/c
 import CallRecoveryCard from './CallRecoveryCard';
 import CallWrapUpConfirm from './CallWrapUpConfirm';
 import RequirementBar from './RequirementBar';
-import { buildRequirementRows, askableRows } from '../../lib/requirementRows';
+import { buildRequirementRows, askableRows, REQUIREMENT_STATE } from '../../lib/requirementRows';
 import CardEyebrow from './CardEyebrow';
 import { readCachedEntitlement, primeEntitlement } from '../../lib/entitlementCache';
 import { callEnterAnim, dockCardAnim, pressable } from '../../lib/ariaMotion';
@@ -660,10 +660,23 @@ const SectionCoach = ({
     // SHOWN: the user's own words. The eyebrow and the body read as one line —
     //        "You asked · About Permit-to-Work" — rather than echoing the control's
     //        caption back at them under a label about answering an interview.
+    // A COVERED row is a different request, and the server has to be told which.
+    //
+    // `scope: 'entry'` routes it away from the cross-history hunt, which files evidence
+    // wherever the user names it and writes a CV-WIDE decline on a no — so tapping "I did
+    // this here too" and then saying "actually not at this job" would have deleted a
+    // requirement they genuinely hold at another one. Entry-scoped, it is one question
+    // about one job: the answer banks HERE, and a no silences nothing.
+    const alsoHere = row.state === REQUIREMENT_STATE.COVERED;
     send(t('ariaStudio.sectionCoach.checklist.askMe') + `: ${row.name}`, {
-      probe: { requirementId: row.requirementId },
+      probe: { requirementId: row.requirementId, ...(alsoHere ? { scope: 'entry' } : {}) },
       selected: true,
-      display: t('ariaStudio.sectionCoach.checklist.askedMessage', { name: row.name }),
+      display: t(
+        alsoHere
+          ? 'ariaStudio.sectionCoach.checklist.alsoHereMessage'
+          : 'ariaStudio.sectionCoach.checklist.askedMessage',
+        { name: row.name }
+      ),
       eyebrowKey: 'ariaStudio.sectionCoach.checklist.askedEyebrow',
     }).finally(() => setPendingRequirementId(null));
   };

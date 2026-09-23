@@ -1107,7 +1107,7 @@
       "settingUp": "Setting up your CV draft…",
       "freeChatsLeft": "{{n}} free chats left today",
       "freeChatsDone": "Free chats done today · 1 credit each",
-      "proTurnCost": "Pro model · {{n}} credits/message · switch to Basic for free",
+      "meteredTurnCost": "{{tier}} model · {{n}} credits/message · switch to Basic for free",
       "tailoredFor": "Tailored for {{title}} at {{company}}",
       "at": "at",
       "focus": "Focus",
@@ -1630,22 +1630,27 @@
       "blurb": {
         "experience": {
           "light": "Steady and accurate. Good for internships, part-time work and first jobs.",
+          "advanced": "Follows your answers more closely and presses less for numbers you do not have.",
           "flagship": "Better at finding the number hiding in your story. Worth it for senior or competitive roles."
         },
         "project": {
           "light": "Says what you built and why it mattered.",
+          "advanced": "Keeps closer to what you actually built, with less filler around it.",
           "flagship": "Goes further on the technical detail and the outcome. Good when a project is your strongest card."
         },
         "summary": {
           "light": "Clear and correct.",
+          "advanced": "Tighter and less generic than Basic, without the Expert price.",
           "flagship": "Reads more like a person wrote it. Worth it when the summary is doing the selling."
         },
         "skills": {
           "light": "Pulls the hard skills out of your history.",
+          "advanced": "Better at spotting the skill behind a task you described plainly.",
           "flagship": "Catches skills you never thought to write down."
         },
         "coverLetter": {
           "light": "Clear, direct, and grounded in your CV.",
+          "advanced": "Reads more naturally than Basic and stays closer to your CV.",
           "flagship": "The most natural, human writing feel. Worth it when the letter is doing the work."
         }
       }
@@ -5413,7 +5418,7 @@
     "sectionCoach": {
       "rerollWasFree": "That re-roll was free.",
       "freeBackAndForth": "This back-and-forth is free · you only pay for the draft",
-      "proTurnCost": "Pro model · {{n}} credits/message · switch to Basic for free",
+      "meteredTurnCost": "{{tier}} model · {{n}} credits/message · switch to Basic for free",
       "backToSections": "Back to sections",
       "aimingAt": "Aiming at: {{keywords}}",
       "questionsLeft_one": "{{count}} question left on this role",
@@ -5433,6 +5438,8 @@
       "checklist": {
         "count": "{{done}} of {{total}}",
         "askMe": "Ask me about this",
+        "alsoHere": "I did this here too",
+        "alsoHereMessage": "I did {{name}} at this job too",
         "askedEyebrow": "You asked",
         "askedMessage": "About {{name}}",
         "askOnCall": "Ask me about this next",

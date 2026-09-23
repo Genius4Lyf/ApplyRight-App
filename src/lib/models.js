@@ -76,6 +76,19 @@ export function tierOf(modelId) {
 // charge (or promises "free" for something that bills).
 export const tierAlwaysMeters = (tier) => tier === 'advanced' || tier === 'flagship';
 
+// ONE NAME PER TIER, for every surface that prints one.
+//
+// The label used to be a ternary in each component — `tier === 'flagship' ? Pro : Basic` —
+// which meant a third tier was silently printed as "Basic" in four places, including the
+// cost notice above the composer. Unknown tiers fall back to light, which matches how
+// tierOf resolves them.
+export const TIER_LABEL_KEYS = Object.freeze({
+  light: 'cvBuilder.modelPicker.tierLight',
+  advanced: 'cvBuilder.modelPicker.tierAdvanced',
+  flagship: 'cvBuilder.modelPicker.tierFlagship',
+});
+export const tierLabelKey = (tier) => TIER_LABEL_KEYS[tier] || TIER_LABEL_KEYS.light;
+
 // Human labels + a single-glyph provider mark for the picker (no external icon deps).
 export const MODEL_LABELS = {
   'deepseek-v4-flash': 'DeepSeek V4 Flash',

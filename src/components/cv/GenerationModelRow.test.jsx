@@ -22,13 +22,22 @@ vi.mock('../../hooks/useAccountWallet', () => ({
 
 // The model catalogue is hydrated from /auth/config at runtime; pin two tiers so the row
 // renders its real picker rather than the loading fallback.
+// Keyed by tier rather than "light or else flagship". The row now walks TIER_ORDER, so a
+// catch-all else returned the same Claude row for BOTH advanced and flagship and rendered
+// it twice — a mock lying about the shape of the registry it stands in for.
+const MODELS_BY_TIER = {
+  light: [{ id: 'gpt-4o-mini', tier: 'light', provider: 'openai' }],
+  advanced: [],
+  flagship: [{ id: 'claude-sonnet-5', tier: 'flagship', provider: 'anthropic' }],
+};
+
 vi.mock('../../lib/models', () => ({
   AI_MODELS: { defaultModel: 'gpt-4o-mini', models: [], flagshipCreditCosts: {} },
-  modelsByTier: (tier) =>
-    tier === 'light'
-      ? [{ id: 'gpt-4o-mini', tier: 'light', provider: 'openai' }]
-      : [{ id: 'claude-sonnet-5', tier: 'flagship', provider: 'anthropic' }],
-  costForActionTier: (_action, tier) => (tier === 'flagship' ? 4 : 1),
+  TIER_ORDER: ['light', 'advanced', 'flagship'],
+  modelsByTier: (tier) => MODELS_BY_TIER[tier] || [],
+  costForActionTier: (_action, tier) => (tier === 'light' ? 1 : 4),
+  tierAlwaysMeters: (tier) => tier === 'advanced' || tier === 'flagship',
+  tierLabelKey: (tier) => `cvBuilder.modelPicker.tier${tier}`,
   PROVIDER_NAME: { anthropic: 'Claude', openai: 'OpenAI' },
   modelLabel: (id) => id,
   subscribeModelConfig: () => () => {},

@@ -5,7 +5,7 @@ import { ArrowUp, Mic, Square } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import ModelPicker from '../ModelPicker';
 import { isSpeechRecognitionSupported, startDictation } from '../../lib/speech';
-import { costForActionTier, tierOf } from '../../lib/models';
+import { costForActionTier, tierOf, tierAlwaysMeters, tierLabelKey } from '../../lib/models';
 import { pressable } from '../../lib/ariaMotion';
 
 // THE Aria composer — one docked input shared by every Aria chat surface (the builder's
@@ -201,15 +201,24 @@ const AriaComposer = ({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 3, scale: 0.98 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
+                // THE NOTICE HAS TO BE TRUE OF THE MODEL THAT IS ACTUALLY SELECTED.
+                //
+                // This asked `tier === 'flagship'` and treated everything else as free —
+                // so the moment a third, metered tier existed, someone on Advanced was
+                // told "this back-and-forth is free" while being charged 2 credits a
+                // message. Reported from use. Amber now means "this costs", whichever
+                // metered tier it is, and the number comes from that tier's own price
+                // rather than a hardcoded flagship lookup.
                 className={`pointer-events-none absolute -top-5 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-full border px-2.5 py-1 font-mono text-[8px] uppercase tracking-wide shadow-sm ${
-                  tierOf(modelNotice) === 'flagship'
+                  tierAlwaysMeters(tierOf(modelNotice))
                     ? 'border-amber-200 bg-amber-50/95 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/15 dark:text-amber-300'
                     : 'border-emerald-200 bg-emerald-50/95 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/15 dark:text-emerald-300'
                 }`}
               >
-                {tierOf(modelNotice) === 'flagship'
-                  ? t('ariaStudio.sectionCoach.proTurnCost', {
-                      n: costForActionTier('ARIA_CHAT_MESSAGE', 'flagship'),
+                {tierAlwaysMeters(tierOf(modelNotice))
+                  ? t('ariaStudio.sectionCoach.meteredTurnCost', {
+                      tier: t(tierLabelKey(tierOf(modelNotice))),
+                      n: costForActionTier('ARIA_CHAT_MESSAGE', tierOf(modelNotice)),
                     })
                   : t('ariaStudio.sectionCoach.freeBackAndForth')}
               </motion.div>

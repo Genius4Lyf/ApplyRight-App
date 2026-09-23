@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { bubbleAnim, portalCard } from '../../lib/ariaMotion';
-import { tierOf, costForActionTier } from '../../lib/models';
+import { tierOf, costForActionTier, tierAlwaysMeters, tierLabelKey } from '../../lib/models';
 import CVService from '../../services/cv.service';
 import { getStepCoaching } from '../../utils/cvCoach';
 import { suggestionsFor } from '../../lib/coachSuggestions';
@@ -67,11 +67,16 @@ const AskAriaGenerate = ({
   // CHAT model; hoisted above REC/per because the generation model (below) is priced
   // off of it as the default before any per-user override.
   const { modelId, selectModel } = useAriaModel({ draftId, cvData, updateCvData });
-  // Flagship NEVER rides the free daily pool — it meters every turn, build-with
-  // included. So the pool counter below is meaningless on Pro and the note has to
-  // say what's actually being spent (and that Standard is the free way back).
-  const isFlagship = tierOf(modelId) === 'flagship';
-  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', 'flagship');
+  // A METERED tier NEVER rides the free daily pool — it charges every turn, build-with
+  // included. So the pool counter below is meaningless there, and the note has to say
+  // what is actually being spent (and that Basic is the free way back).
+  //
+  // Asked `=== 'flagship'` and priced at the flagship rate, both of which broke the
+  // moment a third tier existed: Advanced fell into the "free" branch entirely, and had
+  // it not, it would have been quoted Pro's price. Reads the SELECTED tier for both now.
+  const chatTier = tierOf(modelId);
+  const isMetered = tierAlwaysMeters(chatTier);
+  const perTurnCost = costForActionTier('ARIA_CHAT_MESSAGE', chatTier);
 
   // The GENERATION model — independent of the chat model above. A per-user
   // localStorage preference, defaulting to whatever the chat model is.
@@ -1173,9 +1178,12 @@ const AskAriaGenerate = ({
           onSelectModel={selectModel}
           hideDisclaimer={compactComposer}
           note={
-            isFlagship ? (
+            isMetered ? (
               <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-amber-600 dark:text-amber-400">
-                {t('cvBuilder.common.proTurnCost', { n: perTurnCost })}
+                {t('cvBuilder.common.meteredTurnCost', {
+                  tier: t(tierLabelKey(chatTier)),
+                  n: perTurnCost,
+                })}
               </p>
             ) : freeLeft != null ? (
               <p className="mb-1.5 text-center font-mono text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500">

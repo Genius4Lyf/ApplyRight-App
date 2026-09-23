@@ -4,6 +4,9 @@ import {
   AI_MODELS,
   modelsByTier,
   costForActionTier,
+  tierAlwaysMeters,
+  tierLabelKey,
+  TIER_ORDER,
   PROVIDER_NAME,
   modelLabel,
   subscribeModelConfig,
@@ -68,7 +71,9 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
     </div>
   );
 
-  const models = [...modelsByTier('light'), ...modelsByTier('flagship')];
+  // Cheapest tier first, walked off the shared order so a new rung lands in its right
+  // place rather than being dropped by a hardcoded two-tier concatenation.
+  const models = TIER_ORDER.flatMap((tier) => modelsByTier(tier));
 
   if (models.length < 2) {
     const active = models[0] || {
@@ -82,7 +87,7 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
         <div className="mt-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
-              {active.tier === 'flagship'
+              {tierAlwaysMeters(active.tier)
                 ? PROVIDER_NAME[active.provider] || modelLabel(active.id)
                 : t('cvBuilder.modelPicker.tierLight')}
             </span>
@@ -98,20 +103,26 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
     );
   }
 
+  // PRICED BY THE ROW'S OWN TIER, not by a two-way branch.
+  //
+  // This read the flagship price for anything that was not light, and the light price for
+  // everything else — so a third tier was quoted one of two numbers, neither of them its
+  // own. Each row now asks for its own cost, and "same as Basic" is a comparison rather
+  // than a hardcoded flagship special case.
   const lightCost = costForActionTier(actionKey, 'light');
-  const flagshipCost = costForActionTier(actionKey, 'flagship');
-  const sameCost = lightCost === flagshipCost;
-
   const costLabel = (tier) => {
-    if (tier === 'flagship' && sameCost) return t('cvBuilder.genModel.sameCost');
-    const n = tier === 'flagship' ? flagshipCost : lightCost;
+    const n = costForActionTier(actionKey, tier);
+    if (tier !== 'light' && n === lightCost) return t('cvBuilder.genModel.sameCost');
     return t(unit === 'each' ? 'cvBuilder.genModel.eachCost' : 'cvBuilder.genModel.flatCost', {
       n,
     });
   };
 
+  // The light row is named by its TIER ("Basic") because there is only ever one of it;
+  // the metered rows are named by PROVIDER, since two of them could be exposed at once
+  // and "Advanced"/"Expert" alone would not say which model you were choosing.
   const modelName = (model) =>
-    model.tier === 'flagship'
+    tierAlwaysMeters(model.tier)
       ? PROVIDER_NAME[model.provider] || modelLabel(model.id)
       : t('cvBuilder.modelPicker.tierLight');
 
@@ -139,9 +150,9 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
                   <span className="text-[12.5px] font-semibold text-slate-900 dark:text-slate-100">
                     {modelName(model)}
                   </span>
-                  {model.tier === 'flagship' && (
+                  {tierAlwaysMeters(model.tier) && (
                     <span className="font-mono text-[9px] uppercase tracking-wide rounded px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                      {t('cvBuilder.modelPicker.tierFlagship')}
+                      {t(tierLabelKey(model.tier))}
                     </span>
                   )}
                 </span>
@@ -163,11 +174,7 @@ const GenerationModelRow = ({ action, value, onSelect, chatTier, unit = 'each' }
       </div>
       <p className="mt-2 text-[10px] leading-snug text-slate-400 dark:text-slate-500">
         {t('cvBuilder.genModel.chatNote', {
-          tier: t(
-            chatTier === 'flagship'
-              ? 'cvBuilder.modelPicker.tierFlagship'
-              : 'cvBuilder.modelPicker.tierLight'
-          ),
+          tier: t(tierLabelKey(chatTier)),
         })}
       </p>
     </div>
