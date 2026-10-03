@@ -378,8 +378,23 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
   // draft IMMEDIATELY, so an orphaned blank survives a refresh, and the rendered CV turns
   // it into a literal "Role / Company | -" block — in a preview that filters blanks out,
   // which is to say invisible in the only place that could delete it.
+  //
+  // ⚠ A ROW WHOSE SAVE LANDED IS NEVER PRUNED, whatever this function can see of it.
+  //
+  // `cvData` here is the one this render closed over, and the editor calls onClose in the
+  // same synchronous tick its save resolves — before React has re-rendered the panel with
+  // the written values. So the entry read below is the row as it stood BEFORE the patch:
+  // still blank, on a row the user had just filled in and saved. Experience survived that
+  // only when its section had another real role (removeEntry refuses to empty a required
+  // section); a project was simply deleted. That was the reported "I click Save and it
+  // doesn't save" — the save worked, and the prune on the way out threw it away.
+  //
+  // Hence `savedRef` rather than a smarter read of cvData: the unmount path (below) has
+  // the same staleness and no patch to reason from, and "the user filled this in and we
+  // wrote it" is the actual rule — not "it looks non-blank from here".
+  const savedRef = useRef(new Set());
   const pruneIfBlank = (sortId) => {
-    if (!sortId) return;
+    if (!sortId || savedRef.current.has(sortId)) return;
     const lists = [
       ['experience', cvData?.experience],
       ['project', cvData?.projects],
@@ -402,7 +417,11 @@ const StudioLivePreview = ({ onClose, isSheet = false }) => {
     if (sortId !== editingSortId) pruneIfBlank(editingSortId);
     setEditingSortId(sortId);
   };
-  const closeEdit = () => {
+  // `result` is PreviewEntryEditor's report: { saved: true, patch } when a save landed,
+  // nothing when the editor was simply dismissed (Cancel, Escape, a no-op save). Marking
+  // the id as saved BEFORE pruning is what keeps the prune off a row the user just wrote.
+  const closeEdit = (result) => {
+    if (result?.saved && editingSortId) savedRef.current.add(editingSortId);
     pruneIfBlank(editingSortId);
     setEditingSortId(null);
   };
